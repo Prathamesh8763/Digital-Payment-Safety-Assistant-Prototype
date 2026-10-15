@@ -31,6 +31,13 @@ def analyze_message(message: str) -> AnalysisResult:
         reasons.append("The message involves a refund request or claim.")
         risk_score += 1
 
+    if any(
+        phrase in message_lower
+        for phrase in ["send ₹", "pay ₹", "transfer money", "make a payment"]
+    ):
+        reasons.append("The message asks the user to make a payment.")
+        risk_score += 2
+
     if risk_score >= 5:
         risk_level = "High"
         recommendation = (

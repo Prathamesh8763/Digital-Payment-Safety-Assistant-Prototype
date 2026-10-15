@@ -39,3 +39,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local Antigravity instructions
+user-instructions.md

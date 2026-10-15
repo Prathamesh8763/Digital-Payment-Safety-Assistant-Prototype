@@ -26,3 +26,12 @@ def test_medium_risk_message():
 
     assert result.risk_level == "Medium"
     assert len(result.reasons) == 1
+
+
+def test_payment_request():
+    result = analyze_message(
+        "Send ₹500 to this account immediately."
+    )
+
+    assert result.risk_level == "Medium"
+    assert len(result.reasons) == 2
