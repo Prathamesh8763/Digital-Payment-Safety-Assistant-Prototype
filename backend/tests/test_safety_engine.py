@@ -35,3 +35,13 @@ def test_payment_request():
 
     assert result.risk_level == "Medium"
     assert len(result.reasons) == 2
+
+
+def test_payment_request_without_urgency():
+    result = analyze_message(
+        "Send ₹500 to this account."
+    )
+
+    assert result.risk_level == "Medium"
+    assert len(result.reasons) == 1
+    assert result.reasons[0] == "The message asks the user to make a payment."
