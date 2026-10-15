@@ -33,7 +33,16 @@ def analyze_message(message: str) -> AnalysisResult:
 
     if any(
         phrase in message_lower
-        for phrase in ["send ₹", "pay ₹", "transfer money", "make a payment"]
+        for phrase in [
+            "send ₹",
+            "send rs",
+            "pay ₹",
+            "pay rs",
+            "transfer ₹",
+            "transfer rs",
+            "transfer money",
+            "make a payment",
+        ]
     ):
         reasons.append("The message asks the user to make a payment.")
         risk_score += 2
