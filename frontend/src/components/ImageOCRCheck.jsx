@@ -1,6 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Image as ImageIcon, Send, RotateCcw, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Upload, Send, RotateCcw, CheckCircle2 } from 'lucide-react';
 import { createWorker } from 'tesseract.js';
+import Button from './ui/Button';
+import Textarea from './ui/Textarea';
+import Alert from './ui/Alert';
+import LoadingSpinner from './ui/LoadingSpinner';
 
 export default function ImageOCRCheck({ onAnalyze, loading }) {
   const [imageFile, setImageFile] = useState(null);
@@ -63,7 +67,7 @@ export default function ImageOCRCheck({ onAnalyze, loading }) {
       } else {
         setExtractedText(text);
       }
-    } catch (err) {
+    } catch {
       setErrorMessage('OCR extraction failed. You can still type the text manually in the text check mode.');
     } finally {
       setIsProcessingOcr(false);
@@ -91,9 +95,9 @@ export default function ImageOCRCheck({ onAnalyze, loading }) {
   };
 
   return (
-    <div className="ocr-check-container">
+    <div className="ocr-check-container" aria-label="Screenshot OCR Analysis">
       <div style={{ marginBottom: '1rem' }}>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>
+        <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary)', marginBottom: '0.25rem' }}>
           Screenshot & Image Safety Check
         </h3>
         <p className="form-help">
@@ -103,14 +107,22 @@ export default function ImageOCRCheck({ onAnalyze, loading }) {
 
       {!imagePreview ? (
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
           style={{
             border: '2px dashed var(--border-color)',
-            borderRadius: '12px',
+            borderRadius: 'var(--radius-lg)',
             padding: '2.5rem 1rem',
             textAlign: 'center',
             cursor: 'pointer',
-            background: '#f8fafc',
+            background: 'var(--color-bg-subtle)',
             transition: 'border-color 0.2s ease'
           }}
           onDragOver={(e) => e.preventDefault()}
@@ -118,12 +130,13 @@ export default function ImageOCRCheck({ onAnalyze, loading }) {
             e.preventDefault();
             if (e.dataTransfer.files?.[0]) processSelectedFile(e.dataTransfer.files[0]);
           }}
+          aria-label="Upload screenshot drop zone. Click or drag file here."
         >
-          <Upload size={36} style={{ color: 'var(--primary)', margin: '0 auto 0.75rem' }} />
-          <div style={{ fontWeight: 600, fontSize: '0.98rem', color: '#1e293b', marginBottom: '0.25rem' }}>
+          <Upload size={36} style={{ color: 'var(--primary)', margin: '0 auto 0.75rem' }} aria-hidden="true" />
+          <div style={{ fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-base)', color: 'var(--color-text-primary)', marginBottom: '0.25rem' }}>
             Click or drag & drop a screenshot here
           </div>
-          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
             Supports PNG, JPG, WebP (Max 5 MB) • Processed transiently on-device
           </div>
           <input
@@ -132,44 +145,47 @@ export default function ImageOCRCheck({ onAnalyze, loading }) {
             accept="image/png,image/jpeg,image/webp,image/bmp"
             onChange={handleFileChange}
             style={{ display: 'none' }}
+            tabIndex={-1}
+            aria-hidden="true"
           />
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '1.25rem' }}>
           {/* Image Preview Card */}
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', background: '#f8fafc', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', background: 'var(--color-bg-subtle)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
             <img
               src={imagePreview}
               alt="Uploaded screenshot preview"
-              style={{ maxHeight: '110px', maxWidth: '140px', objectFit: 'contain', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+              style={{ maxHeight: '110px', maxWidth: '140px', objectFit: 'contain', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}
             />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' }}>
+              <div style={{ fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)' }}>
                 {imageFile?.name}
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                {(imageFile?.size / 1024).toFixed(1)} KB
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
+                {imageFile ? `${(imageFile.size / 1024).toFixed(1)} KB` : ''}
               </div>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={handleReset}
-                className="btn btn-secondary"
-                style={{ marginTop: '0.4rem', padding: '0.25rem 0.65rem', fontSize: '0.8rem', minHeight: '32px' }}
+                leftIcon={RotateCcw}
+                style={{ marginTop: '0.4rem', padding: '0.25rem 0.65rem', fontSize: 'var(--font-size-xs)', minHeight: '32px' }}
               >
-                <RotateCcw size={13} /> Change Image
-              </button>
+                Change Image
+              </Button>
             </div>
           </div>
 
           {/* OCR Processing Progress */}
           {isProcessingOcr && (
-            <div style={{ padding: '1rem', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', textAlign: 'center' }}>
-              <Loader2 size={24} className="animate-spin" style={{ color: 'var(--primary)', margin: '0 auto 0.5rem', animation: 'spin 1s linear infinite' }} />
-              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1e40af' }}>
+            <div style={{ padding: '1rem', background: 'var(--color-primary-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-primary-200)', textAlign: 'center' }}>
+              <LoadingSpinner size={24} label={`Extracting text on-device... (${ocrProgress}%)`} />
+              <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-primary-800)', marginTop: '0.5rem' }}>
                 Extracting text on-device... ({ocrProgress}%)
               </div>
-              <div style={{ fontSize: '0.78rem', color: '#3b82f6', marginTop: '0.2rem' }}>
-                Your image is not sent to external servers. Optical character recognition runs in your browser.
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-primary-600)', marginTop: '0.2rem' }}>
+                Your image is not sent to external servers. Optical character recognition runs entirely in your browser.
               </div>
             </div>
           )}
@@ -177,52 +193,51 @@ export default function ImageOCRCheck({ onAnalyze, loading }) {
       )}
 
       {errorMessage && (
-        <div style={{ padding: '0.75rem 1rem', background: '#fef2f2', border: '1px solid #fca5a5', color: '#991b1b', borderRadius: '8px', margin: '0.75rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem' }}>
-          <AlertCircle size={16} style={{ flexShrink: 0 }} />
-          <span>{errorMessage}</span>
-        </div>
+        <Alert variant="error" onDismiss={() => setErrorMessage(null)}>
+          {errorMessage}
+        </Alert>
       )}
 
       {/* Review and Edit Extracted Text */}
       {extractedText && !isProcessingOcr && (
         <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-            <label className="form-label" htmlFor="extracted-ocr-text">
-              Review and Edit Extracted Text:
-            </label>
-            <span style={{ fontSize: '0.78rem', color: '#059669', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <CheckCircle2 size={14} /> Extraction Complete
+            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-success-700)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <CheckCircle2 size={14} aria-hidden="true" /> Extraction Complete
             </span>
           </div>
-          <p className="form-help">
-            Verify the extracted text below. Make any necessary corrections or remove accidental personal numbers before checking safety.
-          </p>
 
-          <textarea
+          <Textarea
             id="extracted-ocr-text"
-            className="text-area"
+            label="Review and Edit Extracted Text:"
+            helperText="Verify the extracted text below. Make any necessary corrections or remove accidental personal numbers before checking safety."
             value={extractedText}
             onChange={(e) => setExtractedText(e.target.value)}
             rows={5}
             required
+            showCount
           />
 
           <div className="btn-row">
-            <button
+            <Button
               type="submit"
-              className="btn btn-primary"
+              variant="primary"
               disabled={extractedText.trim().length < 3 || loading}
+              loading={loading}
+              loadingText="Analyzing..."
+              leftIcon={Send}
             >
-              {loading ? 'Analyzing...' : <><Send size={18} /> Analyze Extracted Text</>}
-            </button>
-            <button
+              Analyze Extracted Text
+            </Button>
+            <Button
               type="button"
-              className="btn btn-secondary"
+              variant="secondary"
               onClick={handleReset}
               disabled={loading}
+              leftIcon={RotateCcw}
             >
-              <RotateCcw size={16} /> Reset
-            </button>
+              Reset
+            </Button>
           </div>
         </form>
       )}

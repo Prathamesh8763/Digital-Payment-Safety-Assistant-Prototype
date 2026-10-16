@@ -1,7 +1,12 @@
-import React from 'react';
-import { History, Trash2, Download, AlertTriangle, ShieldCheck, ShieldAlert, ArrowLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { History, Trash2, Download, ArrowLeft } from 'lucide-react';
+import Button from './ui/Button';
+import Badge from './ui/Badge';
+import ConfirmDialog from './ui/ConfirmDialog';
 
 export default function HistoryDrawer({ history, onDeleteItem, onClearAll, onSelectHistoryItem, onClose }) {
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
   const handleExportJson = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -12,56 +17,58 @@ export default function HistoryDrawer({ history, onDeleteItem, onClearAll, onSel
     downloadAnchor.remove();
   };
 
-  const getRiskBadge = (level) => {
-    if (level === 'HIGH') return <span className="risk-meter" style={{ background: '#fee2e2', color: '#991b1b' }}>HIGH RISK</span>;
-    if (level === 'MEDIUM') return <span className="risk-meter" style={{ background: '#fef3c7', color: '#92400e' }}>MEDIUM RISK</span>;
-    return <span className="risk-meter" style={{ background: '#d1fae5', color: '#065f46' }}>LOW RISK</span>;
+  const handleConfirmClear = () => {
+    setIsConfirmOpen(false);
+    onClearAll();
   };
 
   return (
-    <div className="card" style={{ marginTop: '1.5rem', animation: 'fadeIn 0.25s ease' }}>
+    <div className="history-drawer-container" aria-label="Local Analysis History">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1.1rem', color: '#1e293b' }}>
-          <History size={20} style={{ color: 'var(--primary)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'var(--font-weight-bold)', fontSize: 'var(--font-size-lg)', color: 'var(--color-text-primary)' }}>
+          <History size={20} style={{ color: 'var(--primary)' }} aria-hidden="true" />
           Local Analysis History & Saved Reports
         </div>
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={onClose}
-          className="btn btn-secondary"
-          style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', minHeight: '32px' }}
+          leftIcon={ArrowLeft}
+          style={{ padding: '0.35rem 0.75rem', fontSize: 'var(--font-size-xs)', minHeight: '32px' }}
         >
-          <ArrowLeft size={14} /> Back
-        </button>
+          Back
+        </Button>
       </div>
 
-      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', background: '#f8fafc', padding: '0.65rem 0.85rem', borderRadius: '6px', border: '1px solid var(--border-light)' }}>
+      <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', marginBottom: '1rem', background: 'var(--color-bg-subtle)', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
         🔒 <strong>Local-First Storage:</strong> Analysis summaries are stored only on your browser's local device storage. Raw credentials, full passwords, and payment secrets are never stored.
       </div>
 
       {(!history || history.length === 0) ? (
-        <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+        <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>
           No saved analyses yet. Completed safety checks will appear here automatically.
         </div>
       ) : (
         <>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={handleExportJson}
-              className="btn btn-secondary"
-              style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', minHeight: '32px' }}
+              leftIcon={Download}
+              style={{ padding: '0.35rem 0.75rem', fontSize: 'var(--font-size-xs)', minHeight: '32px' }}
             >
-              <Download size={13} /> Export Report (JSON)
-            </button>
-            <button
+              Export Report (JSON)
+            </Button>
+            <Button
               type="button"
-              onClick={onClearAll}
-              className="btn btn-secondary"
-              style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', minHeight: '32px', color: '#991b1b' }}
+              variant="destructive"
+              onClick={() => setIsConfirmOpen(true)}
+              leftIcon={Trash2}
+              style={{ padding: '0.35rem 0.75rem', fontSize: 'var(--font-size-xs)', minHeight: '32px' }}
             >
-              <Trash2 size={13} /> Clear All History
-            </button>
+              Clear All History
+            </Button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -69,9 +76,9 @@ export default function HistoryDrawer({ history, onDeleteItem, onClearAll, onSel
               <div
                 key={item.id}
                 style={{
-                  background: 'white',
+                  background: 'var(--color-bg-surface)',
                   border: '1px solid var(--border-light)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-md)',
                   padding: '0.85rem 1rem',
                   display: 'flex',
                   alignItems: 'flex-start',
@@ -79,21 +86,33 @@ export default function HistoryDrawer({ history, onDeleteItem, onClearAll, onSel
                   gap: '0.75rem'
                 }}
               >
-                <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => onSelectHistoryItem(item)}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                    {getRiskBadge(item.risk_level)}
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <div
+                  style={{ flex: 1, cursor: 'pointer' }}
+                  onClick={() => onSelectHistoryItem(item)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectHistoryItem(item);
+                    }
+                  }}
+                  aria-label={`View analysis from ${new Date(item.timestamp).toLocaleString()}: ${item.summary}`}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                    <Badge level={item.risk_level} size="sm" />
+                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
                       {new Date(item.timestamp).toLocaleString()}
                     </span>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>
+                    <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-secondary)' }}>
                       ({item.type || 'Text Check'})
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1e293b', marginBottom: '0.2rem' }}>
+                  <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', marginBottom: '0.2rem' }}>
                     {item.summary}
                   </div>
                   {item.sample_snippet && (
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                       "{item.sample_snippet}"
                     </div>
                   )}
@@ -103,22 +122,37 @@ export default function HistoryDrawer({ history, onDeleteItem, onClearAll, onSel
                   type="button"
                   onClick={() => onDeleteItem(item.id)}
                   title="Delete this record"
+                  aria-label={`Delete record from ${new Date(item.timestamp).toLocaleString()}`}
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#94a3b8',
+                    color: 'var(--color-text-subtle)',
                     cursor: 'pointer',
                     padding: '0.25rem',
-                    borderRadius: '4px'
+                    borderRadius: 'var(--radius-xs)',
+                    minWidth: '32px',
+                    minHeight: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
-                  onMouseOver={(e) => e.currentTarget.style.color = '#dc2626'}
-                  onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={16} aria-hidden="true" />
                 </button>
               </div>
             ))}
           </div>
+
+          <ConfirmDialog
+            isOpen={isConfirmOpen}
+            title="Clear All History?"
+            message="Are you sure you want to delete all saved safety reports from your browser? This action cannot be undone."
+            confirmLabel="Delete All Records"
+            cancelLabel="Cancel"
+            onConfirm={handleConfirmClear}
+            onCancel={() => setIsConfirmOpen(false)}
+            variant="destructive"
+          />
         </>
       )}
     </div>

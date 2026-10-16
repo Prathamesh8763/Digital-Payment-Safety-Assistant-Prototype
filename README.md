@@ -1,36 +1,43 @@
-# Digital Payment Safety Assistant (V3)
+# Digital Payment Safety Assistant (V4)
 
 [![Python](https://img.shields.io/badge/Python-3.14%2B-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-3.0.0-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF.svg)](https://vitejs.dev)
 [![Extension](https://img.shields.io/badge/Manifest-V3-success.svg)](extension/manifest.json)
+[![Accessibility](https://img.shields.io/badge/Accessibility-WCAG_2.2_AA-blueviolet.svg)](frontend/src/styles/tokens.css)
 [![Evaluation](https://img.shields.io/badge/Benchmark_Accuracy-100%25-brightgreen.svg)](V3_EVALUATION_REPORT.md)
 
 A privacy-conscious digital-payment safety assistant designed to help people recognize fraud, inspect suspicious links and QR codes, pause before taking risky financial actions, and learn safe verification habits.
 
 ---
 
-## 1. V3 New Capabilities & Quality Hardening
+## 1. V4 Architecture & Design System Upgrades
 
-- **Multi-Language Support (FR-05):**
-  - **English**, **हिंदी (Hindi)**, and **Hinglish** (colloquial Hindi-English mix) support.
-  - Indian context translations for risk titles, actionable safety steps, and educational Golden Rules (e.g. *"पिन केवल पैसे भेजने के लिए होता है, पैसे प्राप्त करने के लिए कभी नहीं"*).
-- **Explicit Uncertainty & Evidence Bounds (FR-01 / FR-03):**
-  - Communicates detectable evidence bounds transparently.
-  - Distinguishes *"High risk indicators detected"*, *"Some warning signs found"*, and *"No strong warning signs detected"*.
-  - Explicit warning: **A low-risk score is never presented as proof of safety.**
-  - Privacy-safe reference ID (`REF-TXT-XXXXXX`) generated for every assessment.
-- **Safe User Feedback & Correction Workflow (FR-04):**
-  - Feedback endpoint (`POST /api/feedback`) allows rating assessments (Helpful, Unclear, Appears Incorrect).
-  - Rate-limited and bounded storage. **Never requires or records original messages or credentials.**
-- **Operational Security & Abuse Hardening (FR-09 / FR-11):**
-  - Security headers middleware (`nosniff`, `DENY` clickjacking protection, `strict-origin-when-cross-origin`).
-  - In-memory rate limiting middleware per client IP (120 req/min).
-  - **Privacy-Safe Audit Logging:** Strictly redacts and excludes raw message contents, audio, and credentials from application logs.
-- **V3 Benchmark Evaluation Suite (FR-02):**
-  - Versioned labeled dataset (`backend/tests/evaluation_dataset.json`) with 20 real-world samples.
-  - Automated evaluation script (`backend/tests/evaluate_model.py`) measuring precision, recall, false-positive rate, and breakdown by category and language.
+- **Design Token System (`frontend/src/styles/tokens.css`):**
+  - Semantic color palette: Primary blues, neutral background surfaces, high-contrast text, and distinct semantic risk variables (`--color-danger-*`, `--color-warning-*`, `--color-success-*`, `--color-info-*`).
+  - Spacing scale (`--space-1` to `--space-12`), typography scale, border radii, and elevation shadows.
+  - Accessible focus visible ring (`:focus-visible` with high contrast outline) and `@media (prefers-reduced-motion: reduce)` respect.
+- **Shared UI Component Atoms (`frontend/src/components/ui/`):**
+  - **`Button.jsx`:** Variants (`primary`, `secondary`, `destructive`, `ghost`), size scale (`sm`, `md`, `lg`), accessible touch targets ($\ge 44$px), loading state spinner, and icon support.
+  - **`Input.jsx` & `Textarea.jsx`:** Programmatically linked labels (`htmlFor`), helper text and inline error messages (`aria-describedby`, `aria-invalid`), character counter, and clear focus states.
+  - **`Card.jsx`:** Elevation, consistent padding, and accessible role/landmarks.
+  - **`Badge.jsx`:** Semantic risk badges (`HIGH`, `MEDIUM`, `LOW`, `UNABLE_TO_ASSESS`) featuring paired icons and unambiguous text indicators (non-color cues).
+  - **`Alert.jsx`:** Live region-compliant banners (`role="alert"` for critical errors, `role="status"` for non-critical information).
+  - **`Modal.jsx` & `ConfirmDialog.jsx`:** Native `<dialog>` element utilizing `.showModal()` for automatic background inertia, platform-standard `Esc` light-dismiss, and confirmation for destructive actions (e.g. clearing history).
+  - **`LoadingSpinner.jsx`:** Accessible spinner with `aria-live="polite"` and `sr-only` description.
+- **Centralized API Client Layer (`frontend/src/services/apiClient.js`):**
+  - Centralized request wrapper with 8-second `AbortController` timeout handling.
+  - Browser offline detection (`navigator.onLine === false`) with clear guidance.
+  - Uniform error mapping for HTTP status codes (404, 429 rate limiting, 500 server errors, network drops).
+  - Environment-aware base URL (`VITE_API_BASE_URL`).
+- **Global Error Boundary (`frontend/src/components/ErrorBoundary.jsx`):**
+  - Catches unhandled client-side render exceptions.
+  - Displays a calm, reassuring, non-alarming error recovery screen ensuring user privacy and offering quick retry/reload options.
+- **Honest Uncertainty & Safety Bounds:**
+  - Clearly distinguishes low-risk results from absolute guarantees. "Low Risk" explicitly clarifies that warning signs were not detected while normal caution is always required.
+- **Frontend Test Suite (`frontend/src/test/`):**
+  - Automated tests via Node's native test runner (`node --test`), verifying API client error mappings, timeout behaviors, and payload formatting.
 
 ---
 
@@ -46,11 +53,12 @@ A privacy-conscious digital-payment safety assistant designed to help people rec
 
 ## 3. Technology Stack
 
-- **Backend:** Python + FastAPI + Pydantic + Uvicorn
+- **Backend:** Python 3.14 + FastAPI + Pydantic + Uvicorn
 - **Safety Engine:** Rule-based detection + URL Inspector + QR Service + Language Localizer + Feedback Service
-- **Frontend:** React 19 + Vite + Lucide Icons + Tesseract.js (On-Device OCR) + jsQR (On-Device QR Decoder)
+- **Frontend:** React 19 + Vite 8 + Lucide Icons + Tesseract.js (On-Device OCR) + jsQR (On-Device QR Decoder)
+- **Design System:** Custom CSS tokens (`tokens.css`) + Shared UI atom library (`components/ui/`)
 - **Extension:** Chrome Manifest V3 + Service Worker
-- **Testing:** Pytest (22 unit tests) + Benchmark Evaluator (`evaluate_model.py`)
+- **Testing:** Pytest (22 backend unit tests) + Benchmark Evaluator (`evaluate_model.py`) + Frontend Unit Tests (`node --test`)
 
 ---
 
@@ -80,6 +88,17 @@ Digital Payment Security Assitant/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── ui/              # V4 Shared UI Atom System
+│   │   │   │   ├── Alert.jsx        # Live-region accessible alert banners
+│   │   │   │   ├── Badge.jsx        # Risk badge with non-color status cues
+│   │   │   │   ├── Button.jsx       # Button with variants, sizes & touch targets
+│   │   │   │   ├── Card.jsx         # Card elevation container
+│   │   │   │   ├── ConfirmDialog.jsx# Destructive confirmation modal
+│   │   │   │   ├── Input.jsx        # Accessible text input
+│   │   │   │   ├── LoadingSpinner.jsx # Accessible animated loading spinner
+│   │   │   │   ├── Modal.jsx        # Native HTML <dialog> modal with showModal()
+│   │   │   │   └── Textarea.jsx     # Accessible textarea with character count
+│   │   │   ├── ErrorBoundary.jsx# Global UI crash recovery screen
 │   │   │   ├── Header.jsx       # App bar with Language Selector (EN / HI / Hinglish)
 │   │   │   ├── TextCheck.jsx    # Text check form + VoiceInput
 │   │   │   ├── VoiceInput.jsx   # Web Speech API speech-to-text
@@ -88,9 +107,16 @@ Digital Payment Security Assitant/
 │   │   │   ├── GuidedCheck.jsx  # 5-step guided questionnaire wizard
 │   │   │   ├── HistoryDrawer.jsx# Local-first saved reports & deletion
 │   │   │   ├── FeedbackModal.jsx# User feedback rating and correction form
-│   │   │   └── ResultDisplay.jsx# Color-coded risk meter & uncertainty bounds
-│   │   ├── App.jsx              # V3 tabs, language state & state manager
-│   │   └── index.css            # Responsive styles
+│   │   │   └── ResultDisplay.jsx# Color-coded risk meter & honest uncertainty bounds
+│   │   ├── services/
+│   │   │   └── apiClient.js     # Centralized API client (timeout, offline, error mapping)
+│   │   ├── styles/
+│   │   │   └── tokens.css       # V4 Design tokens (colors, spacing, focus rings)
+│   │   ├── test/
+│   │   │   └── apiClient.test.js# Frontend test suite
+│   │   ├── App.jsx              # V4 navigation tabs & state manager
+│   │   ├── main.jsx             # React root wrapped in ErrorBoundary
+│   │   └── index.css            # Responsive styles importing design tokens
 │   ├── package.json
 │   └── vite.config.js
 ├── extension/
@@ -144,45 +170,34 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 6. Running Automated Tests & Benchmark Evaluation
+## 6. Running Tests & Quality Verification
 
-### 1. Pytest Test Suite (22 unit tests)
+### 1. Frontend Unit Tests (10 tests)
+```powershell
+cd frontend
+npm test
+```
+
+### 2. Frontend Linter (0 warnings, 0 errors)
+```powershell
+cd frontend
+npm run lint
+```
+
+### 3. Frontend Production Build
+```powershell
+cd frontend
+npm run build
+```
+
+### 4. Backend Pytest Suite (22 unit tests)
 ```powershell
 backend\.venv\Scripts\pytest backend\tests -v
 ```
 
-### 2. Benchmark Quality Evaluation
+### 5. Benchmark Quality Evaluation
 ```powershell
 backend\.venv\Scripts\python backend/tests/evaluate_model.py
-```
-Output:
-```text
-=================================================================
-DIGITAL PAYMENT SAFETY ASSISTANT - V3 BENCHMARK EVALUATION
-=================================================================
-Total Test Samples:          20
-Accuracy:                    100.0%
-Precision:                   100.0%
-Recall (Scam Detection):     100.0%
-False Positive Rate:         0.0%
-False Negative Rate:         0.0%
-Legitimate Safe Rate:        100.0%
-
-Results by Category:
-  • Fake KYC / Account Suspension    4/4 correct
-  • Prize / Reward Scam              1/1 correct
-  • Fake Refund Scam                 1/1 correct
-  • Credential Theft (OTP/PIN/CVV)   2/2 correct
-  • Remote Access Takeover           1/1 correct
-  • UPI QR / Collect Scam            1/1 correct
-  • Normal / Legitimate Transaction  7/7 correct
-  • Part-Time Job / Task Scam        1/1 correct
-  • Malicious Link / Phishing        2/2 correct
-
-Results by Language:
-  • en           19/19 correct
-  • hinglish     1/1 correct
-=================================================================
 ```
 
 ---
@@ -190,5 +205,6 @@ Results by Language:
 ## 7. Limitations & Scope
 
 - **Advisory Only:** Risk assessments are an assistance mechanism, not an absolute guarantee.
+- **Honest Uncertainty:** Low risk indicates absence of known scam patterns; vigilance is always required.
 - **No Direct Bank Integration:** Does not intercept transactions or interface with NPCI/banks.
 - **Privacy Assurance:** Never asks for or stores UPI PINs, OTPs, or financial secrets.

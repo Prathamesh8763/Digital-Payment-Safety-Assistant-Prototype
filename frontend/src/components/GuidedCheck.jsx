@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { HelpCircle, Send, RotateCcw, ArrowRight, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Send, RotateCcw, ArrowRight, ArrowLeft } from 'lucide-react';
+import Button from './ui/Button';
 
 export default function GuidedCheck({ onAnalyze, loading }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -55,18 +56,25 @@ export default function GuidedCheck({ onAnalyze, loading }) {
   };
 
   return (
-    <div className="guided-wizard-container">
+    <div className="guided-wizard-container" aria-label="Guided Safety Questionnaire">
       {/* Progress Bar & Step Indicator */}
       <div style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
+          <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)', color: 'var(--primary)' }}>
             Guided Safety Assistant • Step {currentStep} of {totalSteps}
           </span>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
             Answer in your own words — no technical knowledge needed
           </span>
         </div>
-        <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+        <div
+          role="progressbar"
+          aria-valuenow={currentStep}
+          aria-valuemin={1}
+          aria-valuemax={totalSteps}
+          aria-label={`Step ${currentStep} of ${totalSteps}`}
+          style={{ width: '100%', height: '6px', background: 'var(--color-bg-muted)', borderRadius: '3px', overflow: 'hidden' }}
+        >
           <div
             style={{
               width: `${(currentStep / totalSteps) * 100}%`,
@@ -162,13 +170,13 @@ export default function GuidedCheck({ onAnalyze, loading }) {
         {/* Step 4 */}
         {currentStep === 4 && (
           <div className="guided-step">
-            <label className="form-label">
+            <label className="form-label" id="pressure-tactics-legend">
               4. Check any pressure tactics that apply:
             </label>
             <p className="form-help">
               Select all behaviors that occurred during this interaction.
             </p>
-            <div className="checkbox-group">
+            <div className="checkbox-group" role="group" aria-labelledby="pressure-tactics-legend">
               <label className="checkbox-label">
                 <input
                   type="checkbox"
@@ -214,11 +222,11 @@ export default function GuidedCheck({ onAnalyze, loading }) {
             <label className="form-label">
               5. Review Your Answers & Additional Notes:
             </label>
-            <div style={{ background: '#f8fafc', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-light)', marginBottom: '1rem', fontSize: '0.88rem' }}>
+            <div style={{ background: 'var(--color-bg-subtle)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', marginBottom: '1rem', fontSize: 'var(--font-size-sm)' }}>
               <div style={{ marginBottom: '0.35rem' }}><strong>Contact:</strong> {formData.contact_source.replace(/_/g, ' ')}</div>
               <div style={{ marginBottom: '0.35rem' }}><strong>Their Claim:</strong> {formData.sender_claim.replace(/_/g, ' ')}</div>
               <div style={{ marginBottom: '0.35rem' }}><strong>Demanded Action:</strong> {formData.requested_action.replace(/_/g, ' ')}</div>
-              <div style={{ marginBottom: '0.35rem' }}>
+              <div>
                 <strong>Warning Flags:</strong> {formData.has_urgency_pressure ? 'Urgency pressure' : ''}{formData.demands_money ? ', Demanded money' : ''}{formData.asks_sensitive_data ? ', Asked credentials' : ''}{(!formData.has_urgency_pressure && !formData.demands_money && !formData.asks_sensitive_data) ? 'None reported' : ''}
               </div>
             </div>
@@ -241,42 +249,48 @@ export default function GuidedCheck({ onAnalyze, loading }) {
         {/* Navigation Buttons */}
         <div className="btn-row" style={{ marginTop: '1.5rem' }}>
           {currentStep > 1 && (
-            <button
+            <Button
               type="button"
-              className="btn btn-secondary"
+              variant="secondary"
               onClick={handleBack}
               disabled={loading}
+              leftIcon={ArrowLeft}
             >
-              <ArrowLeft size={16} /> Back
-            </button>
+              Back
+            </Button>
           )}
 
           {currentStep < totalSteps ? (
-            <button
+            <Button
               type="button"
-              className="btn btn-primary"
+              variant="primary"
               onClick={handleNext}
+              rightIcon={ArrowRight}
             >
-              Next Step <ArrowRight size={16} />
-            </button>
+              Next Step
+            </Button>
           ) : (
-            <button
+            <Button
               type="submit"
-              className="btn btn-primary"
+              variant="primary"
               disabled={loading}
+              loading={loading}
+              loadingText="Evaluating Answers..."
+              leftIcon={Send}
             >
-              {loading ? 'Evaluating Answers...' : <><Send size={18} /> Analyze Situation</>}
-            </button>
+              Analyze Situation
+            </Button>
           )}
 
-          <button
+          <Button
             type="button"
-            className="btn btn-secondary"
+            variant="secondary"
             onClick={handleReset}
             disabled={loading}
+            leftIcon={RotateCcw}
           >
-            <RotateCcw size={16} /> Reset
-          </button>
+            Reset
+          </Button>
         </div>
       </form>
     </div>

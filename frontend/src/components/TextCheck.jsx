@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Send, RotateCcw, Sparkles, CheckCircle2, Bot } from 'lucide-react';
+import { Send, RotateCcw, Sparkles, Bot } from 'lucide-react';
 import VoiceInput from './VoiceInput';
+import Button from './ui/Button';
+import Textarea from './ui/Textarea';
+import apiClient from '../services/apiClient';
 
 const FALLBACK_SCENARIOS = [
   {
@@ -59,17 +62,20 @@ export default function TextCheck({ onAnalyze, loading }) {
   const [scenarios, setScenarios] = useState(FALLBACK_SCENARIOS);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/scenarios')
-      .then((res) => {
-        if (res.ok) return res.json();
-        return null;
-      })
+    let isMounted = true;
+    apiClient.fetchScenarios()
       .then((data) => {
-        if (data && Array.isArray(data) && data.length > 0) {
+        if (isMounted && data && Array.isArray(data) && data.length > 0) {
           setScenarios(data);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Fallback scenarios already set as default
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleSubmit = (e) => {
@@ -91,26 +97,21 @@ export default function TextCheck({ onAnalyze, loading }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="text-check-form">
-      <label htmlFor="situation-text" className="form-label">
-        Describe what happened or paste the suspicious message:
-      </label>
-      <p className="form-help">
-        Include what the person claimed and asked you to do. (Never include real PINs, passwords, or full card details!)
-      </p>
-
-      {/* Voice input component */}
-      <VoiceInput onTranscriptReady={handleVoiceTranscript} disabled={loading} />
-
-      <textarea
+    <form onSubmit={handleSubmit} className="text-check-form" aria-label="Suspicious message analysis form">
+      <Textarea
         id="situation-text"
-        className="text-area"
+        label="Describe what happened or paste the suspicious message:"
+        helperText="Include what the person claimed and asked you to do. (Never include real PINs, passwords, or full card details!)"
         placeholder="Example: Someone called me saying they are from my bank. They said my account will be blocked today unless I pay ₹2,000 or share my OTP..."
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={5}
         required
+        showCount
       />
+
+      {/* Voice input component */}
+      <VoiceInput onTranscriptReady={handleVoiceTranscript} disabled={loading} />
 
       {/* Optional AI Enhancement Toggle (FR-03) */}
       <div style={{ margin: '0.85rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -121,42 +122,43 @@ export default function TextCheck({ onAnalyze, loading }) {
           onChange={(e) => setUseAi(e.target.checked)}
           style={{ width: '18px', height: '18px', accentColor: 'var(--primary)', cursor: 'pointer' }}
         />
-        <label htmlFor="ai-toggle" style={{ fontSize: '0.85rem', color: '#334155', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-          <Bot size={15} style={{ color: 'var(--primary)' }} />
-          Enable AI-Assisted Explanation Enhancement (Supplements rule engine; safe fallback if offline)
+        <label
+          htmlFor="ai-toggle"
+          style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+        >
+          <Bot size={15} style={{ color: 'var(--primary)' }} aria-hidden="true" />
+          <span>Enable AI-Assisted Explanation Enhancement (Supplements rule engine; safe fallback if offline)</span>
         </label>
       </div>
 
       <div className="btn-row">
-        <button
+        <Button
           type="submit"
-          className="btn btn-primary"
+          variant="primary"
           disabled={text.trim().length < 3 || loading}
+          loading={loading}
+          loadingText="Analyzing Situation..."
+          leftIcon={Send}
         >
-          {loading ? (
-            'Analyzing Situation...'
-          ) : (
-            <>
-              <Send size={18} /> Check Safety
-            </>
-          )}
-        </button>
+          Check Safety
+        </Button>
 
         {text && (
-          <button
+          <Button
             type="button"
-            className="btn btn-secondary"
+            variant="secondary"
             onClick={handleClear}
             disabled={loading}
+            leftIcon={RotateCcw}
           >
-            <RotateCcw size={16} /> Clear
-          </button>
+            Clear
+          </Button>
         )}
       </div>
 
       <div className="scenarios-section">
         <div className="scenarios-title">
-          <Sparkles size={14} style={{ display: 'inline', marginRight: '4px' }} />
+          <Sparkles size={14} style={{ display: 'inline', marginRight: '4px' }} aria-hidden="true" />
           Try Demonstration Scenarios (Click to test):
         </div>
         <div className="scenarios-grid">
@@ -168,8 +170,8 @@ export default function TextCheck({ onAnalyze, loading }) {
               onClick={() => handleSelectScenario(sc)}
               title={sc.text}
             >
-              {sc.type === 'legitimate' ? '✓ ' : '⚠️ '}
-              {sc.title}
+              <span aria-hidden="true">{sc.type === 'legitimate' ? '✓ ' : '⚠️ '}</span>
+              <span>{sc.title}</span>
             </button>
           ))}
         </div>

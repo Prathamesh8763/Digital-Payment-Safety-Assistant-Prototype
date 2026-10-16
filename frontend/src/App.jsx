@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from './components/Header';
 import TextCheck from './components/TextCheck';
 import GuidedCheck from './components/GuidedCheck';
@@ -6,17 +6,28 @@ import ImageOCRCheck from './components/ImageOCRCheck';
 import UrlQrCheck from './components/UrlQrCheck';
 import HistoryDrawer from './components/HistoryDrawer';
 import ResultDisplay from './components/ResultDisplay';
+import Alert from './components/ui/Alert';
+import Card from './components/ui/Card';
+import apiClient from './services/apiClient';
 import { 
   MessageSquareText, 
   HelpCircle, 
-  AlertCircle, 
   Image as ImageIcon, 
   Link as LinkIcon, 
   History as HistoryIcon 
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8000/api';
 const HISTORY_STORAGE_KEY = 'payment_safety_assistant_history_v2';
+
+function loadStoredHistory() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const saved = localStorage.getItem(HISTORY_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('text'); // 'text' | 'image' | 'url_qr' | 'guided' | 'history'
@@ -24,17 +35,7 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [history, setHistory] = useState([]);
-
-  // Load history from localStorage on startup
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(HISTORY_STORAGE_KEY);
-      if (saved) {
-        setHistory(JSON.parse(saved));
-      }
-    } catch (e) {}
-  }, []);
+  const [history, setHistory] = useState(loadStoredHistory);
 
   // Helper to persist history
   const saveToHistory = (assessment, type, snippet) => {
@@ -53,43 +54,42 @@ export default function App() {
       const updated = [newRecord, ...history].slice(0, 30); // Max 30 records
       setHistory(updated);
       localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
-    } catch (e) {}
+    } catch {
+      // Ignore storage persistence failure
+    }
   };
 
   const handleDeleteHistoryItem = (id) => {
-    const updated = history.filter((item) => item.id !== id);
-    setHistory(updated);
-    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
+    try {
+      const updated = history.filter((item) => item.id !== id);
+      setHistory(updated);
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
+    } catch {
+      // Ignore
+    }
   };
 
   const handleClearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem(HISTORY_STORAGE_KEY);
+    try {
+      setHistory([]);
+      localStorage.removeItem(HISTORY_STORAGE_KEY);
+    } catch {
+      // Ignore
+    }
   };
 
   const handleSelectHistoryItem = (item) => {
     setResult(item.assessment);
   };
 
-  // Text analysis
+  // Text analysis via centralized apiClient
   const handleAnalyzeText = async (payload) => {
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await fetch(`${API_BASE}/check/text`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, language })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Failed to analyze situation. Please check your connection.');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.checkText({ ...payload, language });
       setResult(data);
       saveToHistory(data, 'Text Check', payload.text);
     } catch (err) {
@@ -99,25 +99,14 @@ export default function App() {
     }
   };
 
-  // Guided analysis
+  // Guided analysis via centralized apiClient
   const handleAnalyzeGuided = async (payload) => {
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await fetch(`${API_BASE}/check/guided`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, language })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Failed to analyze answers. Please check your connection.');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.checkGuided({ ...payload, language });
       setResult(data);
       saveToHistory(data, 'Guided Check', `Claim: ${payload.sender_claim}, Action: ${payload.requested_action}`);
     } catch (err) {
@@ -127,25 +116,14 @@ export default function App() {
     }
   };
 
-  // URL inspection
+  // URL inspection via centralized apiClient
   const handleAnalyzeUrl = async (payload) => {
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await fetch(`${API_BASE}/check/url`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, language })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Failed to inspect link.');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.checkUrl({ ...payload, language });
       setResult(data);
       saveToHistory(data, 'Link Inspection', payload.url);
     } catch (err) {
@@ -155,25 +133,14 @@ export default function App() {
     }
   };
 
-  // QR inspection
+  // QR inspection via centralized apiClient
   const handleAnalyzeQr = async (payload) => {
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await fetch(`${API_BASE}/check/qr`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, language })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Failed to analyze QR code.');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.checkQr({ ...payload, language });
       setResult(data);
       saveToHistory(data, 'QR Inspection', payload.payload);
     } catch (err) {
@@ -194,113 +161,118 @@ export default function App() {
 
       <main>
         {!result ? (
-          <div className="card">
-            {/* Primary V3 Navigation Tabs */}
-            <div className="tabs-nav" role="tablist" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))' }}>
+          <Card>
+            {/* Primary Navigation Tabs */}
+            <nav className="tabs-nav" role="tablist" aria-label="Input mode selection">
               <button
                 type="button"
                 role="tab"
+                id="tab-text"
+                aria-controls="panel-text"
                 aria-selected={activeTab === 'text'}
                 className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('text'); setError(null); }}
               >
-                <MessageSquareText size={16} />
-                Text Check
+                <MessageSquareText size={16} aria-hidden="true" />
+                <span>Text Check</span>
               </button>
 
               <button
                 type="button"
                 role="tab"
+                id="tab-image"
+                aria-controls="panel-image"
                 aria-selected={activeTab === 'image'}
                 className={`tab-btn ${activeTab === 'image' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('image'); setError(null); }}
               >
-                <ImageIcon size={16} />
-                Screenshot OCR
+                <ImageIcon size={16} aria-hidden="true" />
+                <span>Screenshot OCR</span>
               </button>
 
               <button
                 type="button"
                 role="tab"
+                id="tab-url_qr"
+                aria-controls="panel-url_qr"
                 aria-selected={activeTab === 'url_qr'}
                 className={`tab-btn ${activeTab === 'url_qr' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('url_qr'); setError(null); }}
               >
-                <LinkIcon size={16} />
-                Link & QR
+                <LinkIcon size={16} aria-hidden="true" />
+                <span>Link & QR</span>
               </button>
 
               <button
                 type="button"
                 role="tab"
+                id="tab-guided"
+                aria-controls="panel-guided"
                 aria-selected={activeTab === 'guided'}
                 className={`tab-btn ${activeTab === 'guided' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('guided'); setError(null); }}
               >
-                <HelpCircle size={16} />
-                "I'm Not Sure"
+                <HelpCircle size={16} aria-hidden="true" />
+                <span>"I'm Not Sure"</span>
               </button>
 
               <button
                 type="button"
                 role="tab"
+                id="tab-history"
+                aria-controls="panel-history"
                 aria-selected={activeTab === 'history'}
                 className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('history'); setError(null); }}
               >
-                <HistoryIcon size={16} />
-                History ({history.length})
+                <HistoryIcon size={16} aria-hidden="true" />
+                <span>History ({history.length})</span>
               </button>
-            </div>
+            </nav>
 
             {error && (
-              <div 
-                style={{ 
-                  background: '#fef2f2', 
-                  border: '1px solid #fca5a5', 
-                  color: '#991b1b', 
-                  padding: '0.75rem 1rem', 
-                  borderRadius: '8px', 
-                  marginBottom: '1.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontSize: '0.9rem'
-                }}
-                role="alert"
-              >
-                <AlertCircle size={18} style={{ flexShrink: 0 }} />
-                <span>{error}</span>
-              </div>
+              <Alert variant="error" onDismiss={() => setError(null)}>
+                {error}
+              </Alert>
             )}
 
             {/* Tab Panels */}
             {activeTab === 'text' && (
-              <TextCheck onAnalyze={handleAnalyzeText} loading={loading} />
+              <div id="panel-text" role="tabpanel" aria-labelledby="tab-text">
+                <TextCheck onAnalyze={handleAnalyzeText} loading={loading} />
+              </div>
             )}
 
             {activeTab === 'image' && (
-              <ImageOCRCheck onAnalyze={handleAnalyzeText} loading={loading} />
+              <div id="panel-image" role="tabpanel" aria-labelledby="tab-image">
+                <ImageOCRCheck onAnalyze={handleAnalyzeText} loading={loading} />
+              </div>
             )}
 
             {activeTab === 'url_qr' && (
-              <UrlQrCheck onAnalyzeUrl={handleAnalyzeUrl} onAnalyzeQr={handleAnalyzeQr} loading={loading} />
+              <div id="panel-url_qr" role="tabpanel" aria-labelledby="tab-url_qr">
+                <UrlQrCheck onAnalyzeUrl={handleAnalyzeUrl} onAnalyzeQr={handleAnalyzeQr} loading={loading} />
+              </div>
             )}
 
             {activeTab === 'guided' && (
-              <GuidedCheck onAnalyze={handleAnalyzeGuided} loading={loading} />
+              <div id="panel-guided" role="tabpanel" aria-labelledby="tab-guided">
+                <GuidedCheck onAnalyze={handleAnalyzeGuided} loading={loading} />
+              </div>
             )}
 
             {activeTab === 'history' && (
-              <HistoryDrawer
-                history={history}
-                onDeleteItem={handleDeleteHistoryItem}
-                onClearAll={handleClearHistory}
-                onSelectHistoryItem={handleSelectHistoryItem}
-                onClose={() => setActiveTab('text')}
-              />
+              <div id="panel-history" role="tabpanel" aria-labelledby="tab-history">
+                <HistoryDrawer
+                  history={history}
+                  onDeleteItem={handleDeleteHistoryItem}
+                  onClearAll={handleClearHistory}
+                  onSelectHistoryItem={handleSelectHistoryItem}
+                  onClose={() => setActiveTab('text')}
+                />
+              </div>
             )}
-          </div>
+          </Card>
         ) : (
           <ResultDisplay result={result} onReset={handleReset} />
         )}
@@ -308,10 +280,10 @@ export default function App() {
 
       <footer className="app-footer">
         <p>
-          Digital Payment Safety Assistant • V3 Quality & Resilience Platform
+          Digital Payment Safety Assistant • V4 Design System & Accessible Architecture
         </p>
-        <p style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}>
-          Rule-Based Engine with Uncertainty Bounds • Multi-Language Support (EN/HI/Hinglish) • Zero Credential Retention
+        <p style={{ marginTop: '0.25rem', fontSize: 'var(--font-size-xs)' }}>
+          Rule-Based Engine with Uncertainty Bounds • Multi-Language Support (EN/HI/Hinglish) • Zero Credential Retention • WCAG 2.2 AA Conformance
         </p>
       </footer>
     </div>

@@ -1,22 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Square, AlertCircle, Check } from 'lucide-react';
+import { Mic, Square, Check } from 'lucide-react';
+import Button from './ui/Button';
+import Alert from './ui/Alert';
+
+/**
+ * Check if Web Speech API is supported
+ */
+function getSpeechRecognition() {
+  if (typeof window === 'undefined') return null;
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
 
 export default function VoiceInput({ onTranscriptReady, disabled }) {
+  const SpeechRecognitionAPI = getSpeechRecognition();
+  const isSupported = Boolean(SpeechRecognitionAPI);
+
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [supported, setSupported] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
   const recognitionRef = useRef(null);
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setSupported(false);
-      return;
-    }
+    if (!SpeechRecognitionAPI) return;
 
     try {
-      const recognition = new SpeechRecognition();
+      const recognition = new SpeechRecognitionAPI();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-IN'; // Indian English / general English default
@@ -44,19 +52,23 @@ export default function VoiceInput({ onTranscriptReady, disabled }) {
 
       recognitionRef.current = recognition;
     } catch (err) {
-      setSupported(false);
+      console.warn('SpeechRecognition initialization error:', err);
     }
 
     return () => {
       if (recognitionRef.current) {
-        try { recognitionRef.current.abort(); } catch (e) {}
+        try {
+          recognitionRef.current.abort();
+        } catch {
+          // Ignore cleanup errors
+        }
       }
     };
-  }, []);
+  }, [SpeechRecognitionAPI]);
 
   const handleToggleRecord = () => {
     setErrorMsg(null);
-    if (!supported) {
+    if (!isSupported || !recognitionRef.current) {
       setErrorMsg('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
       return;
     }
@@ -64,14 +76,16 @@ export default function VoiceInput({ onTranscriptReady, disabled }) {
     if (isRecording) {
       try {
         recognitionRef.current.stop();
-      } catch (e) {}
+      } catch {
+        // Ignore stop error
+      }
       setIsRecording(false);
     } else {
       setTranscript('');
       try {
         recognitionRef.current.start();
         setIsRecording(true);
-      } catch (err) {
+      } catch {
         setErrorMsg('Could not access microphone. Ensure permissions are granted.');
         setIsRecording(false);
       }
@@ -85,76 +99,71 @@ export default function VoiceInput({ onTranscriptReady, disabled }) {
     }
   };
 
-  if (!supported) {
+  if (!isSupported) {
     return (
-      <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.5rem 0' }}>
-        🎙️ Voice speech recognition available in Chrome, Edge, Safari, and Android browsers.
+      <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', margin: '0.5rem 0' }}>
+        🎙️ Voice speech recognition is available in Chrome, Edge, Safari, and Android browsers.
       </div>
     );
   }
 
   return (
-    <div style={{ margin: '0.75rem 0', padding: '0.75rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
+    <div style={{ margin: '0.75rem 0', padding: '0.75rem', background: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <button
+        <Button
           type="button"
           onClick={handleToggleRecord}
           disabled={disabled}
-          className="btn"
+          variant={isRecording ? 'destructive' : 'secondary'}
+          leftIcon={isRecording ? Square : Mic}
           style={{
-            background: isRecording ? '#dc2626' : '#475569',
-            color: 'white',
-            padding: '0.45rem 0.9rem',
-            fontSize: '0.85rem',
+            padding: '0.4rem 0.9rem',
+            fontSize: 'var(--font-size-xs)',
             minHeight: '38px',
-            borderRadius: '20px'
+            borderRadius: 'var(--radius-full)'
           }}
+          aria-pressed={isRecording}
         >
-          {isRecording ? (
-            <>
-              <Square size={14} style={{ fill: 'white' }} /> Stop Recording (Listening...)
-            </>
-          ) : (
-            <>
-              <Mic size={14} /> Speak Suspicious Message (Voice Input)
-            </>
-          )}
-        </button>
+          {isRecording ? 'Stop Recording (Listening...)' : 'Speak Suspicious Message (Voice Input)'}
+        </Button>
 
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
           🔒 Privacy Notice: Speech is transcribed locally via browser API. Audio is never sent to external servers.
         </span>
       </div>
 
       {isRecording && (
-        <div style={{ marginTop: '0.5rem', color: '#dc2626', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#dc2626', animation: 'pulse 1s infinite' }}></span>
-          Microphone active. Speak what the caller or message said...
+        <div style={{ marginTop: '0.5rem', color: 'var(--danger)', fontSize: 'var(--font-size-xs)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)', display: 'inline-block' }} aria-hidden="true"></span>
+          <span>Microphone active. Speak what the caller or message claimed...</span>
         </div>
       )}
 
       {errorMsg && (
-        <div style={{ marginTop: '0.5rem', color: '#991b1b', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-          <AlertCircle size={14} /> {errorMsg}
+        <div style={{ marginTop: '0.5rem' }}>
+          <Alert variant="error" onDismiss={() => setErrorMsg(null)}>
+            {errorMsg}
+          </Alert>
         </div>
       )}
 
       {transcript && !isRecording && (
-        <div style={{ marginTop: '0.65rem', padding: '0.5rem', background: 'white', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+        <div style={{ marginTop: '0.65rem', padding: '0.75rem', background: 'var(--color-bg-surface)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
             Review Transcribed Text:
           </div>
-          <p style={{ fontSize: '0.88rem', color: '#1e293b', fontStyle: 'italic', marginBottom: '0.5rem' }}>
+          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontStyle: 'italic', marginBottom: '0.5rem' }}>
             "{transcript}"
           </p>
-          <button
+          <Button
             type="button"
+            variant="primary"
             onClick={handleApplyTranscript}
-            className="btn btn-primary"
-            style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', minHeight: '32px' }}
+            leftIcon={Check}
+            style={{ padding: '0.35rem 0.75rem', fontSize: 'var(--font-size-xs)', minHeight: '36px' }}
           >
-            <Check size={14} /> Insert into Message Box
-          </button>
+            Insert into Message Box
+          </Button>
         </div>
       )}
     </div>

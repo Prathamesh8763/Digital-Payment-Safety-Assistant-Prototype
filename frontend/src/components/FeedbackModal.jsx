@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ThumbsUp, ThumbsDown, HelpCircle, Send, CheckCircle2, AlertCircle } from 'lucide-react';
-
-const API_BASE = 'http://localhost:8000/api';
+import { ThumbsUp, ThumbsDown, HelpCircle, Send, CheckCircle2 } from 'lucide-react';
+import apiClient from '../services/apiClient';
+import Button from './ui/Button';
+import Alert from './ui/Alert';
 
 export default function FeedbackModal({ referenceId, assessmentType }) {
   const [rating, setRating] = useState(null); // 'helpful' | 'unclear' | 'appears_incorrect'
@@ -18,25 +19,16 @@ export default function FeedbackModal({ referenceId, assessmentType }) {
     setErrorMessage(null);
 
     try {
-      const response = await fetch(`${API_BASE}/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reference_id: referenceId,
-          assessment_type: assessmentType || 'text',
-          feedback_rating: rating,
-          feedback_category: category,
-          comments: comments.trim() || undefined
-        })
+      await apiClient.submitFeedback({
+        reference_id: referenceId,
+        assessment_type: assessmentType || 'text',
+        feedback_rating: rating,
+        feedback_category: category,
+        comments: comments.trim() || undefined
       });
 
-      if (!response.ok) {
-        throw new Error('Could not submit feedback.');
-      }
-
-      const data = await response.json();
       setSubmitted(true);
-    } catch (err) {
+    } catch {
       setErrorMessage('Feedback submission error. Please try again later.');
     } finally {
       setIsSubmitting(false);
@@ -45,19 +37,34 @@ export default function FeedbackModal({ referenceId, assessmentType }) {
 
   if (submitted) {
     return (
-      <div style={{ marginTop: '1.25rem', padding: '0.85rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontSize: '0.88rem' }}>
-        <CheckCircle2 size={18} />
+      <div
+        role="status"
+        aria-live="polite"
+        style={{
+          marginTop: '1.25rem',
+          padding: '0.85rem',
+          background: 'var(--color-success-50)',
+          border: '1px solid var(--color-success-200)',
+          borderRadius: 'var(--radius-md)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          color: 'var(--color-success-800)',
+          fontSize: 'var(--font-size-sm)'
+        }}
+      >
+        <CheckCircle2 size={18} aria-hidden="true" />
         <span>Thank you! Your feedback helps us continuously improve safety detection without collecting personal credentials.</span>
       </div>
     );
   }
 
   return (
-    <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#f8fafc', border: '1px solid var(--border-light)', borderRadius: '10px' }}>
-      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#1e293b', marginBottom: '0.35rem' }}>
+    <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--color-bg-subtle)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-lg)' }}>
+      <div style={{ fontWeight: 'var(--font-weight-bold)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', marginBottom: '0.35rem' }}>
         Was this safety assessment helpful?
       </div>
-      <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+      <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
         Your feedback helps improve our rule-based engine. We never collect messages, audio, or credentials with feedback.
       </p>
 
@@ -67,27 +74,30 @@ export default function FeedbackModal({ referenceId, assessmentType }) {
           type="button"
           onClick={() => setRating('helpful')}
           className={`btn ${rating === 'helpful' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ padding: '0.4rem 0.8rem', fontSize: '0.82rem', minHeight: '34px', borderRadius: '6px' }}
+          style={{ padding: '0.4rem 0.8rem', fontSize: 'var(--font-size-xs)', minHeight: '36px', borderRadius: 'var(--radius-sm)' }}
+          aria-pressed={rating === 'helpful'}
         >
-          <ThumbsUp size={14} /> Helpful & Clear
+          <ThumbsUp size={14} aria-hidden="true" /> Helpful & Clear
         </button>
 
         <button
           type="button"
           onClick={() => setRating('unclear')}
           className={`btn ${rating === 'unclear' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ padding: '0.4rem 0.8rem', fontSize: '0.82rem', minHeight: '34px', borderRadius: '6px' }}
+          style={{ padding: '0.4rem 0.8rem', fontSize: 'var(--font-size-xs)', minHeight: '36px', borderRadius: 'var(--radius-sm)' }}
+          aria-pressed={rating === 'unclear'}
         >
-          <HelpCircle size={14} /> Unclear / Confusing
+          <HelpCircle size={14} aria-hidden="true" /> Unclear / Confusing
         </button>
 
         <button
           type="button"
           onClick={() => setRating('appears_incorrect')}
           className={`btn ${rating === 'appears_incorrect' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ padding: '0.4rem 0.8rem', fontSize: '0.82rem', minHeight: '34px', borderRadius: '6px' }}
+          style={{ padding: '0.4rem 0.8rem', fontSize: 'var(--font-size-xs)', minHeight: '36px', borderRadius: 'var(--radius-sm)' }}
+          aria-pressed={rating === 'appears_incorrect'}
         >
-          <ThumbsDown size={14} /> Appears Incorrect
+          <ThumbsDown size={14} aria-hidden="true" /> Appears Incorrect
         </button>
       </div>
 
@@ -95,12 +105,13 @@ export default function FeedbackModal({ referenceId, assessmentType }) {
         <form onSubmit={handleSubmit} style={{ animation: 'fadeIn 0.2s ease' }}>
           {(rating === 'unclear' || rating === 'appears_incorrect') && (
             <div style={{ marginBottom: '0.65rem' }}>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+              <label htmlFor="feedback-category-select" style={{ display: 'block', fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.25rem' }}>
                 Why does it seem incorrect or unclear?
               </label>
               <select
+                id="feedback-category-select"
                 className="guided-select"
-                style={{ padding: '0.45rem', minHeight: '36px', fontSize: '0.85rem' }}
+                style={{ padding: '0.45rem', minHeight: '38px', fontSize: 'var(--font-size-sm)' }}
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
@@ -113,13 +124,14 @@ export default function FeedbackModal({ referenceId, assessmentType }) {
           )}
 
           <div style={{ marginBottom: '0.75rem' }}>
-            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+            <label htmlFor="feedback-comments-input" style={{ display: 'block', fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.25rem' }}>
               Additional Remarks (Optional - Never include PINs, passwords, or personal details):
             </label>
             <input
               type="text"
+              id="feedback-comments-input"
               className="guided-select"
-              style={{ padding: '0.45rem', minHeight: '36px', fontSize: '0.85rem' }}
+              style={{ padding: '0.45rem', minHeight: '38px', fontSize: 'var(--font-size-sm)' }}
               placeholder="e.g. This was an official utility bill reminder..."
               value={comments}
               onChange={(e) => setComments(e.target.value)}
@@ -128,19 +140,22 @@ export default function FeedbackModal({ referenceId, assessmentType }) {
           </div>
 
           {errorMessage && (
-            <div style={{ color: '#991b1b', fontSize: '0.82rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <AlertCircle size={14} /> {errorMessage}
-            </div>
+            <Alert variant="error" onDismiss={() => setErrorMessage(null)}>
+              {errorMessage}
+            </Alert>
           )}
 
-          <button
+          <Button
             type="submit"
-            className="btn btn-primary"
+            variant="primary"
             disabled={isSubmitting}
-            style={{ padding: '0.45rem 1rem', fontSize: '0.82rem', minHeight: '34px' }}
+            loading={isSubmitting}
+            loadingText="Sending Feedback..."
+            leftIcon={Send}
+            style={{ padding: '0.45rem 1rem', fontSize: 'var(--font-size-xs)', minHeight: '38px' }}
           >
-            {isSubmitting ? 'Sending Feedback...' : <><Send size={14} /> Submit Feedback</>}
-          </button>
+            Submit Feedback
+          </Button>
         </form>
       )}
     </div>
