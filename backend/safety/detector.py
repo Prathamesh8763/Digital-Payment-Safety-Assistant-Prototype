@@ -22,10 +22,14 @@ URGENCY_PATTERNS = [
 FEAR_THREAT_PATTERNS = [
     (r"\b(account\s+(will\s+be\s+)?(blocked|frozen|suspended|deactivated|closed|stopped))\b", "Account blocking threat"),
     (r"\b(kyc\s+(suspended|expired|failed|pending|not\s+updated|incomplete))\b", "KYC expiry / suspension claim"),
-    (r"\b(electricity\s+(will\s+be\s+)?(disconnected|cut\s+off|cut|stopped))\b", "Utility disconnection threat"),
+    (r"\b(electricity\s+(connection\s+|power\s+)?(will\s+be\s+)?(disconnected|cut\s+off|cut|stopped))\b", "Utility disconnection threat"),
     (r"\b(sim\s+(card\s+)?(blocked|deactivated|suspended))\b", "SIM card deactivation threat"),
     (r"\b(police\s+complaint|arrest\s+warrant|legal\s+action|court\s+notice|cbi|customs|cyber\s+crime)\b", "Legal / Law enforcement intimidation"),
     (r"\b(penalty|fine|heavy\s+charges)\s+(will\s+be\s+)?(deducted|imposed|charged)\b", "Financial penalty threat")
+]
+
+JOB_TASK_PATTERNS = [
+    (r"\b(part[-\s]?time\s+job|earn\s+(₹|rs\.?|inr)?\s*\d+\s*(daily|per\s+day|every\s+day)|liking\s+(youtube\s+)?videos|task\s+based\s+earning|work\s+from\s+home\s+earning)\b", "Part-time job / Task investment manipulation")
 ]
 
 IMPERSONATION_PATTERNS = [
@@ -238,6 +242,22 @@ def detect_indicators_in_text(text: str) -> Dict[str, Any]:
             "matched_clues": list(set(link_clues))
         })
         detected_categories.add("Malicious Link / Phishing")
+
+    # 10. Job & Task Scams
+    job_clues = []
+    for pattern, name in JOB_TASK_PATTERNS:
+        match = re.search(pattern, clean_text, re.IGNORECASE)
+        if match:
+            job_clues.append(name)
+    if job_clues:
+        detected_indicators.append({
+            "id": "job_task_manipulation",
+            "name": "Part-Time Job / Task Scam",
+            "description": "Promises high daily earnings for simple online tasks (e.g. liking videos, rating products) before demanding prepaid deposits.",
+            "severity": "medium",
+            "matched_clues": list(set(job_clues))
+        })
+        detected_categories.add("Part-Time Job / Task Scam")
 
     # 10. Legitimate Transaction Signal
     legit_clues = []

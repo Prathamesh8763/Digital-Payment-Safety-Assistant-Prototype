@@ -5,14 +5,20 @@ import os
 from schemas.safety import (
     TextCheckRequest,
     GuidedCheckRequest,
-    SafetyAssessmentResponse
+    SafetyAssessmentResponse,
+    URLCheckRequest,
+    URLCheckResponse,
+    QRCheckRequest,
+    QRCheckResponse,
+    EvaluationMetrics
 )
 from safety.engine import SafetyEngine
+from tests.evaluate_model import run_benchmark_evaluation
 
 app = FastAPI(
     title="Digital Payment Safety Assistant API",
-    description="Rule-based payment safety analysis and scam prevention assistant",
-    version="1.0.0"
+    description="V2 Multi-Modal Payment Safety, Scam Prevention, and URL/QR Analysis API",
+    version="2.0.0"
 )
 
 # CORS setup
@@ -33,7 +39,7 @@ engine = SafetyEngine()
 def root():
     return {
         "service": "Digital Payment Safety Assistant API",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "documentation": "/docs"
     }
 
@@ -42,23 +48,43 @@ def health_check():
     return {
         "status": "healthy",
         "service": "Digital Payment Safety Assistant API",
-        "version": "1.0.0"
+        "version": "2.0.0"
     }
 
 @app.post("/api/check/text", response_model=SafetyAssessmentResponse)
-def check_text(payload: TextCheckRequest):
+async def check_text(payload: TextCheckRequest):
     if not payload.text or len(payload.text.strip()) < 3:
         raise HTTPException(status_code=400, detail="Please provide a message or description of at least 3 characters.")
-    return engine.analyze_text(payload)
+    return await engine.analyze_text_with_ai_option(payload)
 
 @app.post("/api/check/guided", response_model=SafetyAssessmentResponse)
 def check_guided(payload: GuidedCheckRequest):
     return engine.analyze_guided(payload)
 
+@app.post("/api/check/url", response_model=URLCheckResponse)
+def check_url(payload: URLCheckRequest):
+    if not payload.url or len(payload.url.strip()) < 3:
+        raise HTTPException(status_code=400, detail="Please provide a valid web link or URL.")
+    return engine.analyze_url(payload)
+
+@app.post("/api/check/qr", response_model=QRCheckResponse)
+def check_qr(payload: QRCheckRequest):
+    if not payload.payload or len(payload.payload.strip()) < 1:
+        raise HTTPException(status_code=400, detail="QR payload cannot be empty.")
+    return engine.analyze_qr(payload)
+
+@app.get("/api/evaluation/benchmark", response_model=EvaluationMetrics)
+def get_evaluation_benchmark():
+    """
+    Evaluates the safety engine against the labeled benchmark dataset
+    and returns precision, recall, and false-positive metrics.
+    """
+    return run_benchmark_evaluation()
+
 @app.get("/api/scenarios")
 def get_demonstration_scenarios():
     """
-    Returns the V1 demonstration scenario set specified in PRD Section 19.
+    Returns the V2 expanded demonstration scenario set.
     """
     return [
         {
@@ -102,6 +128,13 @@ def get_demonstration_scenarios():
             "category": "UPI QR / Collect Scam",
             "type": "scam",
             "text": "A buyer on OLX sent me a QR code saying: 'Scan this QR code and enter your UPI PIN to receive ₹3,500 advance payment for your sofa.'"
+        },
+        {
+            "id": "phishing_link_sms",
+            "title": "Bank Phishing Link via SMS",
+            "category": "Malicious Link / Phishing",
+            "type": "scam",
+            "text": "Click this link to update your PAN card and unfreeze your bank account: http://sbi-kyc-verify.top/login.apk"
         },
         {
             "id": "legitimate_tea_stall",

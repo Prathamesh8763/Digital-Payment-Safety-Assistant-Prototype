@@ -1,4 +1,4 @@
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 
 RiskLevel = Literal["LOW", "MEDIUM", "HIGH"]
@@ -9,6 +9,10 @@ class TextCheckRequest(BaseModel):
         min_length=3,
         max_length=2500,
         description="The suspicious message, phone call summary, or payment situation described by the user."
+    )
+    use_ai: bool = Field(
+        default=False,
+        description="Optional flag to request AI-assisted explanation enhancement (with fallback)."
     )
 
 class GuidedCheckRequest(BaseModel):
@@ -41,6 +45,10 @@ class GuidedCheckRequest(BaseModel):
         max_length=1000,
         description="Optional additional context provided by the user."
     )
+    use_ai: bool = Field(
+        default=False,
+        description="Optional flag to request AI-assisted explanation enhancement."
+    )
 
 class DetectedIndicator(BaseModel):
     id: str
@@ -64,7 +72,83 @@ class SafetyAssessmentResponse(BaseModel):
     recommended_actions: List[str]
     educational_concept: EducationalConcept
     is_safe_practice: bool = False
+    ai_enhanced: bool = False
+    ai_analysis_summary: Optional[str] = None
+    confidence_rating: Optional[str] = "Deterministic Rule Baseline"
     disclaimer: str = (
         "This safety assessment is an advisory tool designed to help you pause and verify. "
         "A low-risk score is not a guarantee of safety. Never share your UPI PIN or OTP with anyone."
     )
+
+class URLCheckRequest(BaseModel):
+    url: str = Field(
+        ...,
+        min_length=3,
+        max_length=2000,
+        description="The web address or link found in a suspicious message or email."
+    )
+    context: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Optional context (e.g., 'received via SMS claiming to update KYC')."
+    )
+
+class URLCheckResponse(BaseModel):
+    risk_level: RiskLevel
+    risk_score: int = Field(..., ge=0, le=100)
+    url_submitted: str
+    normalized_url: str
+    domain: str
+    protocol: str
+    is_https: bool
+    is_shortened: bool
+    is_ip_address: bool
+    is_suspicious_tld: bool
+    impersonated_brand: Optional[str] = None
+    indicators: List[DetectedIndicator]
+    why_suspicious: List[str]
+    recommended_actions: List[str]
+    educational_concept: EducationalConcept
+    disclaimer: str = (
+        "Inspected safely without visiting the link. A low-risk result does not guarantee that the destination is safe. "
+        "Always verify official bank and payment websites directly from known sources."
+    )
+
+class QRCheckRequest(BaseModel):
+    payload: str = Field(
+        ...,
+        min_length=1,
+        max_length=4000,
+        description="The decoded payload string from a QR code (e.g. upi://pay?... or web URL)."
+    )
+    context: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Context in which QR was provided (e.g., 'buyer told me to scan to receive money')."
+    )
+
+class QRCheckResponse(BaseModel):
+    risk_level: RiskLevel
+    risk_score: int = Field(..., ge=0, le=100)
+    payload_type: Literal["upi_intent", "url", "text", "unknown"]
+    raw_payload_preview: str
+    parsed_details: Dict[str, Any] = {}
+    indicators: List[DetectedIndicator]
+    why_suspicious: List[str]
+    recommended_actions: List[str]
+    educational_concept: EducationalConcept
+    disclaimer: str = (
+        "QR code inspected safely. You NEVER need to scan a QR code or enter your UPI PIN to receive money. "
+        "Scanning a QR code only initiates an outgoing payment from your account."
+    )
+
+class EvaluationMetrics(BaseModel):
+    total_samples: int
+    accuracy_percentage: float
+    precision_percentage: float
+    recall_percentage: float
+    false_positive_rate: float
+    false_negative_rate: float
+    scam_detection_rate: float
+    legitimate_preservation_rate: float
+    details_by_category: Dict[str, Any]

@@ -4,17 +4,29 @@ from schemas.safety import (
     GuidedCheckRequest,
     SafetyAssessmentResponse,
     DetectedIndicator,
-    EducationalConcept
+    EducationalConcept,
+    URLCheckRequest,
+    URLCheckResponse,
+    QRCheckRequest,
+    QRCheckResponse
 )
 from safety.detector import detect_indicators_in_text
 from safety.risk import calculate_risk
 from safety.recommendations import generate_recommendations
+from safety.url_checker import URLChecker
+from safety.qr_service import QRService
+from safety.ai_analysis import AIAnalysisService
 
 class SafetyEngine:
     """
-    Core rule-based engine that processes either freeform text or guided answers
-    and generates an actionable risk assessment.
+    Core rule-based engine that processes freeform text, guided questionnaires,
+    URLs, and QR payloads, with optional AI enhancement.
     """
+
+    def __init__(self):
+        self.url_checker = URLChecker()
+        self.qr_service = QRService()
+        self.ai_service = AIAnalysisService()
 
     def analyze_text(self, request: TextCheckRequest) -> SafetyAssessmentResponse:
         detection = detect_indicators_in_text(request.text)
@@ -51,8 +63,16 @@ class SafetyEngine:
             why_suspicious=rec_data["why_suspicious"],
             recommended_actions=rec_data["recommended_actions"],
             educational_concept=EducationalConcept(**rec_data["educational_concept"]),
-            is_safe_practice=is_standard_notification
+            is_safe_practice=is_standard_notification,
+            ai_enhanced=False,
+            confidence_rating="Deterministic Rule Baseline"
         )
+
+    async def analyze_text_with_ai_option(self, request: TextCheckRequest) -> SafetyAssessmentResponse:
+        baseline = self.analyze_text(request)
+        if request.use_ai:
+            return await self.ai_service.enhance_assessment(request.text, baseline)
+        return baseline
 
     def analyze_guided(self, request: GuidedCheckRequest) -> SafetyAssessmentResponse:
         guided_indicators: List[Dict[str, Any]] = []
@@ -194,5 +214,13 @@ class SafetyEngine:
             why_suspicious=rec_data["why_suspicious"],
             recommended_actions=rec_data["recommended_actions"],
             educational_concept=EducationalConcept(**rec_data["educational_concept"]),
-            is_safe_practice=is_normal_merchant
+            is_safe_practice=is_normal_merchant,
+            ai_enhanced=False,
+            confidence_rating="Deterministic Rule Baseline"
         )
+
+    def analyze_url(self, request: URLCheckRequest) -> URLCheckResponse:
+        return self.url_checker.analyze_url(request)
+
+    def analyze_qr(self, request: QRCheckRequest) -> QRCheckResponse:
+        return self.qr_service.analyze_payload(request)

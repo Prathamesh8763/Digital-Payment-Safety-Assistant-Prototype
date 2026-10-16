@@ -43,6 +43,12 @@ def calculate_risk(indicators: List[Dict[str, Any]], is_standard_notification: b
     if "fear_threat_manipulation" in indicator_ids and ("urgency_coercion" in indicator_ids or "authority_impersonation" in indicator_ids):
         score = max(score, 78)
 
+    if "untrusted_link_file" in indicator_ids:
+        score = max(score, 75)
+
+    if "job_task_manipulation" in indicator_ids:
+        score = max(score, 45)
+
     # Clamp score to 100
     score = min(score, 100)
 

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "eval_01",
+    "text": "Dear customer, your SBI account will be blocked today within 2 hours. Call 9876543210 or share OTP to update KYC.",
+    "expected_risk": "HIGH",
+    "category": "Fake KYC / Account Suspension"
+  },
+  {
+    "id": "eval_02",
+    "text": "Congratulations! You have won ₹25,000 in lucky draw. Pay ₹500 registration fee first to claim your cash reward.",
+    "expected_risk": "HIGH",
+    "category": "Prize / Reward Scam"
+  },
+  {
+    "id": "eval_03",
+    "text": "I sent you ₹3,000 by mistake instead of ₹300. Please scan this QR code or accept the collect request to refund.",
+    "expected_risk": "HIGH",
+    "category": "Fake Refund Scam"
+  },
+  {
+    "id": "eval_04",
+    "text": "Calling from HDFC customer care. We noticed suspicious debit on your card. Tell me the 6 digit OTP to block transaction.",
+    "expected_risk": "HIGH",
+    "category": "Credential Theft (OTP/PIN/CVV)"
+  },
+  {
+    "id": "eval_05",
+    "text": "Your electricity connection will be disconnected tonight at 9:30 PM due to unpaid bill. Call our officer immediately at 9123456789.",
+    "expected_risk": "HIGH",
+    "category": "Fake KYC / Account Suspension"
+  },
+  {
+    "id": "eval_06",
+    "text": "Please install AnyDesk or QuickSupport app on your phone so our support executive can assist you with your refund.",
+    "expected_risk": "HIGH",
+    "category": "Remote Access Takeover"
+  },
+  {
+    "id": "eval_07",
+    "text": "Scan this QR code and enter your UPI PIN to receive ₹4,500 advance payment for the bicycle on OLX.",
+    "expected_risk": "HIGH",
+    "category": "UPI QR / Collect Scam"
+  },
+  {
+    "id": "eval_08",
+    "text": "Urgent police complaint registered against your SIM card by cyber crime. Pay ₹10,000 penalty immediately to avoid arrest.",
+    "expected_risk": "HIGH",
+    "category": "Fake KYC / Account Suspension"
+  },
+  {
+    "id": "eval_09",
+    "text": "Paid ₹60 at Chai Point via PhonePe. Debited INR 60 from ICICI Bank account.",
+    "expected_risk": "LOW",
+    "category": "Normal / Legitimate Transaction"
+  },
+  {
+    "id": "eval_10",
+    "text": "Paid electricity bill on official app. Spent INR 1250 with receipt ID TXN987654.",
+    "expected_risk": "LOW",
+    "category": "Normal / Legitimate Transaction"
+  },
+  {
+    "id": "eval_11",
+    "text": "Credited INR 45,000 to your account towards monthly salary from employer XYZ Pvt Ltd. Available balance INR 52,100.",
+    "expected_risk": "LOW",
+    "category": "Normal / Legitimate Transaction"
+  },
+  {
+    "id": "eval_12",
+    "text": "Transferred ₹500 to my brother via Google Pay for dinner.",
+    "expected_risk": "LOW",
+    "category": "Normal / Legitimate Transaction"
+  },
+  {
+    "id": "eval_13",
+    "text": "Someone messaged me on WhatsApp asking if I want to earn ₹2,000 daily by liking YouTube videos.",
+    "expected_risk": "MEDIUM",
+    "category": "Unspecified"
+  },
+  {
+    "id": "eval_14",
+    "text": "Click this link to download the updated APK for your netbanking app: bit.ly/bankupdate-app",
+    "expected_risk": "HIGH",
+    "category": "Malicious Link / Phishing"
+  },
+  {
+    "id": "eval_15",
+    "text": "A buyer asked me if I accept payments through PhonePe or Google Pay for my used sofa.",
+    "expected_risk": "LOW",
+    "category": "Normal / Legitimate Transaction"
+  }
+]
