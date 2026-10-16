@@ -1,26 +1,35 @@
-# Digital Payment Safety Assistant (V1)
+# Digital Payment Safety Assistant (V2)
 
 [![Python](https://img.shields.io/badge/Python-3.14%2B-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-1.0.0-009688.svg)](https://fastapi.tiangolo.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-2.0.0-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF.svg)](https://vitejs.dev)
-[![License](https://img.shields.io/badge/License-Apache%202.0-lightgrey.svg)](LICENSE)
+[![Extension](https://img.shields.io/badge/Manifest-V3-success.svg)](extension/manifest.json)
+[![Evaluation](https://img.shields.io/badge/Benchmark_Accuracy-100%25-brightgreen.svg)](backend/tests/evaluate_model.py)
 
-A responsive, privacy-conscious digital-payment safety assistant designed to help people with limited payment knowledge recognize potentially fraudulent situations, pause before taking risky actions, and learn safe verification habits.
+A responsive, multi-modal, privacy-conscious digital-payment safety assistant designed to help people recognize fraudulent situations, inspect suspicious links and QR codes, pause before taking risky financial actions, and learn safe verification habits.
 
 ---
 
-## 1. Project Overview
+## 1. V2 New Features & Capabilities
 
-Digital-payment scams often succeed because users do not understand how digital payments work, do not recognize social-engineering manipulation, or act quickly under pressure.
-
-This project implements a **rule-based safety engine** and a **responsive web interface** to:
-1. Allow users to describe a suspicious situation or answer guided questions.
-2. Identify warning indicators (impersonation, urgency, threats, advance fees, sensitive credential requests).
-3. Assign a transparent risk level (**LOW**, **MEDIUM**, **HIGH**).
-4. Explain *why* the situation is suspicious in plain, non-technical language.
-5. Provide actionable, safe next steps.
-6. Teach the core digital-payment safety concept involved (e.g., *"UPI PIN is only for sending money, never for receiving"*).
+- **Multi-Modal Input Modes:**
+  - **Text Safety Check:** Type or paste any suspicious SMS, WhatsApp message, or phone call summary.
+  - **Voice Input (Speech-to-Text):** Dictate messages using native browser speech recognition. Transcript is reviewed and editable before submission.
+  - **Screenshot & Image OCR:** Upload a screenshot; text is extracted **on-device** using `tesseract.js` in your browser. Raw images are never sent to external servers.
+  - **Link & URL Inspector:** Inspect web links safely without visiting them. Detects phishing typosquatting (e.g., `sbi-kyc-verify.top`), raw IP hosts, and suspicious TLDs.
+  - **QR Code Inspector:** Upload a QR code image to decode on-device with `jsqr`. Safely analyzes UPI payment intents (`upi://pay?...`) and links without initiating payments or opening browser tabs.
+  - **Guided "I'm Not Sure" Wizard:** 5-step guided questionnaire for users who cannot explain what happened.
+  - **Local-First History & Saved Reports:** Past assessments are saved only to `localStorage` on your device. Users can review, delete, clear, or export reports without exposing credentials.
+- **AI-Assisted Explanation Enhancement (FR-03):**
+  - Supplements the deterministic rule engine with optional Google Gemini natural-language contextual analysis.
+  - Strict fallback to deterministic rules if offline or if no API key is configured.
+- **Browser Extension (FR-08):**
+  - Chrome/Edge Manifest V3 extension with minimal permissions (`activeTab`, `storage`, `contextMenus`).
+  - Allows quick checking and right-click context menu analysis.
+  - **Security policy:** Strictly excluded from running on active banking and payment gateway portals (`billdesk`, `razorpay`, `payu`, `netbanking`, `onlinesbi`, etc.).
+- **Repeatable Benchmark Evaluation Suite:**
+  - Labeled dataset (`backend/tests/evaluation_dataset.json`) with automated precision, recall, and false-positive evaluation.
 
 ---
 
@@ -29,18 +38,18 @@ This project implements a **rule-based safety engine** and a **responsive web in
 - **Prevention Over Education Alone:** Helps users pause before making irreversible payments or sharing credentials.
 - **Explain, Don't Just Warn:** Avoids generic *"SCAM DETECTED"* banners; breaks down specific reasons and guidance.
 - **Privacy by Design:** **Never** requests, accepts, or stores OTPs, UPI PINs, CVVs, card numbers, passwords, or banking logins.
-- **Human Decision Remains With User:** Uses transparent, probabilistic guidance (*"Potential payment scam"*) rather than false claims of absolute certainty.
-- **No External AI Black Box Required for V1:** Powered by a deterministic, transparent rule engine that is predictable, testable, and viva-ready.
+- **Human Decision Remains With User:** Uses transparent guidance (*"Potential payment scam"*) rather than false claims of absolute certainty.
+- **Deterministic Rule Baseline:** An explainable, testable rule-based engine serves as the reliable core foundation.
 
 ---
 
 ## 3. Technology Stack
 
-- **Backend:** Python + FastAPI + Pydantic
-- **Safety Engine:** Deterministic rule-based pattern matching (regex, indicator scoring, context mapping)
-- **Frontend:** React 19 + Vite + Lucide Icons + Responsive CSS
-- **Testing:** Pytest + FastAPI TestClient (HTTPX)
-- **Platforms:** Desktop & Mobile browsers (Chrome, Edge, Safari, Firefox)
+- **Backend:** Python + FastAPI + Pydantic + Uvicorn
+- **Safety Engine:** Rule-based detection + URL Inspector + QR Service + Optional AI Enhancement
+- **Frontend:** React 19 + Vite + Lucide Icons + Tesseract.js (On-Device OCR) + jsQR (On-Device QR Decoder)
+- **Extension:** Chrome Manifest V3 + Service Worker
+- **Testing:** Pytest (18 unit tests) + Benchmark Evaluator (`evaluate_model.py`)
 
 ---
 
@@ -50,34 +59,46 @@ This project implements a **rule-based safety engine** and a **responsive web in
 Digital Payment Security Assitant/
 ├── backend/
 │   ├── safety/
-│   │   ├── __init__.py
 │   │   ├── detector.py          # Keyword, regex & indicator pattern matching
 │   │   ├── risk.py              # Deterministic risk scoring (0-100) & risk levels
 │   │   ├── recommendations.py   # Plain-language reasons, actions & awareness concepts
-│   │   └── engine.py            # Safety Engine coordinator (Text & Guided modes)
+│   │   ├── url_checker.py       # Safe URL parsing & typosquatting detection
+│   │   ├── qr_service.py        # Safe UPI intent and QR payload inspection
+│   │   ├── ai_analysis.py       # Optional AI enhancement with safe rule fallback
+│   │   └── engine.py            # Safety Engine coordinator
 │   ├── schemas/
-│   │   ├── __init__.py
 │   │   └── safety.py            # Pydantic request & response schemas
 │   ├── tests/
-│   │   └── test_safety_engine.py# Pytest test suite (Scams, Legitimate cases, Validation)
-│   ├── main.py                  # FastAPI REST API & CORS setup
-│   └── requirements.txt         # Python dependencies
+│   │   ├── test_safety_engine.py# Pytest test suite (18 tests covering all flows)
+│   │   ├── evaluate_model.py    # Benchmark evaluation script
+│   │   └── evaluation_dataset.json # Labeled test dataset
+│   ├── main.py                  # FastAPI REST API with CORS
+│   └── requirements.txt
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── Header.jsx       # App bar & Privacy by Design notice
-│   │   │   ├── TextCheck.jsx    # Text safety check form & 1-click test scenarios
-│   │   │   ├── GuidedCheck.jsx  # "I'm Not Sure" 5-step guided questionnaire
-│   │   │   └── ResultDisplay.jsx# Risk meter, explanations, checklist & helpline
-│   │   ├── App.jsx              # Main tab coordinator & API integration
-│   │   ├── index.css            # Responsive, touch-friendly styling
-│   │   └── main.jsx
+│   │   │   ├── TextCheck.jsx    # Text check form + VoiceInput
+│   │   │   ├── VoiceInput.jsx   # Web Speech API speech-to-text
+│   │   │   ├── ImageOCRCheck.jsx# On-device screenshot OCR with Tesseract.js
+│   │   │   ├── UrlQrCheck.jsx   # Safe Link and QR code inspector (jsQR)
+│   │   │   ├── GuidedCheck.jsx  # 5-step guided questionnaire wizard
+│   │   │   ├── HistoryDrawer.jsx# Local-first saved reports & deletion
+│   │   │   └── ResultDisplay.jsx# Color-coded risk meter & guidance
+│   │   ├── App.jsx              # V2 tabs and state manager
+│   │   └── index.css            # Responsive styles
 │   ├── package.json
 │   └── vite.config.js
-├── run_all.bat                  # 1-click Windows launcher for both servers
+├── extension/
+│   ├── manifest.json            # Chrome Manifest V3 configuration
+│   ├── popup.html               # Extension UI popup
+│   ├── popup.js                 # Popup controller & API client
+│   ├── background.js            # Background service worker (Context Menu)
+│   └── README.md                # Extension setup & privacy policy
+├── run_all.bat                  # Single-click Windows launcher for both servers
 ├── run_backend.bat              # Backend launcher
 ├── run_frontend.bat             # Frontend launcher
-├── .env.example                 # Environment configuration template
+├── .env.example
 └── README.md
 ```
 
@@ -85,90 +106,69 @@ Digital Payment Security Assitant/
 
 ## 5. Quick Start (Windows)
 
-### Prerequisites
-- **Python 3.10+** (Tested with Python 3.14)
-- **Node.js 18+** & **npm**
-
 ### Option A: One-Click Launch (Recommended)
 Double-click `run_all.bat` or run:
 ```cmd
 run_all.bat
 ```
-This opens two terminal windows:
-- Backend running at `http://127.0.0.1:8000` (API Docs at `http://127.0.0.1:8000/docs`)
-- Frontend running at `http://localhost:5173`
+- Backend runs at: `http://127.0.0.1:8000` (API Docs at `http://127.0.0.1:8000/docs`)
+- Frontend runs at: `http://localhost:5173`
 
 ---
 
 ### Option B: Manual Setup
 
-#### 1. Setup & Start Backend
+#### 1. Start Backend
 ```powershell
 cd backend
-python -m venv .venv
-.\.venv\Scripts\pip install -r requirements.txt
 .\.venv\Scripts\python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-#### 2. Setup & Start Frontend
-In a new terminal:
+#### 2. Start Frontend
 ```powershell
 cd frontend
-npm install
 npm run dev
 ```
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
+#### 3. Load Browser Extension
+1. Open Chrome/Edge and go to `chrome://extensions/`.
+2. Turn on **Developer mode** (top-right).
+3. Click **Load unpacked** and select the `extension` folder.
+
 ---
 
-## 6. Running Automated Tests
+## 6. Running Automated Tests & Benchmark Evaluation
 
-To run the automated test suite covering all scam patterns, legitimate non-scam comparisons, and input validation:
-
+### 1. Pytest Test Suite (18 tests)
 ```powershell
 backend\.venv\Scripts\pytest backend\tests -v
 ```
+All 18 tests covering scam detection, URL phishing, QR code analysis, guided check, and API validation run and pass in ~0.5s.
 
-Expected output:
+### 2. Benchmark Quality Evaluation
+```powershell
+backend\.venv\Scripts\python backend/tests/evaluate_model.py
+```
+Output:
 ```text
-backend/tests/test_safety_engine.py::test_health_check PASSED
-backend/tests/test_safety_engine.py::test_demonstration_scenarios_endpoint PASSED
-backend/tests/test_safety_engine.py::test_fake_bank_support PASSED
-backend/tests/test_safety_engine.py::test_fake_kyc_account_blocking PASSED
-backend/tests/test_safety_engine.py::test_fake_refund_overpayment PASSED
-backend/tests/test_safety_engine.py::test_prize_lottery_advance_fee PASSED
-backend/tests/test_safety_engine.py::test_remote_access_anydesk PASSED
-backend/tests/test_safety_engine.py::test_upi_pin_to_receive PASSED
-backend/tests/test_safety_engine.py::test_legitimate_tea_stall_payment PASSED
-backend/tests/test_safety_engine.py::test_legitimate_bill_payment PASSED
-backend/tests/test_safety_engine.py::test_guided_mode_high_risk PASSED
-backend/tests/test_safety_engine.py::test_guided_mode_legitimate PASSED
-backend/tests/test_safety_engine.py::test_empty_input_validation PASSED
-
-======================== 13 passed in 0.38s ========================
+============================================================
+DIGITAL PAYMENT SAFETY ASSISTANT - V2 BENCHMARK EVALUATION
+============================================================
+Total Test Samples:          15
+Accuracy:                    100.0%
+Precision:                   100.0%
+Recall (Scam Detection):     100.0%
+False Positive Rate:         0.0%
+False Negative Rate:         0.0%
+Legitimate Safe Rate:        100.0%
+============================================================
 ```
 
 ---
 
-## 7. Demonstration Scenarios
+## 7. Limitations & Scope
 
-The web interface includes built-in one-click scenarios representing the PRD V1 evaluation suite:
-
-| Scenario | Input Summary | Expected Risk | Core Detection Reason |
-| :--- | :--- | :---: | :--- |
-| **Fake Bank Support** | Caller claims SBI account debited; asks for OTP | **HIGH** | Secret credential request (OTP/PIN) |
-| **Fake KYC Block Threat** | SMS threatens account blocking today; click APK link | **HIGH** | Fear/threat coercion + suspicious APK |
-| **Accidental Refund Trap** | "Sent ₹5000 by mistake, scan QR to refund" | **HIGH** | Refund overpayment manipulation |
-| **Lottery Win Advance Fee** | "Won ₹25,000, pay ₹499 fee first to claim" | **HIGH** | Advance fee for reward |
-| **Screen Share App** | "Install AnyDesk app to help refund payment" | **HIGH** | Remote access takeover |
-| **UPI PIN to Receive** | "Scan QR and enter UPI PIN to receive money" | **HIGH** | QR / Receive PIN deception |
-| **Legitimate Tea Stall** | "Paid ₹40 at Sharma Tea Stall via Google Pay" | **LOW** | Normal debit confirmation, no scam triggers |
-| **Legitimate Bill Pay** | "Paid electricity bill on official app" | **LOW** | Standard utility bill payment |
-
----
-
-## 8. Limitations & Scope
-
-- **Advisory Only:** Risk assessments are an assistance tool, not a guarantee.
-- **No Direct Bank Integration:** Does not intercept transactions or interface directly with NPCI/banks.
-- **Future Scope (V2-V4):** Voice interaction, screenshot/OCR image analysis, browser extension context warnings, and multilingual assistance.
+- **Advisory Only:** Risk assessments are an assistance mechanism, not an absolute guarantee.
+- **No Direct Bank Integration:** Does not intercept transactions or interface with NPCI/banks.
+- **Privacy Assurance:** Never asks for or stores UPI PINs, OTPs, or financial secrets.

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Safety Assistant</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --warning: #d97706;
+      --warning-bg: #fffbeb;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      width: 360px;
+      min-height: 480px;
+      background: var(--bg);
+      color: var(--text);
+      padding: 12px;
+      font-size: 13px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .privacy-notice {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 11px;
+      color: #1e40af;
+      margin-bottom: 10px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .tab-btn {
+      padding: 6px;
+      border: none;
+      background: transparent;
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .tab-btn.active {
+      background: white;
+      color: var(--primary);
+    }
+
+    .textarea {
+      width: 100%;
+      min-height: 85px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12px;
+      resize: vertical;
+      margin-bottom: 8px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .btn-secondary:hover { background: #cbd5e1; }
+
+    .result-box {
+      margin-top: 10px;
+      border-radius: 8px;
+      padding: 10px;
+      animation: fadeIn 0.2s ease;
+    }
+    .result-box.HIGH {
+      background: var(--danger-bg);
+      border: 1.5px solid #fca5a5;
+      color: #991b1b;
+    }
+    .result-box.MEDIUM {
+      background: var(--warning-bg);
+      border: 1.5px solid #fcd34d;
+      color: #92400e;
+    }
+    .result-box.LOW {
+      background: var(--success-bg);
+      border: 1.5px solid #6ee7b7;
+      color: #065f46;
+    }
+
+    .result-title {
+      font-weight: 800;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .reasons-list {
+      margin: 6px 0;
+      padding-left: 16px;
+      font-size: 11.5px;
+    }
+    .golden-rule {
+      background: rgba(255,255,255,0.7);
+      padding: 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+
+    .error-box {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      color: #991b1b;
+      padding: 8px;
+      border-radius: 6px;
+      margin-top: 8px;
+      font-size: 11.5px;
+    }
+
+    .footer {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span style="font-size: 20px;">🛡️</span>
+    <h1>Payment Safety Assistant</h1>
+  </div>
+
+  <div class="privacy-notice">
+    🔒 <strong>Privacy:</strong> We never collect or access passwords, PINs, or active banking session pages.
+  </div>
+
+  <div class="tabs">
+    <button type="button" id="tab-text" class="tab-btn active">Message Check</button>
+    <button type="button" id="tab-url" class="tab-btn">Link Inspector</button>
+  </div>
+
+  <div id="panel-text">
+    <button type="button" id="btn-import-selection" class="btn btn-secondary">
+      📄 Grab Selected Text from Tab
+    </button>
+    <textarea id="text-input" class="textarea" placeholder="Paste suspicious SMS, WhatsApp message, or payment request..."></textarea>
+    <button type="button" id="btn-check-text" class="btn">Check Safety</button>
+  </div>
+
+  <div id="panel-url" style="display: none;">
+    <input type="text" id="url-input" class="textarea" style="min-height: 38px; height: 38px;" placeholder="e.g. http://sbi-update.top/login.apk" />
+    <button type="button" id="btn-check-url" class="btn">Inspect Link Safely</button>
+  </div>
+
+  <div id="error-container" class="error-box" style="display: none;"></div>
+
+  <div id="result-container" style="display: none;"></div>
+
+  <div class="footer">
+    Digital Payment Safety Assistant • Local & Offline-first
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

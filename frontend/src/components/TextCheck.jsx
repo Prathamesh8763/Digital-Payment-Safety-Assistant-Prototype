@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Send, RotateCcw, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Send, RotateCcw, Sparkles, CheckCircle2, Bot } from 'lucide-react';
+import VoiceInput from './VoiceInput';
 
 const FALLBACK_SCENARIOS = [
   {
@@ -54,10 +55,10 @@ const FALLBACK_SCENARIOS = [
 
 export default function TextCheck({ onAnalyze, loading }) {
   const [text, setText] = useState('');
+  const [useAi, setUseAi] = useState(false);
   const [scenarios, setScenarios] = useState(FALLBACK_SCENARIOS);
 
   useEffect(() => {
-    // Try fetching scenarios from backend
     fetch('http://localhost:8000/api/scenarios')
       .then((res) => {
         if (res.ok) return res.json();
@@ -68,19 +69,21 @@ export default function TextCheck({ onAnalyze, loading }) {
           setScenarios(data);
         }
       })
-      .catch(() => {
-        // Use fallback scenarios
-      });
+      .catch(() => {});
   }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!text.trim() || loading) return;
-    onAnalyze({ text: text.trim() });
+    onAnalyze({ text: text.trim(), use_ai: useAi });
   };
 
   const handleSelectScenario = (scenario) => {
     setText(scenario.text);
+  };
+
+  const handleVoiceTranscript = (spokenText) => {
+    setText((prev) => (prev ? `${prev} ${spokenText}` : spokenText));
   };
 
   const handleClear = () => {
@@ -93,8 +96,11 @@ export default function TextCheck({ onAnalyze, loading }) {
         Describe what happened or paste the suspicious message:
       </label>
       <p className="form-help">
-        Include what the person said, what they claimed, and what they asked you to do. (Never include real PINs or passwords!)
+        Include what the person claimed and asked you to do. (Never include real PINs, passwords, or full card details!)
       </p>
+
+      {/* Voice input component */}
+      <VoiceInput onTranscriptReady={handleVoiceTranscript} disabled={loading} />
 
       <textarea
         id="situation-text"
@@ -105,6 +111,21 @@ export default function TextCheck({ onAnalyze, loading }) {
         rows={5}
         required
       />
+
+      {/* Optional AI Enhancement Toggle (FR-03) */}
+      <div style={{ margin: '0.85rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <input
+          type="checkbox"
+          id="ai-toggle"
+          checked={useAi}
+          onChange={(e) => setUseAi(e.target.checked)}
+          style={{ width: '18px', height: '18px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+        />
+        <label htmlFor="ai-toggle" style={{ fontSize: '0.85rem', color: '#334155', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <Bot size={15} style={{ color: 'var(--primary)' }} />
+          Enable AI-Assisted Explanation Enhancement (Supplements rule engine; safe fallback if offline)
+        </label>
+      </div>
 
       <div className="btn-row">
         <button
