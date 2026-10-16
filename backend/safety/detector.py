@@ -21,9 +21,10 @@ URGENCY_PATTERNS = [
 
 FEAR_THREAT_PATTERNS = [
     (r"\b(account\s+(will\s+be\s+)?(blocked|frozen|suspended|deactivated|closed|stopped))\b", "Account blocking threat"),
+    (r"\b(account|khata)\s+.*?\b(block|band|freeze|suspend|deactivate)\b", "Account blocking threat (Hinglish/Colloquial)"),
     (r"\b(kyc\s+(suspended|expired|failed|pending|not\s+updated|incomplete))\b", "KYC expiry / suspension claim"),
-    (r"\b(electricity\s+(connection\s+|power\s+)?(will\s+be\s+)?(disconnected|cut\s+off|cut|stopped))\b", "Utility disconnection threat"),
-    (r"\b(sim\s+(card\s+)?(blocked|deactivated|suspended))\b", "SIM card deactivation threat"),
+    (r"\b(electricity|bijli)\s+.*?\b(disconnected|cut\s+off|cut|stopped|kat\s+diya|band\s+kar|kat\s+jayega)\b", "Utility disconnection threat"),
+    (r"\b(sim\s+(card\s+)?(blocked|deactivated|suspended|band))\b", "SIM card deactivation threat"),
     (r"\b(police\s+complaint|arrest\s+warrant|legal\s+action|court\s+notice|cbi|customs|cyber\s+crime)\b", "Legal / Law enforcement intimidation"),
     (r"\b(penalty|fine|heavy\s+charges)\s+(will\s+be\s+)?(deducted|imposed|charged)\b", "Financial penalty threat")
 ]

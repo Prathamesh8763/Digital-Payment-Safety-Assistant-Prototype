@@ -20,6 +20,7 @@ const HISTORY_STORAGE_KEY = 'payment_safety_assistant_history_v2';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('text'); // 'text' | 'image' | 'url_qr' | 'guided' | 'history'
+  const [language, setLanguage] = useState('en'); // 'en' | 'hi' | 'hinglish'
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -80,7 +81,7 @@ export default function App() {
       const response = await fetch(`${API_BASE}/check/text`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, language })
       });
 
       if (!response.ok) {
@@ -108,7 +109,7 @@ export default function App() {
       const response = await fetch(`${API_BASE}/check/guided`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, language })
       });
 
       if (!response.ok) {
@@ -136,7 +137,7 @@ export default function App() {
       const response = await fetch(`${API_BASE}/check/url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, language })
       });
 
       if (!response.ok) {
@@ -164,7 +165,7 @@ export default function App() {
       const response = await fetch(`${API_BASE}/check/qr`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, language })
       });
 
       if (!response.ok) {
@@ -189,12 +190,12 @@ export default function App() {
 
   return (
     <div className="container">
-      <Header />
+      <Header language={language} onLanguageChange={setLanguage} />
 
       <main>
         {!result ? (
           <div className="card">
-            {/* Primary V2 Navigation Tabs */}
+            {/* Primary V3 Navigation Tabs */}
             <div className="tabs-nav" role="tablist" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))' }}>
               <button
                 type="button"
@@ -307,10 +308,10 @@ export default function App() {
 
       <footer className="app-footer">
         <p>
-          Digital Payment Safety Assistant • V2 Multi-Modal Platform
+          Digital Payment Safety Assistant • V3 Quality & Resilience Platform
         </p>
         <p style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}>
-          Rule-Based Detection Engine • On-Device OCR & QR Inspection • Local-First History • Zero Payment Credential Collection
+          Rule-Based Engine with Uncertainty Bounds • Multi-Language Support (EN/HI/Hinglish) • Zero Credential Retention
         </p>
       </footer>
     </div>

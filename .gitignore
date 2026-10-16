@@ -52,3 +52,6 @@ frontend/.vite/
 *~
 .DS_Store
 Thumbs.db
+
+# Feedback and runtime stores
+*feedback_store.json

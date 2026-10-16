@@ -11,7 +11,8 @@ from schemas.safety import (
     TextCheckRequest, 
     GuidedCheckRequest,
     URLCheckRequest,
-    QRCheckRequest
+    QRCheckRequest,
+    FeedbackRequest
 )
 from safety.engine import SafetyEngine
 
@@ -21,13 +22,20 @@ engine = SafetyEngine()
 def test_health_check():
     response = client.get("/api/health")
     assert response.status_code == 200
-    assert response.json()["status"] == "healthy"
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert "timestamp" in data
+
+def test_security_headers_present():
+    response = client.get("/api/health")
+    assert response.headers.get("x-content-type-options") == "nosniff"
+    assert response.headers.get("x-frame-options") == "DENY"
 
 def test_demonstration_scenarios_endpoint():
     response = client.get("/api/scenarios")
     assert response.status_code == 200
     scenarios = response.json()
-    assert len(scenarios) >= 7
+    assert len(scenarios) >= 8
     types = {s["type"] for s in scenarios}
     assert "scam" in types
     assert "legitimate" in types
@@ -40,6 +48,8 @@ def test_fake_bank_support():
     assert res.risk_score >= 80
     assert any(ind.id == "sensitive_credential_request" for ind in res.indicators)
     assert any("OTP" in action for action in res.recommended_actions)
+    assert res.reference_id.startswith("REF-")
+    assert "detected" in res.uncertainty_note.lower()
 
 # Scenario 2: Fake KYC account blocking threat
 def test_fake_kyc_account_blocking():
@@ -160,12 +170,50 @@ def test_qr_check_standard_merchant():
     assert res.risk_level == "LOW"
     assert res.payload_type == "upi_intent"
 
-# Scenario 16: Benchmark Evaluation Endpoint
+# Scenario 16: V3 Hindi Language Localization
+def test_hindi_language_localization():
+    req = TextCheckRequest(
+        text="Caller asked for my OTP to update bank KYC.",
+        language="hi"
+    )
+    res = engine.analyze_text(req)
+    assert res.risk_level == "HIGH"
+    assert res.language == "hi"
+    assert any("पिन" in act or "ओटीपी" in act for act in res.recommended_actions)
+
+# Scenario 17: V3 Hinglish Language Localization
+def test_hinglish_language_localization():
+    req = TextCheckRequest(
+        text="Someone asked me to scan QR to receive cash prize.",
+        language="hinglish"
+    )
+    res = engine.analyze_text(req)
+    assert res.risk_level == "HIGH"
+    assert res.language == "hinglish"
+    assert "Golden Rule" in res.educational_concept.golden_rule
+    assert "paise" in res.educational_concept.golden_rule.lower()
+
+# Scenario 18: V3 User Feedback Workflow
+def test_feedback_submission_workflow():
+    payload = {
+        "reference_id": "REF-TXT-TEST1234",
+        "assessment_type": "text",
+        "feedback_rating": "helpful",
+        "feedback_category": "general",
+        "comments": "The explanation was very clear."
+    }
+    response = client.post("/api/feedback", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert data["feedback_id"].startswith("fb_")
+
+# Scenario 19: Benchmark Evaluation Endpoint (20 samples)
 def test_benchmark_evaluation_endpoint():
     response = client.get("/api/evaluation/benchmark")
     assert response.status_code == 200
     metrics = response.json()
-    assert metrics["total_samples"] >= 15
+    assert metrics["total_samples"] >= 20
     assert metrics["accuracy_percentage"] >= 90.0
     assert metrics["precision_percentage"] >= 90.0
     assert metrics["recall_percentage"] >= 90.0

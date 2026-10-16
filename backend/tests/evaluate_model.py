@@ -21,24 +21,32 @@ def run_benchmark_evaluation() -> Dict[str, Any]:
     true_negatives = 0
     false_negatives = 0
 
-    category_results = {}
+    category_results: Dict[str, Dict[str, int]] = {}
+    language_results: Dict[str, Dict[str, int]] = {}
 
     for item in samples:
         expected = item["expected_risk"]
         cat = item.get("category", "General")
+        lang = item.get("language", "en")
+
         if cat not in category_results:
             category_results[cat] = {"total": 0, "correct": 0}
         category_results[cat]["total"] += 1
 
-        req = TextCheckRequest(text=item["text"])
+        if lang not in language_results:
+            language_results[lang] = {"total": 0, "correct": 0}
+        language_results[lang]["total"] += 1
+
+        req = TextCheckRequest(text=item["text"], language=lang)
         res = engine.analyze_text(req)
         actual = res.risk_level
 
-        # Match logic
+        # Exact match logic
         is_match = (actual == expected)
         if is_match:
             correct += 1
             category_results[cat]["correct"] += 1
+            language_results[lang]["correct"] += 1
 
         # Binary classification view (Scam/Suspicious: HIGH/MEDIUM vs Legitimate: LOW)
         is_expected_scam = expected in ["HIGH", "MEDIUM"]
@@ -68,14 +76,16 @@ def run_benchmark_evaluation() -> Dict[str, Any]:
         "false_negative_rate": round(fnr, 2),
         "scam_detection_rate": round(recall, 2),
         "legitimate_preservation_rate": round(100.0 - fpr, 2),
-        "details_by_category": category_results
+        "details_by_category": category_results,
+        "details_by_language": language_results,
+        "evaluation_version": "V3.0"
     }
 
 if __name__ == "__main__":
     report = run_benchmark_evaluation()
-    print("=" * 60)
-    print("DIGITAL PAYMENT SAFETY ASSISTANT - V2 BENCHMARK EVALUATION")
-    print("=" * 60)
+    print("=" * 65)
+    print("DIGITAL PAYMENT SAFETY ASSISTANT - V3 BENCHMARK EVALUATION")
+    print("=" * 65)
     print(f"Total Test Samples:          {report['total_samples']}")
     print(f"Accuracy:                    {report['accuracy_percentage']}%")
     print(f"Precision:                   {report['precision_percentage']}%")
@@ -83,4 +93,10 @@ if __name__ == "__main__":
     print(f"False Positive Rate:         {report['false_positive_rate']}%")
     print(f"False Negative Rate:         {report['false_negative_rate']}%")
     print(f"Legitimate Safe Rate:        {report['legitimate_preservation_rate']}%")
-    print("=" * 60)
+    print("\nResults by Category:")
+    for cat, stats in report["details_by_category"].items():
+        print(f"  • {cat:<32} {stats['correct']}/{stats['total']} correct")
+    print("\nResults by Language:")
+    for lang, stats in report["details_by_language"].items():
+        print(f"  • {lang:<12} {stats['correct']}/{stats['total']} correct")
+    print("=" * 65)

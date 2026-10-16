@@ -11,10 +11,11 @@ import {
   ArrowLeft,
   Lightbulb,
   Bot,
-  ExternalLink,
   Link,
-  QrCode
+  QrCode,
+  Info
 } from 'lucide-react';
+import FeedbackModal from './FeedbackModal';
 
 export default function ResultDisplay({ result, onReset }) {
   const [copied, setCopied] = useState(false);
@@ -34,6 +35,8 @@ export default function ResultDisplay({ result, onReset }) {
     confidence_rating,
     ai_enhanced,
     ai_analysis_summary,
+    reference_id,
+    uncertainty_note,
     // URL specific fields
     domain,
     protocol,
@@ -46,7 +49,7 @@ export default function ResultDisplay({ result, onReset }) {
   } = result;
 
   const handleCopy = () => {
-    const textToCopy = `Safety Assessment: ${risk_level} RISK (${risk_score}/100)\n\nSummary: ${summary}\n\nRecommended Actions:\n${recommended_actions.map(a => `• ${a}`).join('\n')}\n\nGolden Rule: ${educational_concept?.golden_rule || ''}`;
+    const textToCopy = `Safety Assessment: ${risk_level} RISK (${risk_score}/100) [Ref: ${reference_id || 'N/A'}]\n\nSummary: ${summary}\n\nRecommended Actions:\n${(recommended_actions || []).map(a => `• ${a}`).join('\n')}\n\nGolden Rule: ${educational_concept?.golden_rule || ''}`;
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -71,12 +74,20 @@ export default function ResultDisplay({ result, onReset }) {
               {risk_level === 'HIGH' && 'HIGH RISK: Potential Payment Scam'}
               {risk_level === 'MEDIUM' && 'MEDIUM RISK: Suspicious Signs Detected'}
               {risk_level === 'LOW' && 'LOW RISK: No Strong Scam Signs Found'}
+              {risk_level === 'UNABLE_TO_ASSESS' && 'UNABLE TO ASSESS: Incomplete Information'}
             </h3>
-            {confidence_rating && (
-              <span style={{ fontSize: '0.72rem', background: 'rgba(0,0,0,0.08)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>
-                {confidence_rating}
-              </span>
-            )}
+            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+              {reference_id && (
+                <span style={{ fontSize: '0.72rem', background: 'rgba(0,0,0,0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 600 }}>
+                  {reference_id}
+                </span>
+              )}
+              {confidence_rating && (
+                <span style={{ fontSize: '0.72rem', background: 'rgba(0,0,0,0.08)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>
+                  {confidence_rating}
+                </span>
+              )}
+            </div>
           </div>
           <p style={{ margin: '0.35rem 0 0.2rem', fontSize: '0.92rem' }}>{summary}</p>
           <div className="risk-meter">
@@ -84,6 +95,16 @@ export default function ResultDisplay({ result, onReset }) {
           </div>
         </div>
       </div>
+
+      {/* Uncertainty & Evidence Bounds Callout (FR-01 / FR-03) */}
+      {uncertainty_note && (
+        <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: '0.85rem', color: '#334155', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+          <Info size={16} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }} />
+          <div>
+            <strong>Assessment Scope & Uncertainty:</strong> {uncertainty_note}
+          </div>
+        </div>
+      )}
 
       {/* AI Analysis Enhancement Box (FR-03) */}
       {ai_enhanced && ai_analysis_summary && (
@@ -189,10 +210,13 @@ export default function ResultDisplay({ result, onReset }) {
             {educational_concept.concept}
           </p>
           <div className="edu-box-rule">
-            💡 Golden Rule: {educational_concept.golden_rule}
+            {educational_concept.golden_rule}
           </div>
         </div>
       )}
+
+      {/* User Feedback & Correction Workflow (FR-04) */}
+      <FeedbackModal referenceId={reference_id} assessmentType={domain ? 'url' : (payload_type ? 'qr' : 'text')} />
 
       {/* Helpline banner */}
       <div className="helpline-box">

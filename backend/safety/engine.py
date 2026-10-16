@@ -1,3 +1,4 @@
+import uuid
 from typing import Dict, Any, List
 from schemas.safety import (
     TextCheckRequest,
@@ -16,17 +17,32 @@ from safety.recommendations import generate_recommendations
 from safety.url_checker import URLChecker
 from safety.qr_service import QRService
 from safety.ai_analysis import AIAnalysisService
+from safety.languages import localize_assessment
+from safety.feedback_service import FeedbackService
 
 class SafetyEngine:
     """
-    Core rule-based engine that processes freeform text, guided questionnaires,
-    URLs, and QR payloads, with optional AI enhancement.
+    V3 Multi-modal Safety Engine coordinating text analysis, guided questionnaires,
+    URLs, QR payloads, localization (Hindi/Hinglish), and feedback recording.
     """
 
     def __init__(self):
         self.url_checker = URLChecker()
         self.qr_service = QRService()
         self.ai_service = AIAnalysisService()
+        self.feedback_service = FeedbackService()
+
+    def _generate_ref_id(self, prefix: str) -> str:
+        return f"REF-{prefix}-{uuid.uuid4().hex[:8].upper()}"
+
+    def _build_uncertainty_note(self, risk_level: str, num_indicators: int) -> str:
+        if risk_level == "HIGH":
+            return f"High risk indicators detected ({num_indicators} matched warning sign(s)). Exercise extreme caution and do not send funds."
+        elif risk_level == "MEDIUM":
+            return "Some warning signs detected, but available evidence is incomplete. Pause and independently verify before acting."
+        elif risk_level == "LOW":
+            return "No strong scam warning signs detected. NOTE: A low-risk assessment is NOT proof of safety. Always remain vigilant."
+        return "Unable to determine risk due to insufficient contextual information."
 
     def analyze_text(self, request: TextCheckRequest) -> SafetyAssessmentResponse:
         detection = detect_indicators_in_text(request.text)
@@ -54,6 +70,30 @@ class SafetyEngine:
             for ind in indicators
         ]
 
+        ref_id = self._generate_ref_id("TXT")
+        uncertainty = self._build_uncertainty_note(risk_level, len(indicators))
+
+        # Localize if requested (Hindi / Hinglish)
+        golden_rule = rec_data["educational_concept"]["golden_rule"]
+        actions = rec_data["recommended_actions"]
+        if request.language in ["hi", "hinglish"]:
+            localized = localize_assessment(
+                language=request.language,
+                risk_level=risk_level,
+                recommended_actions=actions,
+                golden_rule=golden_rule,
+                uncertainty_note=uncertainty
+            )
+            actions = localized["localized_actions"]
+            golden_rule = localized["localized_golden_rule"]
+            uncertainty = localized["localized_uncertainty"]
+
+        edu_concept = EducationalConcept(
+            title=rec_data["educational_concept"]["title"],
+            concept=rec_data["educational_concept"]["concept"],
+            golden_rule=golden_rule
+        )
+
         return SafetyAssessmentResponse(
             risk_level=risk_level,
             risk_score=risk_score,
@@ -61,11 +101,14 @@ class SafetyEngine:
             detected_categories=categories if categories else (["Normal / Legitimate Transaction"] if is_standard_notification else ["Unspecified"]),
             indicators=formatted_indicators,
             why_suspicious=rec_data["why_suspicious"],
-            recommended_actions=rec_data["recommended_actions"],
-            educational_concept=EducationalConcept(**rec_data["educational_concept"]),
+            recommended_actions=actions,
+            educational_concept=edu_concept,
             is_safe_practice=is_standard_notification,
             ai_enhanced=False,
-            confidence_rating="Deterministic Rule Baseline"
+            confidence_rating="Deterministic Rule Baseline",
+            reference_id=ref_id,
+            uncertainty_note=uncertainty,
+            language=request.language
         )
 
     async def analyze_text_with_ai_option(self, request: TextCheckRequest) -> SafetyAssessmentResponse:
@@ -78,7 +121,6 @@ class SafetyEngine:
         guided_indicators: List[Dict[str, Any]] = []
         categories = set()
 
-        # Map guided answers to deterministic safety indicators
         if request.asks_sensitive_data or request.requested_action == "share_otp_pin":
             guided_indicators.append({
                 "id": "sensitive_credential_request",
@@ -168,7 +210,6 @@ class SafetyEngine:
             })
             categories.add("Malicious Link / Phishing")
 
-        # Scan additional notes if provided
         if request.additional_notes and len(request.additional_notes.strip()) > 3:
             text_detection = detect_indicators_in_text(request.additional_notes)
             existing_ids = {ind["id"] for ind in guided_indicators}
@@ -205,6 +246,29 @@ class SafetyEngine:
             for ind in guided_indicators
         ]
 
+        ref_id = self._generate_ref_id("GUIDED")
+        uncertainty = self._build_uncertainty_note(risk_level, len(guided_indicators))
+
+        golden_rule = rec_data["educational_concept"]["golden_rule"]
+        actions = rec_data["recommended_actions"]
+        if request.language in ["hi", "hinglish"]:
+            localized = localize_assessment(
+                language=request.language,
+                risk_level=risk_level,
+                recommended_actions=actions,
+                golden_rule=golden_rule,
+                uncertainty_note=uncertainty
+            )
+            actions = localized["localized_actions"]
+            golden_rule = localized["localized_golden_rule"]
+            uncertainty = localized["localized_uncertainty"]
+
+        edu_concept = EducationalConcept(
+            title=rec_data["educational_concept"]["title"],
+            concept=rec_data["educational_concept"]["concept"],
+            golden_rule=golden_rule
+        )
+
         return SafetyAssessmentResponse(
             risk_level=risk_level,
             risk_score=risk_score,
@@ -212,15 +276,26 @@ class SafetyEngine:
             detected_categories=list(categories) if categories else (["Normal Merchant Payment"] if is_normal_merchant else ["Unspecified"]),
             indicators=formatted_indicators,
             why_suspicious=rec_data["why_suspicious"],
-            recommended_actions=rec_data["recommended_actions"],
-            educational_concept=EducationalConcept(**rec_data["educational_concept"]),
+            recommended_actions=actions,
+            educational_concept=edu_concept,
             is_safe_practice=is_normal_merchant,
             ai_enhanced=False,
-            confidence_rating="Deterministic Rule Baseline"
+            confidence_rating="Deterministic Rule Baseline",
+            reference_id=ref_id,
+            uncertainty_note=uncertainty,
+            language=request.language
         )
 
     def analyze_url(self, request: URLCheckRequest) -> URLCheckResponse:
-        return self.url_checker.analyze_url(request)
+        res = self.url_checker.analyze_url(request)
+        res.reference_id = self._generate_ref_id("URL")
+        res.language = request.language
+        res.uncertainty_note = self._build_uncertainty_note(res.risk_level, len(res.indicators))
+        return res
 
     def analyze_qr(self, request: QRCheckRequest) -> QRCheckResponse:
-        return self.qr_service.analyze_payload(request)
+        res = self.qr_service.analyze_payload(request)
+        res.reference_id = self._generate_ref_id("QR")
+        res.language = request.language
+        res.uncertainty_note = self._build_uncertainty_note(res.risk_level, len(res.indicators))
+        return res

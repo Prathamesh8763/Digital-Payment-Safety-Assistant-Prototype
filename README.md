@@ -1,35 +1,36 @@
-# Digital Payment Safety Assistant (V2)
+# Digital Payment Safety Assistant (V3)
 
 [![Python](https://img.shields.io/badge/Python-3.14%2B-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-2.0.0-009688.svg)](https://fastapi.tiangolo.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-3.0.0-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF.svg)](https://vitejs.dev)
 [![Extension](https://img.shields.io/badge/Manifest-V3-success.svg)](extension/manifest.json)
-[![Evaluation](https://img.shields.io/badge/Benchmark_Accuracy-100%25-brightgreen.svg)](backend/tests/evaluate_model.py)
+[![Evaluation](https://img.shields.io/badge/Benchmark_Accuracy-100%25-brightgreen.svg)](V3_EVALUATION_REPORT.md)
 
-A responsive, multi-modal, privacy-conscious digital-payment safety assistant designed to help people recognize fraudulent situations, inspect suspicious links and QR codes, pause before taking risky financial actions, and learn safe verification habits.
+A privacy-conscious digital-payment safety assistant designed to help people recognize fraud, inspect suspicious links and QR codes, pause before taking risky financial actions, and learn safe verification habits.
 
 ---
 
-## 1. V2 New Features & Capabilities
+## 1. V3 New Capabilities & Quality Hardening
 
-- **Multi-Modal Input Modes:**
-  - **Text Safety Check:** Type or paste any suspicious SMS, WhatsApp message, or phone call summary.
-  - **Voice Input (Speech-to-Text):** Dictate messages using native browser speech recognition. Transcript is reviewed and editable before submission.
-  - **Screenshot & Image OCR:** Upload a screenshot; text is extracted **on-device** using `tesseract.js` in your browser. Raw images are never sent to external servers.
-  - **Link & URL Inspector:** Inspect web links safely without visiting them. Detects phishing typosquatting (e.g., `sbi-kyc-verify.top`), raw IP hosts, and suspicious TLDs.
-  - **QR Code Inspector:** Upload a QR code image to decode on-device with `jsqr`. Safely analyzes UPI payment intents (`upi://pay?...`) and links without initiating payments or opening browser tabs.
-  - **Guided "I'm Not Sure" Wizard:** 5-step guided questionnaire for users who cannot explain what happened.
-  - **Local-First History & Saved Reports:** Past assessments are saved only to `localStorage` on your device. Users can review, delete, clear, or export reports without exposing credentials.
-- **AI-Assisted Explanation Enhancement (FR-03):**
-  - Supplements the deterministic rule engine with optional Google Gemini natural-language contextual analysis.
-  - Strict fallback to deterministic rules if offline or if no API key is configured.
-- **Browser Extension (FR-08):**
-  - Chrome/Edge Manifest V3 extension with minimal permissions (`activeTab`, `storage`, `contextMenus`).
-  - Allows quick checking and right-click context menu analysis.
-  - **Security policy:** Strictly excluded from running on active banking and payment gateway portals (`billdesk`, `razorpay`, `payu`, `netbanking`, `onlinesbi`, etc.).
-- **Repeatable Benchmark Evaluation Suite:**
-  - Labeled dataset (`backend/tests/evaluation_dataset.json`) with automated precision, recall, and false-positive evaluation.
+- **Multi-Language Support (FR-05):**
+  - **English**, **हिंदी (Hindi)**, and **Hinglish** (colloquial Hindi-English mix) support.
+  - Indian context translations for risk titles, actionable safety steps, and educational Golden Rules (e.g. *"पिन केवल पैसे भेजने के लिए होता है, पैसे प्राप्त करने के लिए कभी नहीं"*).
+- **Explicit Uncertainty & Evidence Bounds (FR-01 / FR-03):**
+  - Communicates detectable evidence bounds transparently.
+  - Distinguishes *"High risk indicators detected"*, *"Some warning signs found"*, and *"No strong warning signs detected"*.
+  - Explicit warning: **A low-risk score is never presented as proof of safety.**
+  - Privacy-safe reference ID (`REF-TXT-XXXXXX`) generated for every assessment.
+- **Safe User Feedback & Correction Workflow (FR-04):**
+  - Feedback endpoint (`POST /api/feedback`) allows rating assessments (Helpful, Unclear, Appears Incorrect).
+  - Rate-limited and bounded storage. **Never requires or records original messages or credentials.**
+- **Operational Security & Abuse Hardening (FR-09 / FR-11):**
+  - Security headers middleware (`nosniff`, `DENY` clickjacking protection, `strict-origin-when-cross-origin`).
+  - In-memory rate limiting middleware per client IP (120 req/min).
+  - **Privacy-Safe Audit Logging:** Strictly redacts and excludes raw message contents, audio, and credentials from application logs.
+- **V3 Benchmark Evaluation Suite (FR-02):**
+  - Versioned labeled dataset (`backend/tests/evaluation_dataset.json`) with 20 real-world samples.
+  - Automated evaluation script (`backend/tests/evaluate_model.py`) measuring precision, recall, false-positive rate, and breakdown by category and language.
 
 ---
 
@@ -38,7 +39,7 @@ A responsive, multi-modal, privacy-conscious digital-payment safety assistant de
 - **Prevention Over Education Alone:** Helps users pause before making irreversible payments or sharing credentials.
 - **Explain, Don't Just Warn:** Avoids generic *"SCAM DETECTED"* banners; breaks down specific reasons and guidance.
 - **Privacy by Design:** **Never** requests, accepts, or stores OTPs, UPI PINs, CVVs, card numbers, passwords, or banking logins.
-- **Human Decision Remains With User:** Uses transparent guidance (*"Potential payment scam"*) rather than false claims of absolute certainty.
+- **No Payment Page Scraping:** The browser extension strictly excludes active banking portals (`billdesk`, `razorpay`, `payu`, `netbanking`, `sbi.co.in`, etc.).
 - **Deterministic Rule Baseline:** An explainable, testable rule-based engine serves as the reliable core foundation.
 
 ---
@@ -46,10 +47,10 @@ A responsive, multi-modal, privacy-conscious digital-payment safety assistant de
 ## 3. Technology Stack
 
 - **Backend:** Python + FastAPI + Pydantic + Uvicorn
-- **Safety Engine:** Rule-based detection + URL Inspector + QR Service + Optional AI Enhancement
+- **Safety Engine:** Rule-based detection + URL Inspector + QR Service + Language Localizer + Feedback Service
 - **Frontend:** React 19 + Vite + Lucide Icons + Tesseract.js (On-Device OCR) + jsQR (On-Device QR Decoder)
 - **Extension:** Chrome Manifest V3 + Service Worker
-- **Testing:** Pytest (18 unit tests) + Benchmark Evaluator (`evaluate_model.py`)
+- **Testing:** Pytest (22 unit tests) + Benchmark Evaluator (`evaluate_model.py`)
 
 ---
 
@@ -60,32 +61,35 @@ Digital Payment Security Assitant/
 ├── backend/
 │   ├── safety/
 │   │   ├── detector.py          # Keyword, regex & indicator pattern matching
-│   │   ├── risk.py              # Deterministic risk scoring (0-100) & risk levels
-│   │   ├── recommendations.py   # Plain-language reasons, actions & awareness concepts
+│   │   ├── risk.py              # Risk scoring (0-100) & level calculation
+│   │   ├── recommendations.py   # Plain-language reasons & awareness concepts
 │   │   ├── url_checker.py       # Safe URL parsing & typosquatting detection
 │   │   ├── qr_service.py        # Safe UPI intent and QR payload inspection
-│   │   ├── ai_analysis.py       # Optional AI enhancement with safe rule fallback
+│   │   ├── ai_analysis.py       # Optional AI enhancement with rule fallback
+│   │   ├── languages.py         # Hindi and Hinglish localizations (FR-05)
+│   │   ├── feedback_service.py  # Rate-limited user feedback handler (FR-04)
 │   │   └── engine.py            # Safety Engine coordinator
 │   ├── schemas/
-│   │   └── safety.py            # Pydantic request & response schemas
+│   │   └── safety.py            # Pydantic schemas (V3 multi-language & feedback)
 │   ├── tests/
-│   │   ├── test_safety_engine.py# Pytest test suite (18 tests covering all flows)
+│   │   ├── test_safety_engine.py# Pytest test suite (22 unit tests)
 │   │   ├── evaluate_model.py    # Benchmark evaluation script
-│   │   └── evaluation_dataset.json # Labeled test dataset
-│   ├── main.py                  # FastAPI REST API with CORS
+│   │   └── evaluation_dataset.json # Labeled test dataset (20 samples)
+│   ├── main.py                  # FastAPI REST API with security headers & rate limiting
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Header.jsx       # App bar & Privacy by Design notice
+│   │   │   ├── Header.jsx       # App bar with Language Selector (EN / HI / Hinglish)
 │   │   │   ├── TextCheck.jsx    # Text check form + VoiceInput
 │   │   │   ├── VoiceInput.jsx   # Web Speech API speech-to-text
 │   │   │   ├── ImageOCRCheck.jsx# On-device screenshot OCR with Tesseract.js
 │   │   │   ├── UrlQrCheck.jsx   # Safe Link and QR code inspector (jsQR)
 │   │   │   ├── GuidedCheck.jsx  # 5-step guided questionnaire wizard
 │   │   │   ├── HistoryDrawer.jsx# Local-first saved reports & deletion
-│   │   │   └── ResultDisplay.jsx# Color-coded risk meter & guidance
-│   │   ├── App.jsx              # V2 tabs and state manager
+│   │   │   ├── FeedbackModal.jsx# User feedback rating and correction form
+│   │   │   └── ResultDisplay.jsx# Color-coded risk meter & uncertainty bounds
+│   │   ├── App.jsx              # V3 tabs, language state & state manager
 │   │   └── index.css            # Responsive styles
 │   ├── package.json
 │   └── vite.config.js
@@ -98,6 +102,7 @@ Digital Payment Security Assitant/
 ├── run_all.bat                  # Single-click Windows launcher for both servers
 ├── run_backend.bat              # Backend launcher
 ├── run_frontend.bat             # Frontend launcher
+├── V3_EVALUATION_REPORT.md      # V3 quality benchmark evaluation report
 ├── .env.example
 └── README.md
 ```
@@ -132,19 +137,19 @@ npm run dev
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 #### 3. Load Browser Extension
-1. Open Chrome/Edge and go to `chrome://extensions/`.
-2. Turn on **Developer mode** (top-right).
-3. Click **Load unpacked** and select the `extension` folder.
+1. Open Chrome or Edge and navigate to `chrome://extensions/`.
+2. Enable **Developer mode** (top-right).
+3. Click **Load unpacked** and select the `extension` folder in this project:
+   `d:\Digital Payment Security Assitant\extension`
 
 ---
 
 ## 6. Running Automated Tests & Benchmark Evaluation
 
-### 1. Pytest Test Suite (18 tests)
+### 1. Pytest Test Suite (22 unit tests)
 ```powershell
 backend\.venv\Scripts\pytest backend\tests -v
 ```
-All 18 tests covering scam detection, URL phishing, QR code analysis, guided check, and API validation run and pass in ~0.5s.
 
 ### 2. Benchmark Quality Evaluation
 ```powershell
@@ -152,17 +157,32 @@ backend\.venv\Scripts\python backend/tests/evaluate_model.py
 ```
 Output:
 ```text
-============================================================
-DIGITAL PAYMENT SAFETY ASSISTANT - V2 BENCHMARK EVALUATION
-============================================================
-Total Test Samples:          15
+=================================================================
+DIGITAL PAYMENT SAFETY ASSISTANT - V3 BENCHMARK EVALUATION
+=================================================================
+Total Test Samples:          20
 Accuracy:                    100.0%
 Precision:                   100.0%
 Recall (Scam Detection):     100.0%
 False Positive Rate:         0.0%
 False Negative Rate:         0.0%
 Legitimate Safe Rate:        100.0%
-============================================================
+
+Results by Category:
+  • Fake KYC / Account Suspension    4/4 correct
+  • Prize / Reward Scam              1/1 correct
+  • Fake Refund Scam                 1/1 correct
+  • Credential Theft (OTP/PIN/CVV)   2/2 correct
+  • Remote Access Takeover           1/1 correct
+  • UPI QR / Collect Scam            1/1 correct
+  • Normal / Legitimate Transaction  7/7 correct
+  • Part-Time Job / Task Scam        1/1 correct
+  • Malicious Link / Phishing        2/2 correct
+
+Results by Language:
+  • en           19/19 correct
+  • hinglish     1/1 correct
+=================================================================
 ```
 
 ---

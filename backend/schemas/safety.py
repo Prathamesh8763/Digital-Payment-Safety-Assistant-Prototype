@@ -1,7 +1,7 @@
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 
-RiskLevel = Literal["LOW", "MEDIUM", "HIGH"]
+RiskLevel = Literal["LOW", "MEDIUM", "HIGH", "UNABLE_TO_ASSESS"]
 
 class TextCheckRequest(BaseModel):
     text: str = Field(
@@ -13,6 +13,10 @@ class TextCheckRequest(BaseModel):
     use_ai: bool = Field(
         default=False,
         description="Optional flag to request AI-assisted explanation enhancement (with fallback)."
+    )
+    language: str = Field(
+        default="en",
+        description="Target output language for explanations ('en', 'hi' for Hindi, 'hinglish' for Hinglish)."
     )
 
 class GuidedCheckRequest(BaseModel):
@@ -49,6 +53,10 @@ class GuidedCheckRequest(BaseModel):
         default=False,
         description="Optional flag to request AI-assisted explanation enhancement."
     )
+    language: str = Field(
+        default="en",
+        description="Target output language for explanations ('en', 'hi', 'hinglish')."
+    )
 
 class DetectedIndicator(BaseModel):
     id: str
@@ -75,6 +83,12 @@ class SafetyAssessmentResponse(BaseModel):
     ai_enhanced: bool = False
     ai_analysis_summary: Optional[str] = None
     confidence_rating: Optional[str] = "Deterministic Rule Baseline"
+    reference_id: str = Field(default="REF-SAFETY-0000", description="Privacy-safe reference ID for this assessment")
+    uncertainty_note: str = Field(
+        default="This assessment reflects detectable patterns. A low-risk result is not proof of safety.",
+        description="Explicit communication of evidence bounds and uncertainty (FR-01/FR-03)"
+    )
+    language: str = Field(default="en", description="Output language code")
     disclaimer: str = (
         "This safety assessment is an advisory tool designed to help you pause and verify. "
         "A low-risk score is not a guarantee of safety. Never share your UPI PIN or OTP with anyone."
@@ -92,6 +106,7 @@ class URLCheckRequest(BaseModel):
         max_length=500,
         description="Optional context (e.g., 'received via SMS claiming to update KYC')."
     )
+    language: str = Field(default="en")
 
 class URLCheckResponse(BaseModel):
     risk_level: RiskLevel
@@ -109,6 +124,9 @@ class URLCheckResponse(BaseModel):
     why_suspicious: List[str]
     recommended_actions: List[str]
     educational_concept: EducationalConcept
+    reference_id: str = "REF-URL-0000"
+    uncertainty_note: str = "Inspected without navigating to the destination. Unflagged domains may still host unknown threats."
+    language: str = "en"
     disclaimer: str = (
         "Inspected safely without visiting the link. A low-risk result does not guarantee that the destination is safe. "
         "Always verify official bank and payment websites directly from known sources."
@@ -126,6 +144,7 @@ class QRCheckRequest(BaseModel):
         max_length=500,
         description="Context in which QR was provided (e.g., 'buyer told me to scan to receive money')."
     )
+    language: str = Field(default="en")
 
 class QRCheckResponse(BaseModel):
     risk_level: RiskLevel
@@ -137,9 +156,27 @@ class QRCheckResponse(BaseModel):
     why_suspicious: List[str]
     recommended_actions: List[str]
     educational_concept: EducationalConcept
+    reference_id: str = "REF-QR-0000"
+    uncertainty_note: str = "QR code inspected safely. A QR code can only request outgoing payments."
+    language: str = "en"
     disclaimer: str = (
         "QR code inspected safely. You NEVER need to scan a QR code or enter your UPI PIN to receive money. "
         "Scanning a QR code only initiates an outgoing payment from your account."
+    )
+
+class FeedbackRequest(BaseModel):
+    reference_id: Optional[str] = Field(default=None, max_length=64, description="Optional assessment reference ID")
+    assessment_type: Literal["text", "guided", "url", "qr"]
+    feedback_rating: Literal["helpful", "unclear", "appears_incorrect"]
+    feedback_category: Optional[Literal["false_alarm", "missed_scam", "unclear_explanation", "general"]] = None
+    comments: Optional[str] = Field(default=None, max_length=500, description="Optional brief remarks (do NOT include PINs or passwords)")
+
+class FeedbackResponse(BaseModel):
+    status: str = "success"
+    feedback_id: str
+    message: str = (
+        "Thank you for your feedback! Your feedback helps us continuously improve detection rules "
+        "without collecting personal credentials."
     )
 
 class EvaluationMetrics(BaseModel):
@@ -152,3 +189,5 @@ class EvaluationMetrics(BaseModel):
     scam_detection_rate: float
     legitimate_preservation_rate: float
     details_by_category: Dict[str, Any]
+    details_by_language: Optional[Dict[str, Any]] = None
+    evaluation_version: str = "V3.0"

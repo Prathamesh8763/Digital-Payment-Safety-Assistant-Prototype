@@ -1,6 +1,9 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 import os
+import time
+import logging
+from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from schemas.safety import (
     TextCheckRequest,
@@ -10,18 +13,73 @@ from schemas.safety import (
     URLCheckResponse,
     QRCheckRequest,
     QRCheckResponse,
+    FeedbackRequest,
+    FeedbackResponse,
     EvaluationMetrics
 )
 from safety.engine import SafetyEngine
 from tests.evaluate_model import run_benchmark_evaluation
 
+# Configure Privacy-Safe Logger (Never logs raw message content or credentials - FR-07/FR-10)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("safety.api")
+
 app = FastAPI(
     title="Digital Payment Safety Assistant API",
-    description="V2 Multi-Modal Payment Safety, Scam Prevention, and URL/QR Analysis API",
-    version="2.0.0"
+    description="V3 Multi-Modal Payment Safety, Scam Prevention, and Uncertainty-Aware Engine",
+    version="3.0.0"
 )
 
-# CORS setup
+# 1. Security Headers Middleware (FR-09/FR-11)
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+# 2. Rate Limiting Middleware (Simple In-Memory Token Bucket - FR-09)
+RATE_LIMIT_WINDOW = 60  # seconds
+MAX_REQUESTS_PER_WINDOW = 120
+client_request_history = {}
+
+class RateLimitingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        client_ip = request.client.host if request.client else "127.0.0.1"
+        now = time.time()
+        
+        # Clean expired timestamps
+        history = client_request_history.get(client_ip, [])
+        valid_timestamps = [ts for ts in history if now - ts < RATE_LIMIT_WINDOW]
+        
+        if len(valid_timestamps) >= MAX_REQUESTS_PER_WINDOW:
+            logger.warning(f"Rate limit exceeded for client: {client_ip}")
+            return Response(
+                content='{"detail": "Rate limit exceeded. Please wait a moment before sending more requests."}',
+                status_code=429,
+                media_type="application/json"
+            )
+        
+        valid_timestamps.append(now)
+        client_request_history[client_ip] = valid_timestamps
+
+        start_time = time.time()
+        response: Response = await call_next(request)
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Privacy-Safe Audit Log: No raw message body or passwords logged!
+        if request.url.path.startswith("/api/"):
+            logger.info(f"{request.method} {request.url.path} -> {response.status_code} ({duration_ms:.1f}ms)")
+
+        return response
+
+app.add_middleware(RateLimitingMiddleware)
+
+# 3. CORS setup
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000")
 origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
 
@@ -39,16 +97,22 @@ engine = SafetyEngine()
 def root():
     return {
         "service": "Digital Payment Safety Assistant API",
-        "version": "2.0.0",
+        "version": "3.0.0",
         "documentation": "/docs"
     }
 
 @app.get("/api/health")
 def health_check():
+    """
+    FR-10: Operational health status without leaking configuration or secrets.
+    """
     return {
         "status": "healthy",
         "service": "Digital Payment Safety Assistant API",
-        "version": "2.0.0"
+        "version": "3.0.0",
+        "uptime_state": "operational",
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "feedback_entries_count": engine.feedback_service.get_feedback_count()
     }
 
 @app.post("/api/check/text", response_model=SafetyAssessmentResponse)
@@ -73,18 +137,25 @@ def check_qr(payload: QRCheckRequest):
         raise HTTPException(status_code=400, detail="QR payload cannot be empty.")
     return engine.analyze_qr(payload)
 
+@app.post("/api/feedback", response_model=FeedbackResponse)
+def submit_feedback(payload: FeedbackRequest, request: Request):
+    """
+    FR-04: User feedback and correction workflow.
+    """
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    return engine.feedback_service.record_feedback(payload, client_ip=client_ip)
+
 @app.get("/api/evaluation/benchmark", response_model=EvaluationMetrics)
 def get_evaluation_benchmark():
     """
-    Evaluates the safety engine against the labeled benchmark dataset
-    and returns precision, recall, and false-positive metrics.
+    FR-02: Repeatable evaluation against labeled dataset.
     """
     return run_benchmark_evaluation()
 
 @app.get("/api/scenarios")
 def get_demonstration_scenarios():
     """
-    Returns the V2 expanded demonstration scenario set.
+    V3 Multilingual and adversarial demonstration scenarios.
     """
     return [
         {
@@ -128,6 +199,13 @@ def get_demonstration_scenarios():
             "category": "UPI QR / Collect Scam",
             "type": "scam",
             "text": "A buyer on OLX sent me a QR code saying: 'Scan this QR code and enter your UPI PIN to receive ₹3,500 advance payment for your sofa.'"
+        },
+        {
+            "id": "hinglish_kyc_threat",
+            "title": "Hinglish Electricity Disconnection Threat",
+            "category": "Fake KYC / Account Suspension",
+            "type": "scam",
+            "text": "Aapka electricity connection aaj raat 9 baje cut off kar diya jayega bill unpaid hone ki wajah se. Turant 9876543210 par call karke settle karein."
         },
         {
             "id": "phishing_link_sms",
