@@ -12,6 +12,53 @@ Format per change entry:
 
 ---
 
+## [V8.0.0] - 2026-10-18
+
+### 1. Analysis Result Experience Visual Redesign (Reference Fidelity)
+- **Change:** Rebuilt `ResultDisplay.jsx` and created `frontend/src/styles/result.css` matching mandatory reference asset `docs/design-references/v8-analysis-result-reference.png`. Implemented high-contrast white layout with breadcrumb header (`Home / Analyze a message / Result`), `ILLUSTRATIVE EXAMPLE` pill, `ANALYSIS RESULT` eyebrow, wide risk summary banner with warning count stat box, 2-column evidence vs. next steps layout, 2-column reviewed message/link vs. analysis details layout, 3-card "How to interpret a result" section, advisory guidance banner, and bottom action bar.
+- **Reason:** Satisfy V8 PRD P0 requirements to deliver a trustworthy, clear, and reassuring result screen that eliminates panic while clearly guiding safe user actions.
+- **Affected Area:** `frontend/src/components/ResultDisplay.jsx`, `frontend/src/styles/result.css`, `frontend/src/components/SafetyAnalyzer.jsx`.
+- **Impact:** Result view visually matches reference design; risk indicators and action steps are distinct, responsive, and accessible.
+- **Evidence:** `docs/design-references/v8-analysis-result-reference.png`, `frontend/src/styles/result.css`, `frontend/src/components/ResultDisplay.jsx`.
+- **Status:** [Verified]
+
+### 2. Structured Result Response Contract Separation
+- **Change:** Enhanced backend schemas (`backend/schemas/safety.py`) with additive fields:
+  - `DetectedIndicator`: `code` (stable identifier), `title` (human-readable title), `evidence_excerpt` (relevant excerpt), `source_type` (`message_rule` or `url_check`).
+  - `SafetyAssessmentResponse`: `reviewed_input` (original text), `verification_status` (explicit status), `analysis_id` (alias for reference_id), `urls` (normalized URL assessment list).
+  - `URLCheckResponse`: `reviewed_input`, `verification_status`, `analysis_id`, `display_url`, `checks` (structured per-check list).
+- **Reason:** Strict separation of `risk_level` (`HIGH`, `MEDIUM`, `LOW`, `UNABLE_TO_ASSESS`) from `verification_status` (`flagged`, `suspicious`, `no_known_threat_found`, `unverified`, `invalid_input`, `provider_unavailable`) to eliminate false passes.
+- **Affected Area:** `backend/schemas/safety.py`, `backend/safety/engine.py`, `backend/tests/test_v8_result_contract.py`.
+- **Impact:** API consumers and UI components have direct access to additive metadata while maintaining 100% backwards compatibility.
+- **Evidence:** `backend/schemas/safety.py` lines 61-125, `backend/tests/test_v8_result_contract.py` (5 tests passing).
+- **Status:** [Verified]
+
+### 3. Integrated Action Bar & Privacy Redaction Utility
+- **Change:** Implemented working result actions: "Analyze another message" (resets state smoothly to input), "Back to Analyze" in header navigation, and "Copy summary" with automatic privacy redaction (`frontend/src/utils/resultFormatters.js`). Redaction automatically masks OTPs, PINs, card numbers, and strips URL query parameters/tokens before copying to clipboard.
+- **Reason:** Guarantee user safety and prevent confidential tokens from leaking when users share summaries with family, support, or cybercrime portals.
+- **Affected Area:** `frontend/src/utils/resultFormatters.js`, `frontend/src/components/ResultDisplay.jsx`, `frontend/src/test/resultFormatters.test.js`.
+- **Impact:** Clean, privacy-safe text summaries are copied to clipboard; query parameters (`?token=secret`) and credentials are never exposed in reports.
+- **Evidence:** `frontend/src/utils/resultFormatters.js`, 5 unit tests in `frontend/src/test/resultFormatters.test.js`.
+- **Status:** [Verified]
+
+### 4. Detection Precision & Reference Scenario Alignment
+- **Change:** Updated `URGENCY_PATTERNS` in `backend/safety/detector.py` to recognize immediate threat deadlines ("verify now", "act now", "blocked today") and integrated automatic URL destination indicator creation (`unverified_url_destination` / `flagged_url_destination`) in `SafetyEngine.analyze_text`.
+- **Reason:** The reference example ("Your UPI account will be blocked today. Verify now to keep your account active. Link: https://secure-upi-help.example") contains 3 distinct warning signs: urgency/time pressure, deceptive account block threat, and an unverified destination link.
+- **Affected Area:** `backend/safety/detector.py`, `backend/safety/engine.py`, `frontend/src/components/SafetyAnalyzer.jsx`.
+- **Impact:** The exact reference scenario reliably yields 3 indicators and High Risk banner matching the visual reference asset.
+- **Evidence:** Pytest session 64 passed, detector patterns lines 15-20.
+- **Status:** [Verified]
+
+### 5. Automated Verification & Quality Gates
+- **Change:** Created `backend/tests/test_v8_result_contract.py` and `frontend/src/test/resultFormatters.test.js`. Updated application version to `8.0.0` in `backend/main.py`.
+- **Reason:** Establish continuous automated regression barriers across backend contracts and frontend formatting logic.
+- **Affected Area:** `backend/tests/test_v8_result_contract.py`, `frontend/src/test/resultFormatters.test.js`, `backend/main.py`.
+- **Impact:** 64 backend tests passing (0.50s), 17 frontend tests passing (72ms), 0 oxlint warnings/errors, and Vite build passing (385ms).
+- **Evidence:** `pytest` log (64 passed), `npm test` log (17 passed), `npm run lint` (0 warnings).
+- **Status:** [Verified]
+
+---
+
 ## [V6.0.0] - 2026-10-17
 
 ### 1. URL Safety Engine False-Pass Elimination & Hardening

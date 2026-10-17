@@ -64,6 +64,18 @@ class DetectedIndicator(BaseModel):
     description: str
     severity: Literal["low", "medium", "high"]
     matched_clues: List[str] = []
+    code: Optional[str] = None
+    title: Optional[str] = None
+    evidence_excerpt: Optional[str] = None
+    source_type: Optional[str] = "message_rule"
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.code is None:
+            self.code = self.id.upper()
+        if self.title is None:
+            self.title = self.name
+        if self.evidence_excerpt is None and self.matched_clues:
+            self.evidence_excerpt = self.matched_clues[0]
 
 class EducationalConcept(BaseModel):
     title: str
@@ -77,7 +89,9 @@ class SafetyAssessmentResponse(BaseModel):
     risk_score: int = Field(..., ge=0, le=100, description="Risk score from 0 (very safe) to 100 (critical risk)")
     summary: str
     status: Optional[str] = "analyzed"
+    verification_status: Optional[str] = None
     input_type: str = "message"
+    reviewed_input: Optional[str] = None
     detected_categories: List[str]
     indicators: List[DetectedIndicator]
     why_suspicious: List[str]
@@ -87,6 +101,7 @@ class SafetyAssessmentResponse(BaseModel):
     educational_concept: EducationalConcept
     detected_urls: List[str] = []
     url_assessments: List[Dict[str, Any]] = []
+    urls: Optional[List[Dict[str, Any]]] = None
     checks_performed: List[str] = []
     checks_unavailable: List[str] = []
     checked_at: Optional[str] = None
@@ -95,6 +110,7 @@ class SafetyAssessmentResponse(BaseModel):
     ai_analysis_summary: Optional[str] = None
     confidence_rating: Optional[str] = "Deterministic Rule Baseline"
     reference_id: str = Field(default="REF-SAFETY-0000", description="Privacy-safe reference ID for this assessment")
+    analysis_id: Optional[str] = None
     uncertainty_note: str = Field(
         default="This assessment reflects detectable patterns. A low-risk result is not proof of safety.",
         description="Explicit communication of evidence bounds and uncertainty (FR-01/FR-03)"
@@ -110,6 +126,12 @@ class SafetyAssessmentResponse(BaseModel):
             self.reasons = list(self.why_suspicious)
         if self.recommendation is None and self.recommended_actions:
             self.recommendation = self.recommended_actions[0]
+        if self.verification_status is None:
+            self.verification_status = self.status
+        if self.analysis_id is None:
+            self.analysis_id = self.reference_id
+        if self.urls is None and self.url_assessments:
+            self.urls = self.url_assessments
 
 class URLCheckRequest(BaseModel):
     url: str = Field(
@@ -129,9 +151,12 @@ class URLCheckResponse(BaseModel):
     risk_level: RiskLevel
     risk_score: int = Field(..., ge=0, le=100)
     status: URLVerificationStatus = "unverified"
+    verification_status: Optional[str] = None
     input_type: str = "url"
+    reviewed_input: Optional[str] = None
     url_submitted: str
     normalized_url: str
+    display_url: Optional[str] = None
     domain: str
     protocol: str
     is_https: bool
@@ -144,11 +169,13 @@ class URLCheckResponse(BaseModel):
     reasons: Optional[List[str]] = None
     recommended_actions: List[str]
     recommendation: Optional[str] = None
+    checks: Optional[List[Dict[str, Any]]] = None
     checks_performed: List[str] = []
     checks_unavailable: List[str] = []
     checked_at: Optional[str] = None
     educational_concept: EducationalConcept
     reference_id: str = "REF-URL-0000"
+    analysis_id: Optional[str] = None
     uncertainty_note: str = "Inspected without navigating to the destination. Unflagged domains may still host unknown threats."
     language: str = "en"
     disclaimer: str = (
@@ -161,6 +188,17 @@ class URLCheckResponse(BaseModel):
             self.reasons = list(self.why_suspicious)
         if self.recommendation is None and self.recommended_actions:
             self.recommendation = self.recommended_actions[0]
+        if self.verification_status is None:
+            self.verification_status = self.status
+        if self.analysis_id is None:
+            self.analysis_id = self.reference_id
+        if self.display_url is None:
+            self.display_url = self.domain
+        if self.checks is None:
+            self.checks = (
+                [{"name": c, "status": "completed"} for c in self.checks_performed] +
+                [{"name": c, "status": "not_configured"} for c in self.checks_unavailable]
+            )
 
 class QRCheckRequest(BaseModel):
     payload: str = Field(
@@ -180,6 +218,8 @@ class QRCheckResponse(BaseModel):
     risk_level: RiskLevel
     risk_score: int = Field(..., ge=0, le=100)
     payload_type: Literal["upi_intent", "url", "text", "unknown"]
+    reviewed_input: Optional[str] = None
+    verification_status: Optional[str] = None
     raw_payload_preview: str
     parsed_details: Dict[str, Any] = {}
     indicators: List[DetectedIndicator]
@@ -187,12 +227,19 @@ class QRCheckResponse(BaseModel):
     recommended_actions: List[str]
     educational_concept: EducationalConcept
     reference_id: str = "REF-QR-0000"
+    analysis_id: Optional[str] = None
     uncertainty_note: str = "QR code inspected safely. A QR code can only request outgoing payments."
     language: str = "en"
     disclaimer: str = (
         "QR code inspected safely. You NEVER need to scan a QR code or enter your UPI PIN to receive money. "
         "Scanning a QR code only initiates an outgoing payment from your account."
     )
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.analysis_id is None:
+            self.analysis_id = self.reference_id
+        if self.verification_status is None:
+            self.verification_status = "flagged" if self.risk_level == "HIGH" else "unverified"
 
 class FeedbackRequest(BaseModel):
     reference_id: Optional[str] = Field(default=None, max_length=64, description="Optional assessment reference ID")

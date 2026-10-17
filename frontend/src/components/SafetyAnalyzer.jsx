@@ -35,7 +35,7 @@ const MESSAGE_EXAMPLES = [
   {
     label: "Account blocked",
     chipClass: "v6-chip-blue",
-    text: "Dear customer, your bank account will be blocked today within 2 hours because KYC is incomplete. Call 9876543210 or install APK to update immediately."
+    text: "Your UPI account will be blocked today. Verify now to keep your account active. Link: https://secure-upi-help.example"
   },
   {
     label: "Unexpected UPI request",
@@ -81,6 +81,7 @@ export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState(loadStoredHistory);
+  const [isExample, setIsExample] = useState(false);
 
   const saveToHistory = (assessment, type, snippet) => {
     try {
@@ -174,6 +175,7 @@ export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initi
   const handleReset = () => {
     setResult(null);
     setError(null);
+    setIsExample(false);
   };
 
   // Preview normalized URL
@@ -224,75 +226,109 @@ export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initi
               </select>
             </div>
 
-            {onNavigateHome && (
-              <button type="button" onClick={onNavigateHome} className="v6-back-btn" aria-label="Back to home page">
+            {result ? (
+              <button 
+                type="button" 
+                onClick={handleReset} 
+                className="v6-back-btn" 
+                aria-label="Back to Analyze"
+              >
                 <ArrowLeft size={14} aria-hidden="true" />
-                <span>Back to home</span>
+                <span>Back to Analyze</span>
               </button>
+            ) : (
+              onNavigateHome && (
+                <button type="button" onClick={onNavigateHome} className="v6-back-btn" aria-label="Back to home page">
+                  <ArrowLeft size={14} aria-hidden="true" />
+                  <span>Back to home</span>
+                </button>
+              )
             )}
           </nav>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="v6-content-container">
-        {/* Breadcrumb Navigation */}
-        <nav className="v6-breadcrumbs" aria-label="Breadcrumb">
-          <a href="/" onClick={(e) => { e.preventDefault(); if (onNavigateHome) onNavigateHome(); }}>Home</a>
-          <span>/</span>
-          <span style={{ color: '#0f172a', fontWeight: 500 }}>
-            {activeTab === 'link' ? 'Inspect a link' : 'Analyze a message'}
-          </span>
-        </nav>
-
-        {/* Eyebrow & Headline */}
-        <div className="v6-eyebrow">
-          {activeTab === 'link' ? 'LINK SAFETY CHECK' : 'MESSAGE SAFETY CHECK'}
-        </div>
-        <h1 className="v6-page-headline">
-          {activeTab === 'link' ? 'Inspect a link before you click.' : 'Check a message before you act.'}
-        </h1>
-        <p className="v6-page-subhead">
-          {activeTab === 'link' 
-            ? 'Paste an unfamiliar web address or domain name. We will inspect its structure and verified financial directories without visiting the link.'
-            : 'Paste a suspicious SMS, chat, email, or payment request. We\'ll help you spot common warning signs and think through a safer next step.'}
-        </p>
-
-        {/* Privacy Reassurance Banner */}
-        <div className="v6-privacy-banner" role="region" aria-label="Privacy guarantee">
-          <div className="v6-privacy-content">
-            <div className="v6-privacy-icon">
-              <Check size={14} strokeWidth={3} aria-hidden="true" />
+      {result ? (
+        <main className="v8-result-main" style={{ width: '100%', minHeight: 'calc(100vh - 72px)' }}>
+          {error && (
+            <div style={{ maxWidth: '1200px', margin: '1rem auto 0', padding: '0 1.5rem' }}>
+              <Alert variant="error" onDismiss={() => setError(null)}>
+                {error}
+              </Alert>
             </div>
-            <div>
-              <div className="v6-privacy-title">Your privacy comes first</div>
-              <div className="v6-privacy-desc">
-                Remove names, phone numbers, account details, and other personal information before pasting. We never request or store OTPs, PINs, or passwords.
-              </div>
-            </div>
-          </div>
-          <a href="#privacy" className="v6-privacy-link" onClick={(e) => { e.preventDefault(); alert("ClearPay Privacy Guarantee: All safety analyses run without storing your credentials or personal information. Never paste actual passwords or PINs."); }}>
-            <span>Privacy details</span>
-            <ArrowRight size={14} aria-hidden="true" />
-          </a>
-        </div>
-
-        {error && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <Alert variant="error" onDismiss={() => setError(null)}>
-              {error}
-            </Alert>
-          </div>
-        )}
-
-        {/* Dynamic Display: Result OR Input Cards */}
-        {result ? (
+          )}
           <ResultDisplay 
             result={result} 
             onReset={handleReset} 
             onInspectUrl={handleInspectDetectedUrl} 
+            reviewedText={activeTab === 'link' ? urlInput : messageText}
+            isExample={isExample}
           />
-        ) : (
+          <footer className="v6-footer">
+            <div className="v6-footer-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
+              <div className="v6-footer-brand">
+                <strong>ClearPay</strong>
+                <span>· Educational guidance only · No scam checker can promise 100% accuracy.</span>
+              </div>
+              <div className="v6-footer-links">
+                <a href="#privacy" onClick={(e) => { e.preventDefault(); alert("Privacy: ClearPay never collects or stores passwords, PINs, or credentials."); }}>Privacy</a>
+                <a href="#help" onClick={(e) => { e.preventDefault(); alert("Help & National Helpline: Dial 1930 to report cyber fraud in India."); }}>Help & FAQ</a>
+              </div>
+            </div>
+          </footer>
+        </main>
+      ) : (
+        <main className="v6-content-container">
+          {/* Breadcrumb Navigation */}
+          <nav className="v6-breadcrumbs" aria-label="Breadcrumb">
+            <a href="/" onClick={(e) => { e.preventDefault(); if (onNavigateHome) onNavigateHome(); }}>Home</a>
+            <span>/</span>
+            <span style={{ color: '#0f172a', fontWeight: 500 }}>
+              {activeTab === 'link' ? 'Inspect a link' : 'Analyze a message'}
+            </span>
+          </nav>
+
+          {/* Eyebrow & Headline */}
+          <div className="v6-eyebrow">
+            {activeTab === 'link' ? 'LINK SAFETY CHECK' : 'MESSAGE SAFETY CHECK'}
+          </div>
+          <h1 className="v6-page-headline">
+            {activeTab === 'link' ? 'Inspect a link before you click.' : 'Check a message before you act.'}
+          </h1>
+          <p className="v6-page-subhead">
+            {activeTab === 'link' 
+              ? 'Paste an unfamiliar web address or domain name. We will inspect its structure and verified financial directories without visiting the link.'
+              : 'Paste a suspicious SMS, chat, email, or payment request. We\'ll help you spot common warning signs and think through a safer next step.'}
+          </p>
+
+          {/* Privacy Reassurance Banner */}
+          <div className="v6-privacy-banner" role="region" aria-label="Privacy guarantee">
+            <div className="v6-privacy-content">
+              <div className="v6-privacy-icon">
+                <Check size={14} strokeWidth={3} aria-hidden="true" />
+              </div>
+              <div>
+                <div className="v6-privacy-title">Your privacy comes first</div>
+                <div className="v6-privacy-desc">
+                  Remove names, phone numbers, account details, and other personal information before pasting. We never request or store OTPs, PINs, or passwords.
+                </div>
+              </div>
+            </div>
+            <a href="#privacy" className="v6-privacy-link" onClick={(e) => { e.preventDefault(); alert("ClearPay Privacy Guarantee: All safety analyses run without storing your credentials or personal information. Never paste actual passwords or PINs."); }}>
+              <span>Privacy details</span>
+              <ArrowRight size={14} aria-hidden="true" />
+            </a>
+          </div>
+
+          {error && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <Alert variant="error" onDismiss={() => setError(null)}>
+                {error}
+              </Alert>
+            </div>
+          )}
+
           <div className="v6-main-grid">
             {/* Left Column: Input Form Card */}
             <div className="v6-input-card">
@@ -368,7 +404,7 @@ export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initi
                       placeholder={'Paste the suspicious message here...\n\nFor example: "Your bank account will be blocked today. Verify immediately to avoid losing access."'}
                       value={messageText}
                       maxLength={2000}
-                      onChange={(e) => setMessageText(e.target.value)}
+                      onChange={(e) => { setMessageText(e.target.value); setIsExample(false); }}
                       rows={6}
                       required
                     />
@@ -386,7 +422,7 @@ export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initi
                           key={idx}
                           type="button"
                           className={`v6-chip ${ex.chipClass}`}
-                          onClick={() => { setMessageText(ex.text); setError(null); }}
+                          onClick={() => { setMessageText(ex.text); setIsExample(true); setError(null); }}
                         >
                           {ex.label}
                         </button>
@@ -430,7 +466,7 @@ export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initi
                       placeholder="e.g. https://fake-bank-verify.example/confirm or secure-pay.example"
                       value={urlInput}
                       maxLength={2000}
-                      onChange={(e) => setUrlInput(e.target.value)}
+                      onChange={(e) => { setUrlInput(e.target.value); setIsExample(false); }}
                       required
                     />
                     <div className="v6-char-counter">
@@ -454,7 +490,7 @@ export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initi
                           key={idx}
                           type="button"
                           className={`v6-chip ${ex.chipClass}`}
-                          onClick={() => { setUrlInput(ex.url); setError(null); }}
+                          onClick={() => { setUrlInput(ex.url); setIsExample(true); setError(null); }}
                         >
                           {ex.label}
                         </button>
@@ -581,7 +617,6 @@ export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initi
               </div>
             </div>
           </div>
-        )}
 
         {/* Lower Section: What makes a message suspicious? */}
         <section className="v6-suspicious-section" aria-labelledby="suspicious-patterns-title">
@@ -647,6 +682,7 @@ export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initi
           </div>
         </footer>
       </main>
+      )}
     </div>
   );
 }

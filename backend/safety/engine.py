@@ -99,34 +99,74 @@ class SafetyEngine:
         checks_performed = ["text_pattern_matching", "credential_check", "urgency_check"]
         if detected_urls:
             checks_performed.append("url_extraction")
-            for u in detected_urls[:5]:
+            for idx, u in enumerate(detected_urls[:5]):
                 u_check = self.url_checker.analyze_url(URLCheckRequest(url=u, language=request.language))
+                checks_list = (
+                    [{"name": c, "status": "completed"} for c in u_check.checks_performed] +
+                    [{"name": c, "status": "not_configured"} for c in u_check.checks_unavailable]
+                )
                 url_assessments.append({
+                    "url_id": f"url-{idx + 1}",
                     "url": u,
+                    "display_url": u_check.domain,
                     "domain": u_check.domain,
                     "status": u_check.status,
+                    "verification_status": u_check.status,
                     "risk_level": u_check.risk_level,
                     "risk_score": u_check.risk_score,
-                    "why_suspicious": u_check.why_suspicious
+                    "why_suspicious": u_check.why_suspicious,
+                    "reasons": u_check.why_suspicious,
+                    "checks": checks_list
                 })
+
+                if u_check.status == "unverified" and not any(ind.id == "unverified_url_destination" for ind in formatted_indicators):
+                    formatted_indicators.append(DetectedIndicator(
+                        id="unverified_url_destination",
+                        name="Unverified destination",
+                        description="The link has no verified trust verdict in this example; unknown does not mean safe.",
+                        severity="medium",
+                        matched_clues=["UNVERIFIED URL"],
+                        code="UNVERIFIED_DESTINATION",
+                        title="Unverified destination",
+                        evidence_excerpt=u,
+                        source_type="url_check"
+                    ))
+                elif u_check.status == "flagged" and not any(ind.id == "flagged_url_destination" for ind in formatted_indicators):
+                    formatted_indicators.append(DetectedIndicator(
+                        id="flagged_url_destination",
+                        name="Potential Threat Link",
+                        description="The link matches known deceptive domains, suspicious TLDs, or dangerous file downloads.",
+                        severity="high",
+                        matched_clues=["FLAGGED URL"],
+                        code="FLAGGED_DESTINATION",
+                        title="Potential Threat Link",
+                        evidence_excerpt=u,
+                        source_type="url_check"
+                    ))
 
         return SafetyAssessmentResponse(
             risk_level=risk_level,
             risk_score=risk_score,
             summary=rec_data["summary"],
+            status="analyzed",
+            verification_status="analyzed",
+            reviewed_input=request.text,
             detected_categories=categories if categories else (["Normal / Legitimate Transaction"] if is_standard_notification else ["Unspecified"]),
             indicators=formatted_indicators,
             why_suspicious=rec_data["why_suspicious"],
+            reasons=rec_data["why_suspicious"],
             recommended_actions=actions,
             educational_concept=edu_concept,
             detected_urls=detected_urls,
             url_assessments=url_assessments,
+            urls=url_assessments,
             checks_performed=checks_performed,
             checks_unavailable=[],
             is_safe_practice=is_standard_notification,
             ai_enhanced=False,
             confidence_rating="Deterministic Rule Baseline",
             reference_id=ref_id,
+            analysis_id=ref_id,
             uncertainty_note=uncertainty,
             language=request.language
         )
@@ -293,15 +333,20 @@ class SafetyEngine:
             risk_level=risk_level,
             risk_score=risk_score,
             summary=rec_data["summary"],
+            status="analyzed",
+            verification_status="analyzed",
+            reviewed_input=f"Sender: {request.contact_source}, Claim: {request.sender_claim}, Action: {request.requested_action}",
             detected_categories=list(categories) if categories else (["Normal Merchant Payment"] if is_normal_merchant else ["Unspecified"]),
             indicators=formatted_indicators,
             why_suspicious=rec_data["why_suspicious"],
+            reasons=rec_data["why_suspicious"],
             recommended_actions=actions,
             educational_concept=edu_concept,
             is_safe_practice=is_normal_merchant,
             ai_enhanced=False,
             confidence_rating="Deterministic Rule Baseline",
             reference_id=ref_id,
+            analysis_id=ref_id,
             uncertainty_note=uncertainty,
             language=request.language
         )
@@ -309,6 +354,10 @@ class SafetyEngine:
     def analyze_url(self, request: URLCheckRequest) -> URLCheckResponse:
         res = self.url_checker.analyze_url(request)
         res.reference_id = self._generate_ref_id("URL")
+        res.analysis_id = res.reference_id
+        res.reviewed_input = request.url
+        res.display_url = res.domain
+        res.verification_status = res.status
         res.language = request.language
         if not res.uncertainty_note:
             res.uncertainty_note = self._build_uncertainty_note(res.risk_level, len(res.indicators))
@@ -317,6 +366,9 @@ class SafetyEngine:
     def analyze_qr(self, request: QRCheckRequest) -> QRCheckResponse:
         res = self.qr_service.analyze_payload(request)
         res.reference_id = self._generate_ref_id("QR")
+        res.analysis_id = res.reference_id
+        res.reviewed_input = request.payload
+        res.verification_status = "flagged" if res.risk_level == "HIGH" else "unverified"
         res.language = request.language
         res.uncertainty_note = self._build_uncertainty_note(res.risk_level, len(res.indicators))
         return res

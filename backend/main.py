@@ -28,8 +28,8 @@ logger = logging.getLogger("safety.api")
 
 app = FastAPI(
     title="Digital Payment Safety Assistant API",
-    description="V3 Multi-Modal Payment Safety, Scam Prevention, and Uncertainty-Aware Engine",
-    version="3.0.0"
+    description="V8 Multi-Modal Payment Safety, Scam Prevention, and Uncertainty-Aware Engine",
+    version="8.0.0"
 )
 
 # 1. Security Headers Middleware (FR-09/FR-11)
@@ -99,7 +99,7 @@ engine = SafetyEngine()
 def root():
     return {
         "service": "Digital Payment Safety Assistant API",
-        "version": "3.0.0",
+        "version": "8.0.0",
         "documentation": "/docs"
     }
 
@@ -111,7 +111,7 @@ def health_check():
     return {
         "status": "healthy",
         "service": "Digital Payment Safety Assistant API",
-        "version": "3.0.0",
+        "version": "8.0.0",
         "uptime_state": "operational",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "feedback_entries_count": engine.feedback_service.get_feedback_count()

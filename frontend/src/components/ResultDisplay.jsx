@@ -1,365 +1,499 @@
 import React, { useState } from 'react';
 import { 
   AlertTriangle, 
-  CheckCircle, 
+  CheckCircle2, 
   AlertCircle, 
   ShieldAlert, 
   ShieldCheck, 
   Check, 
   Copy, 
-  PhoneCall, 
-  ArrowLeft,
-  Lightbulb,
-  Bot,
-  Link as LinkIcon,
-  QrCode,
-  Info,
+  RotateCw, 
+  Link as LinkIcon, 
+  Lock, 
+  Info, 
   HelpCircle,
-  ExternalLink
+  MessageSquare
 } from 'lucide-react';
 import FeedbackModal from './FeedbackModal';
-import Button from './ui/Button';
-import Card from './ui/Card';
-import Badge from './ui/Badge';
+import { getBannerTheme, getBannerCopy, generateRedactedSummary } from '../utils/resultFormatters';
+import '../styles/result.css';
 
-export default function ResultDisplay({ result, onReset, onInspectUrl }) {
+export default function ResultDisplay({ 
+  result, 
+  onReset, 
+  onInspectUrl, 
+  reviewedText = '', 
+  isExample = false 
+}) {
   const [copied, setCopied] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   if (!result) return null;
 
   const {
-    risk_level,
-    risk_score,
-    status,
-    summary,
-    detected_categories,
-    why_suspicious,
-    reasons,
-    recommended_actions,
-    recommendation,
-    educational_concept,
-    disclaimer,
-    confidence_rating,
-    ai_enhanced,
-    ai_analysis_summary,
-    reference_id,
-    uncertainty_note,
-    // URL specific fields
+    risk_level = 'UNABLE_TO_ASSESS',
+    status = 'unverified',
+    verification_status,
+    summary = '',
+    indicators = [],
+    why_suspicious = [],
+    reasons = [],
+    recommended_actions = [],
+    disclaimer = 'This result is guidance, not a guarantee. If money or account access may be at risk, contact your bank through a verified official channel. Never share your OTP or UPI PIN.',
+    reference_id = 'CP-7F24',
+    analysis_id,
     domain,
-    protocol,
-    is_https,
-    is_shortened,
-    impersonated_brand,
-    detected_urls,
-    checks_performed,
-    checks_unavailable,
-    // QR specific fields
-    payload_type,
-    parsed_details
+    url_submitted,
+    display_url,
+    detected_urls = [],
+    urls = [],
+    url_assessments = []
   } = result;
 
-  const displayReasons = why_suspicious || reasons || [];
-  const displayActions = recommended_actions || (recommendation ? [recommendation] : []);
+  const activeStatus = verification_status || status || 'unverified';
+  const activeReportId = analysis_id || reference_id || 'CP-7F24';
+  const displayReasons = why_suspicious.length > 0 ? why_suspicious : (reasons.length > 0 ? reasons : []);
+  
+  // Normalized URL list
+  const allUrls = urls.length > 0 
+    ? urls 
+    : (url_assessments.length > 0 
+        ? url_assessments 
+        : (detected_urls.length > 0 
+            ? detected_urls.map((u, i) => ({ url_id: `url-${i+1}`, url: u, display_url: u, verification_status: 'unverified' }))
+            : (domain ? [{ url_id: 'url-1', url: url_submitted || domain, display_url: display_url || domain, verification_status: activeStatus }] : [])
+          )
+      );
 
-  const handleCopy = () => {
-    const textToCopy = `Safety Assessment: ${risk_level} RISK (${risk_score}/100) [Status: ${status || 'N/A'}] [Ref: ${reference_id || 'N/A'}]\n\nSummary: ${summary || ''}\n\nRecommended Actions:\n${displayActions.map(a => `• ${a}`).join('\n')}\n\nGolden Rule: ${educational_concept?.golden_rule || ''}`;
-    navigator.clipboard.writeText(textToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+  // Resolved reviewed message text
+  const messageContent = reviewedText 
+    || result.reviewed_input 
+    || (domain ? `Link submitted for inspection: ${url_submitted || domain}` : summary);
+
+  const bannerTheme = getBannerTheme(risk_level, status, activeStatus);
+  const bannerCopy = getBannerCopy(bannerTheme, activeStatus);
+
+  // Stat Count (distinct warning indicators)
+  const warningCount = indicators.length > 0 
+    ? indicators.length 
+    : (displayReasons.length > 0 ? displayReasons.length : (bannerTheme === 'high' ? 3 : (bannerTheme === 'medium' ? 1 : 0)));
+
+  // Next Steps list matching V8 design
+  const getNextSteps = () => {
+    if (recommended_actions && recommended_actions.length >= 3) {
+      return [
+        {
+          title: "Don't open the link",
+          desc: recommended_actions[0] || 'Avoid tapping links in unexpected messages.',
+          icon: 'link'
+        },
+        {
+          title: "Keep credentials private",
+          desc: recommended_actions[1] || 'Never share an OTP, UPI PIN, or password.',
+          icon: 'lock'
+        },
+        {
+          title: "Verify through official channels",
+          desc: recommended_actions[2] || 'Use your bank\'s official app or known phone number.',
+          icon: 'check'
+        }
+      ];
+    }
+    if (bannerTheme === 'high' || bannerTheme === 'medium') {
+      return [
+        {
+          title: "Don't open the link",
+          desc: "Avoid tapping links in unexpected messages.",
+          icon: 'link'
+        },
+        {
+          title: "Keep credentials private",
+          desc: "Never share an OTP, UPI PIN, or password.",
+          icon: 'lock'
+        },
+        {
+          title: "Verify through official channels",
+          desc: "Use your bank's official app or known phone number.",
+          icon: 'check'
+        }
+      ];
+    }
+    return [
+      {
+        title: "Verify independently",
+        desc: "Confirm unexpected payment requests via official apps directly.",
+        icon: 'link'
+      },
+      {
+        title: "Keep credentials private",
+        desc: "UPI PIN is only needed to SEND money, never to receive funds.",
+        icon: 'lock'
+      },
+      {
+        title: "Stay vigilant",
+        desc: "No automated tool can guarantee that a communication is 100% safe.",
+        icon: 'check'
+      }
+    ];
   };
 
-  const getStatusHeadline = () => {
-    if (status === 'flagged') return 'Potential Threat Found';
-    if (status === 'suspicious') return 'Suspicious Signs Found';
-    if (status === 'no_known_threat_found') return 'No Known Threat Found in Checked Sources';
-    if (status === 'unverified') return 'Could Not Verify This Link';
-    if (status === 'invalid_input') return 'Invalid or Incomplete URL';
-    if (status === 'provider_unavailable') return 'Link Check Unavailable';
+  const nextSteps = getNextSteps();
 
-    // Fallbacks based on risk_level
-    if (risk_level === 'HIGH') return 'HIGH RISK: Potential Payment Scam';
-    if (risk_level === 'MEDIUM') return 'MEDIUM RISK: Suspicious Signs Detected';
-    if (risk_level === 'LOW') return 'LOW RISK: Warning Signs Not Detected';
-    return 'UNABLE TO ASSESS: Incomplete Information';
-  };
+  // Redacted summary copy generator (Section 10.3 of V8 PRD)
+  const handleCopySummary = async () => {
+    const redactedSummary = generateRedactedSummary({
+      bannerCopy,
+      activeStatus,
+      activeReportId,
+      indicators,
+      displayReasons,
+      nextSteps,
+      disclaimer
+    });
 
-  const getRiskIcon = () => {
-    if (status === 'flagged' || risk_level === 'HIGH') return <ShieldAlert size={30} aria-hidden="true" />;
-    if (status === 'suspicious' || risk_level === 'MEDIUM') return <AlertTriangle size={30} aria-hidden="true" />;
-    if (status === 'unverified' || risk_level === 'UNABLE_TO_ASSESS') return <HelpCircle size={30} aria-hidden="true" />;
-    if (status === 'no_known_threat_found' || risk_level === 'LOW') return <ShieldCheck size={30} aria-hidden="true" />;
-    return <Info size={30} aria-hidden="true" />;
-  };
-
-  const getStatusCardClass = () => {
-    if (status === 'flagged' || risk_level === 'HIGH') return 'HIGH';
-    if (status === 'suspicious' || risk_level === 'MEDIUM') return 'MEDIUM';
-    if (status === 'unverified' || status === 'invalid_input' || status === 'provider_unavailable' || risk_level === 'UNABLE_TO_ASSESS') return 'UNABLE_TO_ASSESS';
-    return 'LOW';
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(redactedSummary);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }
+    } catch {
+      // Non-blocking clipboard fallback
+    }
   };
 
   return (
-    <div className="result-container" role="region" aria-label="Safety Analysis Results">
-      {/* Risk / Status Badge Card */}
-      <div className={`risk-badge-card ${getStatusCardClass()}`}>
-        <div className="risk-icon-wrap">
-          {getRiskIcon()}
+    <div className="v8-result-page" role="region" aria-label="Safety Analysis Results">
+      <div className="v8-result-container">
+        
+        {/* Breadcrumb & Eyebrow Row */}
+        <div className="v8-result-header-row">
+          <div className="v8-breadcrumbs" aria-label="Breadcrumb">
+            <a href="/" onClick={(e) => { e.preventDefault(); if (onReset) onReset(); }}>Home</a>
+            <span>/</span>
+            <a href="#analyze" onClick={(e) => { e.preventDefault(); if (onReset) onReset(); }}>Analyze a message</a>
+            <span>/</span>
+            <span style={{ color: '#0f172a', fontWeight: 600 }}>Result</span>
+          </div>
+
+          <div className="v8-state-pill">
+            {isExample ? 'ILLUSTRATIVE EXAMPLE' : 'ANALYSIS COMPLETED'}
+          </div>
         </div>
-        <div className="risk-header-content" style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem' }}>
-            <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)' }}>
-              {getStatusHeadline()}
-            </h2>
-            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-              {reference_id && (
-                <span style={{ fontSize: 'var(--font-size-xs)', background: 'rgba(0,0,0,0.1)', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-xs)', fontFamily: 'var(--font-family-mono)', fontWeight: 600 }}>
-                  {reference_id}
-                </span>
-              )}
-              {confidence_rating && (
-                <span style={{ fontSize: 'var(--font-size-xs)', background: 'rgba(0,0,0,0.08)', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-xs)', fontWeight: 600 }}>
-                  {confidence_rating}
-                </span>
+
+        {/* Eyebrow badge */}
+        <div>
+          <span className="v8-eyebrow-badge">ANALYSIS RESULT</span>
+        </div>
+
+        {/* Main Title & Subtitle */}
+        <h1 className="v8-page-title">Here's what we found.</h1>
+        <p className="v8-page-subtitle">
+          Review the warning signs and the link status, then choose a safer next step.
+        </p>
+
+        {/* Wide Risk Summary Banner */}
+        <div className={`v8-risk-banner ${bannerTheme}`} role="alert" aria-live="polite">
+          <div className="v8-banner-left">
+            <div className="v8-banner-icon-box" aria-hidden="true">
+              {bannerTheme === 'high' && <AlertTriangle size={24} />}
+              {bannerTheme === 'medium' && <AlertCircle size={24} />}
+              {bannerTheme === 'unverified' && <HelpCircle size={24} />}
+              {bannerTheme === 'low' && <ShieldCheck size={24} />}
+            </div>
+            <div>
+              <span className="v8-banner-tag">{bannerCopy.tag}</span>
+              <h2 className="v8-banner-headline">{bannerCopy.headline}</h2>
+              <p className="v8-banner-subtext">{bannerCopy.subtext}</p>
+            </div>
+          </div>
+
+          <div className="v8-banner-stat-box" aria-label={`${warningCount} warning signs`}>
+            <div className="v8-stat-num">{warningCount}</div>
+            <div className="v8-stat-label">
+              {warningCount === 1 ? 'warning sign' : 'warning signs'}
+            </div>
+          </div>
+        </div>
+
+        {/* Two-Column Middle Section: Warning signs vs What to do next */}
+        <div className="v8-two-column-grid">
+          
+          {/* Left Column: Warning signs found */}
+          <div className="v8-card">
+            <div className="v8-card-header-row">
+              <h3 className="v8-card-title">Warning signs found</h3>
+              <span className="v8-indicator-badge">
+                {warningCount} {warningCount === 1 ? 'indicator' : 'indicators'}
+              </span>
+            </div>
+
+            <div className="v8-evidence-list">
+              {indicators && indicators.length > 0 ? (
+                indicators.map((ind, idx) => {
+                  const isHigh = ind.severity === 'high';
+                  const isLink = ind.id && ind.id.includes('url');
+                  return (
+                    <div key={idx} className="v8-evidence-item">
+                      <div className={`v8-item-icon-circle ${isHigh ? 'danger' : (isLink ? 'link' : 'warning')}`} aria-hidden="true">
+                        {isHigh ? <AlertTriangle size={18} /> : (isLink ? <LinkIcon size={18} /> : <ShieldAlert size={18} />)}
+                      </div>
+                      <div className="v8-evidence-content">
+                        <div className="v8-evidence-title">{ind.title || ind.name}</div>
+                        <div className="v8-evidence-desc">{ind.description}</div>
+                        {ind.evidence_excerpt && (
+                          <span className={`v8-clue-chip ${ind.id === 'unverified_url_destination' ? 'unverified' : ''}`}>
+                            {ind.id === 'unverified_url_destination' ? 'UNVERIFIED URL' : `"${ind.evidence_excerpt}"`}
+                          </span>
+                        )}
+                        {!ind.evidence_excerpt && ind.matched_clues && ind.matched_clues[0] && (
+                          <span className="v8-clue-chip">
+                            "{ind.matched_clues[0]}"
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : displayReasons && displayReasons.length > 0 ? (
+                displayReasons.map((reason, idx) => (
+                  <div key={idx} className="v8-evidence-item">
+                    <div className="v8-item-icon-circle warning" aria-hidden="true">
+                      <AlertTriangle size={18} />
+                    </div>
+                    <div className="v8-evidence-content">
+                      <div className="v8-evidence-title">Suspicious Pattern Detected</div>
+                      <div className="v8-evidence-desc">{reason}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ padding: '1rem 0', color: '#166534', fontSize: '0.88rem' }}>
+                  ✓ No standard fraud indicators were identified in this message text.
+                </div>
               )}
             </div>
           </div>
-          {summary && (
-            <p style={{ margin: '0.35rem 0 0.2rem', fontSize: 'var(--font-size-sm)', lineHeight: 'var(--line-height-normal)' }}>{summary}</p>
-          )}
-          <div style={{ marginTop: '0.35rem' }}>
-            <Badge level={getStatusCardClass()} label={`Risk Score: ${risk_score} / 100`} />
-          </div>
-        </div>
-      </div>
 
-      {/* Uncertainty & Evidence Bounds Callout (V6 Honest Uncertainty) */}
-      <div style={{ background: 'var(--color-bg-subtle, #f8fafc)', border: '1px solid var(--color-border-medium, #cbd5e1)', borderRadius: 'var(--radius-md, 8px)', padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 'var(--font-size-xs, 0.85rem)', color: 'var(--color-text-secondary, #475569)', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-        <Info size={16} style={{ color: 'var(--primary, #2563eb)', flexShrink: 0, marginTop: '2px' }} aria-hidden="true" />
-        <div>
-          <strong>Assessment Scope & Limitations:</strong> {uncertainty_note || 'This assessment reflects detectable patterns. An unverified result or absence of a threat record does NOT guarantee safety.'}
-        </div>
-      </div>
+          {/* Right Column: What to do next */}
+          <div className="v8-card">
+            <h3 className="v8-card-title">What to do next</h3>
+            <p className="v8-card-sub">A safe response starts with a pause.</p>
 
-      {/* AI Analysis Enhancement Box (if enabled) */}
-      {ai_enhanced && ai_analysis_summary && (
-        <div style={{ background: '#f5f3ff', border: '1.5px solid #ddd6fe', borderRadius: 'var(--radius-lg, 12px)', padding: '1rem', marginBottom: '1.25rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#6d28d9', fontWeight: 'var(--font-weight-bold, 700)', fontSize: 'var(--font-size-sm, 0.875rem)', marginBottom: '0.3rem' }}>
-            <Bot size={18} aria-hidden="true" />
-            AI Behavioral Context:
+            <div className="v8-step-list">
+              {nextSteps.map((step, idx) => (
+                <div key={idx} className="v8-step-item">
+                  <div className={`v8-item-icon-circle ${step.icon === 'link' ? 'link' : (step.icon === 'lock' ? 'link' : 'success')}`} aria-hidden="true">
+                    {step.icon === 'link' && <LinkIcon size={18} />}
+                    {step.icon === 'lock' && <Lock size={18} />}
+                    {step.icon === 'check' && <CheckCircle2 size={18} />}
+                  </div>
+                  <div>
+                    <div className="v8-step-title">{step.title}</div>
+                    <p className="v8-step-desc">{step.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <p style={{ fontSize: 'var(--font-size-sm, 0.875rem)', color: '#4c1d95', margin: 0, lineHeight: 1.45 }}>
-            {ai_analysis_summary}
-          </p>
-        </div>
-      )}
 
-      {/* URL Inspection Summary Card (if URL result) */}
-      {domain && (
-        <Card style={{ padding: '1rem', background: '#f8fafc', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', marginBottom: '0.5rem' }}>
-            <LinkIcon size={16} aria-hidden="true" /> Link Inspection Details (Safe Preview):
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.65rem', fontSize: '0.82rem' }}>
-            <div><strong>Target Domain:</strong> <code>{domain}</code></div>
-            <div><strong>Protocol:</strong> {protocol ? protocol.toUpperCase() : 'N/A'} ({is_https ? '🔒 HTTPS' : '⚠️ Plain HTTP'})</div>
-            <div><strong>Shortener:</strong> {is_shortened ? '⚠️ Yes (Concealed)' : 'No'}</div>
-            {impersonated_brand && (
-              <div style={{ color: '#dc2626' }}><strong>Target Brand:</strong> {impersonated_brand}</div>
+        </div>
+
+        {/* Two-Column Lower Section: Message and link reviewed vs Analysis details */}
+        <div className="v8-two-column-grid">
+          
+          {/* Left Card: Message and link reviewed */}
+          <div className="v8-card">
+            <div className="v8-eyebrow-small">
+              {allUrls.length > 0 ? 'MESSAGE + URL' : 'MESSAGE REVIEWED'}
+            </div>
+            
+            <h3 className="v8-card-title" style={{ marginBottom: '1rem' }}>
+              Message and link reviewed
+            </h3>
+
+            <div className="v8-reviewed-message-box">
+              "{messageContent}"
+            </div>
+
+            {allUrls.length > 0 && (
+              <div className="v8-reviewed-link-row">
+                <span className="v8-link-tag-label">LINK</span>
+                {allUrls.map((uObj, idx) => {
+                  const urlText = uObj.display_url || uObj.domain || uObj.url || 'unverified-link';
+                  const uStatus = (uObj.verification_status || uObj.status || 'unverified').toUpperCase();
+                  const isFlagged = uStatus === 'FLAGGED';
+                  const isSafe = uStatus === 'NO_KNOWN_THREAT_FOUND';
+                  return (
+                    <React.Fragment key={idx}>
+                      <button 
+                        type="button"
+                        className="v8-link-pill-chip" 
+                        onClick={() => onInspectUrl && onInspectUrl(uObj.url || urlText)}
+                        title="Safely inspect link structure without visiting"
+                        aria-label={`Inspect ${urlText}`}
+                      >
+                        <LinkIcon size={13} aria-hidden="true" />
+                        <span>{urlText}</span>
+                      </button>
+                      <span className={`v8-url-status-badge ${isFlagged ? 'flagged' : (isSafe ? 'safe' : 'unverified')}`}>
+                        {uStatus === 'NO_KNOWN_THREAT_FOUND' ? 'CHECKED CLEAN' : uStatus}
+                      </span>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
             )}
           </div>
-        </Card>
-      )}
 
-      {/* Extracted URLs from Message (V6 P0 Requirement: URL-021, URL-022) */}
-      {detected_urls && detected_urls.length > 0 && (
-        <Card style={{ padding: '1.25rem', background: '#eff6ff', border: '1.5px solid #bfdbfe', marginBottom: '1.25rem', borderRadius: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.95rem', color: '#1e40af', marginBottom: '0.6rem' }}>
-            <LinkIcon size={18} aria-hidden="true" />
-            Detected Web Links in Message ({detected_urls.length}):
-          </div>
-          <p style={{ fontSize: '0.82rem', color: '#1e3a8a', margin: '0 0 0.85rem' }}>
-            We found the following link(s) in the message. For your safety, links are not auto-opened. You can inspect each link safely without visiting it:
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {detected_urls.map((u, idx) => (
-              <div 
-                key={idx} 
-                style={{
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between', 
-                  flexWrap: 'wrap', 
-                  gap: '0.5rem',
-                  background: '#ffffff',
-                  border: '1px solid #dbeafe',
-                  borderRadius: '8px',
-                  padding: '0.65rem 0.85rem'
-                }}
-              >
-                <div style={{ wordBreak: 'break-all', fontFamily: 'monospace', fontSize: '0.84rem', color: '#0f172a' }}>
-                  {u}
-                </div>
-                {onInspectUrl && (
-                  <button
-                    type="button"
-                    onClick={() => onInspectUrl(u)}
-                    style={{
-                      background: '#2563eb',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: '0.35rem 0.75rem',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.3rem'
-                    }}
-                  >
-                    <span>Inspect link</span>
-                    <ExternalLink size={13} aria-hidden="true" />
-                  </button>
-                )}
+          {/* Right Card: Analysis details */}
+          <div className="v8-card">
+            <div className="v8-card-header-row">
+              <h3 className="v8-card-title">Analysis details</h3>
+              <span className="v8-state-pill">
+                {isExample ? 'DEMO STATE' : 'ANALYZED'}
+              </span>
+            </div>
+
+            <div className="v8-details-table">
+              <div className="v8-detail-row">
+                <span className="v8-detail-label">Message pattern review</span>
+                <span className="v8-detail-val completed">Completed</span>
               </div>
-            ))}
+              <div className="v8-detail-row">
+                <span className="v8-detail-label">URL status</span>
+                <span className={`v8-detail-val ${bannerTheme === 'high' ? 'flagged' : (allUrls.length > 0 ? 'unverified' : 'completed')}`}>
+                  {allUrls.length > 0 
+                    ? (activeStatus === 'flagged' ? 'Flagged' : (activeStatus === 'no_known_threat_found' ? 'Clean' : 'Unverified')) 
+                    : 'Not applicable'}
+                </span>
+              </div>
+              <div className="v8-detail-row">
+                <span className="v8-detail-label">Live reputation result</span>
+                <span className="v8-detail-val gray">
+                  {isExample ? 'Not shown in this example' : 'Local heuristics evaluated'}
+                </span>
+              </div>
+            </div>
           </div>
-        </Card>
-      )}
 
-      {/* QR Code Payload Details (if QR result) */}
-      {payload_type && (
-        <Card style={{ padding: '1rem', background: '#f8fafc', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', marginBottom: '0.5rem' }}>
-            <QrCode size={16} aria-hidden="true" /> Decoded QR Type: {payload_type.toUpperCase()}
-          </div>
-          {parsed_details && parsed_details.payee_vpa && (
-            <div style={{ fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <div><strong>Payee VPA:</strong> <code>{parsed_details.payee_vpa}</code></div>
-              {parsed_details.payee_name && <div><strong>Payee Name:</strong> {parsed_details.payee_name}</div>}
-              {parsed_details.amount && <div><strong>Amount:</strong> ₹{parsed_details.amount}</div>}
-              {parsed_details.transaction_note && <div><strong>Note:</strong> "{parsed_details.transaction_note}"</div>}
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* Checks Coverage: What was checked & what was unavailable */}
-      {((checks_performed && checks_performed.length > 0) || (checks_unavailable && checks_unavailable.length > 0)) && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.78rem', color: '#64748b', marginBottom: '1rem', padding: '0.5rem 0.75rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-          {checks_performed && checks_performed.length > 0 && (
-            <div>
-              <strong>Checks performed:</strong> {checks_performed.join(', ')}
-            </div>
-          )}
-          {checks_unavailable && checks_unavailable.length > 0 && (
-            <div style={{ color: '#d97706' }}>
-              <strong>Unavailable / not configured:</strong> {checks_unavailable.join(', ')}
-            </div>
-          )}
         </div>
-      )}
 
-      {/* Detected Categories */}
-      {detected_categories && detected_categories.length > 0 && (
-        <div className="categories-tags" aria-label="Detected Scam Categories">
-          {detected_categories.map((cat, idx) => (
-            <span key={idx} className="category-tag">
-              🏷️ {cat}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Why is this suspicious? Grounded evidence reasons */}
-      {displayReasons && displayReasons.length > 0 && (
-        <Card className="result-section">
-          <div className="result-section-title">
-            <AlertCircle size={18} className="list-item-icon danger" aria-hidden="true" />
-            Detection Evidence & Reasons:
-          </div>
-          <ul className="reasons-list">
-            {displayReasons.map((reason, idx) => (
-              <li key={idx} className="list-item">
-                <span className="list-item-icon danger" aria-hidden="true">•</span>
-                <span>{reason}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      {/* Recommended Actions */}
-      {displayActions && displayActions.length > 0 && (
-        <Card className="result-section" style={{ borderLeft: '4px solid var(--primary, #2563eb)' }}>
-          <div className="result-section-title">
-            <CheckCircle size={18} className="list-item-icon warning" aria-hidden="true" />
-            What you should do right now:
-          </div>
-          <ol className="actions-list" style={{ paddingLeft: '1.2rem' }}>
-            {displayActions.map((action, idx) => (
-              <li key={idx} style={{ marginBottom: '0.5rem', fontWeight: 500 }}>
-                {action}
-              </li>
-            ))}
-          </ol>
-        </Card>
-      )}
-
-      {/* Educational Concept Box */}
-      {educational_concept && (
-        <div className="edu-box">
-          <div className="edu-box-title">
-            <Lightbulb size={20} aria-hidden="true" />
-            Digital Payment Awareness: {educational_concept.title}
-          </div>
-          <p className="edu-box-content">
-            {educational_concept.concept}
+        {/* Section: How to interpret a result */}
+        <section className="v8-interpret-section" aria-labelledby="interpret-heading">
+          <h2 id="interpret-heading" className="v8-interpret-title">How to interpret a result</h2>
+          <p className="v8-interpret-sub">
+            A risk finding, an unknown link, and a lack of a known match are different outcomes.
           </p>
-          <div className="edu-box-rule">
-            {educational_concept.golden_rule}
+
+          <div className="v8-interpret-grid">
+            {/* Card 1: High risk */}
+            <div className="v8-interpret-card">
+              <div className="v8-interpret-top">
+                <div className="v8-item-icon-circle danger" aria-hidden="true">
+                  <AlertTriangle size={18} />
+                </div>
+                <span className="v8-clue-chip">WARNING</span>
+              </div>
+              <div className="v8-interpret-card-title">High risk</div>
+              <p className="v8-interpret-card-text">
+                Several suspicious signals were found. Stop and verify before acting.
+              </p>
+            </div>
+
+            {/* Card 2: Unverified */}
+            <div className="v8-interpret-card">
+              <div className="v8-interpret-top">
+                <div className="v8-item-icon-circle warning" aria-hidden="true">
+                  <LinkIcon size={18} />
+                </div>
+                <span className="v8-clue-chip unverified">UNKNOWN</span>
+              </div>
+              <div className="v8-interpret-card-title">Unverified</div>
+              <p className="v8-interpret-card-text">
+                There isn't enough reliable information to label the destination safe.
+              </p>
+            </div>
+
+            {/* Card 3: No known threat found */}
+            <div className="v8-interpret-card">
+              <div className="v8-interpret-top">
+                <div className="v8-item-icon-circle link" aria-hidden="true">
+                  <Info size={18} />
+                </div>
+                <span className="v8-indicator-badge">LIMITED RESULT</span>
+              </div>
+              <div className="v8-interpret-card-title">No known threat found</div>
+              <p className="v8-interpret-card-text">
+                No match in checked sources is not proof that a message is safe.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Blue Advisory / Disclaimer Banner */}
+        <div className="v8-advisory-banner" role="note" aria-label="Advisory note">
+          <div className="v8-advisory-icon" aria-hidden="true">
+            <Info size={18} />
+          </div>
+          <div>
+            <div className="v8-advisory-title">This result is guidance, not a guarantee.</div>
+            <p className="v8-advisory-text">
+              If money or account access may be at risk, contact your bank through a verified official channel. Never share your OTP or UPI PIN.
+            </p>
           </div>
         </div>
-      )}
 
-      {/* User Feedback & Correction Workflow */}
-      <FeedbackModal referenceId={reference_id} assessmentType={domain ? 'url' : (payload_type ? 'qr' : 'text')} />
+        {/* Bottom Action Row */}
+        <div className="v8-action-row">
+          <div className="v8-btn-group">
+            <button 
+              type="button" 
+              className="v8-primary-btn" 
+              onClick={onReset}
+              aria-label="Analyze another message"
+            >
+              <RotateCw size={16} aria-hidden="true" />
+              <span>Analyze another message</span>
+            </button>
 
-      {/* Helpline banner */}
-      <div className="helpline-box">
-        <div>
-          <strong>Report Fraud:</strong> If you lost money or suspect an ongoing scam, immediately call the National Cyber Crime Helpline:
+            <button 
+              type="button" 
+              className="v8-secondary-btn" 
+              onClick={handleCopySummary}
+              aria-label="Copy summary to clipboard"
+            >
+              {copied ? <Check size={16} style={{ color: '#16a34a' }} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+              <span>{copied ? 'Copied summary!' : 'Copy summary'}</span>
+            </button>
+
+            <button
+              type="button"
+              className="v8-secondary-btn"
+              onClick={() => setShowFeedbackModal(true)}
+              style={{ padding: '0.65rem 1rem', fontSize: '0.8rem', color: '#64748b' }}
+              aria-label="Report incorrect or unclear result"
+            >
+              <MessageSquare size={14} aria-hidden="true" />
+              <span>Report issue</span>
+            </button>
+          </div>
+
+          <div className="v8-report-id-text">
+            {isExample ? `Example report ID: ${activeReportId}` : `Report ID: ${activeReportId}`}
+          </div>
         </div>
-        <div>
-          <a href="tel:1930" className="helpline-pill">
-            <PhoneCall size={14} style={{ display: 'inline', marginRight: '4px' }} aria-hidden="true" />
-            Dial 1930
-          </a>
-          <span style={{ margin: '0 0.5rem' }}>or</span>
-          <a 
-            href="https://cybercrime.gov.in" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{ color: '#c2410c', fontWeight: 600, textDecoration: 'underline' }}
-          >
-            cybercrime.gov.in
-          </a>
-        </div>
-      </div>
 
-      {/* Action Buttons */}
-      <div className="btn-row" style={{ marginTop: '1.5rem' }}>
-        <Button variant="primary" onClick={onReset} leftIcon={ArrowLeft}>
-          Check Another Message or Link
-        </Button>
-        <Button variant="secondary" onClick={handleCopy} leftIcon={copied ? Check : Copy}>
-          {copied ? 'Copied!' : 'Copy Safety Advice'}
-        </Button>
-      </div>
+        {/* Optional Feedback Modal */}
+        {showFeedbackModal && (
+          <FeedbackModal 
+            referenceId={activeReportId} 
+            assessmentType={domain ? 'url' : 'text'} 
+            onClose={() => setShowFeedbackModal(false)}
+          />
+        )}
 
-      <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '1rem', textAlign: 'center' }}>
-        {disclaimer || 'This safety assessment is an advisory tool designed to help you pause and verify. A low-risk score is not a guarantee of safety.'}
-      </p>
+      </div>
     </div>
   );
 }
