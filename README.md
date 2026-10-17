@@ -1,43 +1,37 @@
-# Digital Payment Safety Assistant (V4)
+# Digital Payment Safety Assistant (ClearPay - V5)
 
 [![Python](https://img.shields.io/badge/Python-3.14%2B-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-3.0.0-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF.svg)](https://vitejs.dev)
-[![Extension](https://img.shields.io/badge/Manifest-V3-success.svg)](extension/manifest.json)
+[![Design](https://img.shields.io/badge/Design-V5_Landing_Page-0284c7.svg)](docs/design-references/v5-landing-page-reference.png)
 [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG_2.2_AA-blueviolet.svg)](frontend/src/styles/tokens.css)
 [![Evaluation](https://img.shields.io/badge/Benchmark_Accuracy-100%25-brightgreen.svg)](V3_EVALUATION_REPORT.md)
 
-A privacy-conscious digital-payment safety assistant designed to help people recognize fraud, inspect suspicious links and QR codes, pause before taking risky financial actions, and learn safe verification habits.
+A calm, privacy-first digital-payment safety assistant designed to help people recognize fraud, inspect suspicious messages and QR codes, pause before taking risky financial actions, and learn safe verification habits.
 
 ---
 
-## 1. V4 Architecture & Design System Upgrades
+## 1. V5 Public Landing Page & Design Specification
 
-- **Design Token System (`frontend/src/styles/tokens.css`):**
-  - Semantic color palette: Primary blues, neutral background surfaces, high-contrast text, and distinct semantic risk variables (`--color-danger-*`, `--color-warning-*`, `--color-success-*`, `--color-info-*`).
-  - Spacing scale (`--space-1` to `--space-12`), typography scale, border radii, and elevation shadows.
-  - Accessible focus visible ring (`:focus-visible` with high contrast outline) and `@media (prefers-reduced-motion: reduce)` respect.
-- **Shared UI Component Atoms (`frontend/src/components/ui/`):**
-  - **`Button.jsx`:** Variants (`primary`, `secondary`, `destructive`, `ghost`), size scale (`sm`, `md`, `lg`), accessible touch targets ($\ge 44$px), loading state spinner, and icon support.
-  - **`Input.jsx` & `Textarea.jsx`:** Programmatically linked labels (`htmlFor`), helper text and inline error messages (`aria-describedby`, `aria-invalid`), character counter, and clear focus states.
-  - **`Card.jsx`:** Elevation, consistent padding, and accessible role/landmarks.
-  - **`Badge.jsx`:** Semantic risk badges (`HIGH`, `MEDIUM`, `LOW`, `UNABLE_TO_ASSESS`) featuring paired icons and unambiguous text indicators (non-color cues).
-  - **`Alert.jsx`:** Live region-compliant banners (`role="alert"` for critical errors, `role="status"` for non-critical information).
-  - **`Modal.jsx` & `ConfirmDialog.jsx`:** Native `<dialog>` element utilizing `.showModal()` for automatic background inertia, platform-standard `Esc` light-dismiss, and confirmation for destructive actions (e.g. clearing history).
-  - **`LoadingSpinner.jsx`:** Accessible spinner with `aria-live="polite"` and `sr-only` description.
-- **Centralized API Client Layer (`frontend/src/services/apiClient.js`):**
-  - Centralized request wrapper with 8-second `AbortController` timeout handling.
-  - Browser offline detection (`navigator.onLine === false`) with clear guidance.
-  - Uniform error mapping for HTTP status codes (404, 429 rate limiting, 500 server errors, network drops).
-  - Environment-aware base URL (`VITE_API_BASE_URL`).
-- **Global Error Boundary (`frontend/src/components/ErrorBoundary.jsx`):**
-  - Catches unhandled client-side render exceptions.
-  - Displays a calm, reassuring, non-alarming error recovery screen ensuring user privacy and offering quick retry/reload options.
-- **Honest Uncertainty & Safety Bounds:**
-  - Clearly distinguishes low-risk results from absolute guarantees. "Low Risk" explicitly clarifies that warning signs were not detected while normal caution is always required.
-- **Frontend Test Suite (`frontend/src/test/`):**
-  - Automated tests via Node's native test runner (`node --test`), verifying API client error mappings, timeout behaviors, and payload formatting.
+- **Primary Design Reference (`docs/design-references/v5-landing-page-reference.png`):**
+  - Fully implements the visual design, typography hierarchy, section sequence, and palette defined in the reference image.
+  - Recreated with editable, accessible React components and responsive CSS (not a flattened screenshot).
+- **Public Website Information Architecture:**
+  - **`/` (Public Landing Page):**
+    - **Top Announcement Bar:** Subtle notice with direct navigation to how it works.
+    - **Main Navigation Bar:** ClearPay brand mark, navigation links (`How it works`, `Learn`, `Privacy`), and high-contrast `Analyze a message ↗` action CTA.
+    - **Hero Section:** Clear headline (`Pause before you pay. Know before you trust.`), `Check a message` CTA, `How it works` anchor, and privacy reassurance.
+    - **Interactive Demo Card:** Live preview of suspicious SMS message evaluation with `HIGH RISK` warning signs and actionable safe next steps.
+    - **Trust & Confidence Bar:** Process anchors (`01 Understand the warning signs`, `02 Get a clear next step`, `03 Stay in control`).
+    - **Feature Overview Section (`#learn`):** Three distinct guidance cards for suspicious messages, urgency pressure, and safer verification steps.
+    - **Three Simple Steps Section (`#how-it-works`):** Dark navy contrast section (`01 Share the message`, `02 Review the signals`, `03 Choose a safe next step`).
+    - **Privacy Callout Section (`#privacy`):** Visible privacy guarantees confirming zero credential collection and zero transaction execution.
+    - **Vibrant Blue CTA Banner:** Final high-visibility call-to-action to check a message.
+    - **Footer:** Brand notice, educational disclaimer, and anchor links.
+  - **`/analyze` (Safety Analysis Workspace):**
+    - The complete multimodal analysis suite: Text Check, Voice Input, Screenshot OCR, Link & QR Inspector, "I'm Not Sure" Guided Wizard, Local History Drawer, and Feedback Workflow.
+    - Includes a convenient `← Home` return link in the header.
 
 ---
 
@@ -56,7 +50,7 @@ A privacy-conscious digital-payment safety assistant designed to help people rec
 - **Backend:** Python 3.14 + FastAPI + Pydantic + Uvicorn
 - **Safety Engine:** Rule-based detection + URL Inspector + QR Service + Language Localizer + Feedback Service
 - **Frontend:** React 19 + Vite 8 + Lucide Icons + Tesseract.js (On-Device OCR) + jsQR (On-Device QR Decoder)
-- **Design System:** Custom CSS tokens (`tokens.css`) + Shared UI atom library (`components/ui/`)
+- **Design System:** Custom CSS tokens (`tokens.css`) + Landing styles (`landing.css`) + Shared UI atom library (`components/ui/`)
 - **Extension:** Chrome Manifest V3 + Service Worker
 - **Testing:** Pytest (22 backend unit tests) + Benchmark Evaluator (`evaluate_model.py`) + Frontend Unit Tests (`node --test`)
 
@@ -66,6 +60,9 @@ A privacy-conscious digital-payment safety assistant designed to help people rec
 
 ```text
 Digital Payment Security Assitant/
+├── docs/
+│   └── design-references/
+│       └── v5-landing-page-reference.png # Preserved visual design reference
 ├── backend/
 │   ├── safety/
 │   │   ├── detector.py          # Keyword, regex & indicator pattern matching
@@ -88,7 +85,19 @@ Digital Payment Security Assitant/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── ui/              # V4 Shared UI Atom System
+│   │   │   ├── landing/         # V5 Landing Page Components
+│   │   │   │   ├── TopAnnouncementBar.jsx     # Dark top announcement bar
+│   │   │   │   ├── LandingNavbar.jsx          # Header with logo, links, and CTA
+│   │   │   │   ├── HeroSection.jsx            # Two-column hero with headline
+│   │   │   │   ├── HeroDemoCard.jsx           # Interactive message safety demo card
+│   │   │   │   ├── TrustBar.jsx               # 3-step trust & confidence anchors
+│   │   │   │   ├── FeatureOverviewSection.jsx # Guidance cards (learn)
+│   │   │   │   ├── ThreeStepsSection.jsx      # Dark navy process steps
+│   │   │   │   ├── PrivacyCalloutSection.jsx  # Privacy guarantees callout
+│   │   │   │   ├── CtaBannerSection.jsx       # Vibrant blue CTA banner
+│   │   │   │   ├── LandingFooter.jsx          # Footer with brand & links
+│   │   │   │   └── LandingPage.jsx            # Assembled Landing Page view
+│   │   │   ├── ui/              # V4/V5 Shared UI Atom System
 │   │   │   │   ├── Alert.jsx        # Live-region accessible alert banners
 │   │   │   │   ├── Badge.jsx        # Risk badge with non-color status cues
 │   │   │   │   ├── Button.jsx       # Button with variants, sizes & touch targets
@@ -98,8 +107,9 @@ Digital Payment Security Assitant/
 │   │   │   │   ├── LoadingSpinner.jsx # Accessible animated loading spinner
 │   │   │   │   ├── Modal.jsx        # Native HTML <dialog> modal with showModal()
 │   │   │   │   └── Textarea.jsx     # Accessible textarea with character count
+│   │   │   ├── SafetyAnalyzer.jsx # Full multimodal safety analysis workspace
 │   │   │   ├── ErrorBoundary.jsx# Global UI crash recovery screen
-│   │   │   ├── Header.jsx       # App bar with Language Selector (EN / HI / Hinglish)
+│   │   │   ├── Header.jsx       # App bar with Language Selector & Home link
 │   │   │   ├── TextCheck.jsx    # Text check form + VoiceInput
 │   │   │   ├── VoiceInput.jsx   # Web Speech API speech-to-text
 │   │   │   ├── ImageOCRCheck.jsx# On-device screenshot OCR with Tesseract.js
@@ -111,10 +121,11 @@ Digital Payment Security Assitant/
 │   │   ├── services/
 │   │   │   └── apiClient.js     # Centralized API client (timeout, offline, error mapping)
 │   │   ├── styles/
-│   │   │   └── tokens.css       # V4 Design tokens (colors, spacing, focus rings)
+│   │   │   ├── tokens.css       # Design tokens (colors, spacing, focus rings)
+│   │   │   └── landing.css      # V5 landing page responsive styles
 │   │   ├── test/
 │   │   │   └── apiClient.test.js# Frontend test suite
-│   │   ├── App.jsx              # V4 navigation tabs & state manager
+│   │   ├── App.jsx              # Client router (`/` -> Landing, `/analyze` -> Workspace)
 │   │   ├── main.jsx             # React root wrapped in ErrorBoundary
 │   │   └── index.css            # Responsive styles importing design tokens
 │   ├── package.json

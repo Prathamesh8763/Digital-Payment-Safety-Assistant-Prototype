@@ -56,8 +56,8 @@ const FALLBACK_SCENARIOS = [
   }
 ];
 
-export default function TextCheck({ onAnalyze, loading }) {
-  const [text, setText] = useState('');
+export default function TextCheck({ onAnalyze, loading, initialText = '' }) {
+  const [text, setText] = useState(initialText);
   const [useAi, setUseAi] = useState(false);
   const [scenarios, setScenarios] = useState(FALLBACK_SCENARIOS);
 
