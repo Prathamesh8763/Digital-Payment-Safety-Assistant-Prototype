@@ -115,10 +115,21 @@ export async function request(endpoint, options = {}) {
 
 export const apiClient = {
   /**
-   * Submit text message for safety analysis
+   * Submit text message for safety analysis (supports /check/text and /analyze)
    */
   async checkText(payload, options = {}) {
     return request('/check/text', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      ...options
+    });
+  },
+
+  /**
+   * Dedicated analyze message endpoint
+   */
+  async analyzeMessage(payload, options = {}) {
+    return request('/analyze', {
       method: 'POST',
       body: JSON.stringify(payload),
       ...options
@@ -137,10 +148,21 @@ export const apiClient = {
   },
 
   /**
-   * Inspect a link / URL
+   * Inspect a link / URL (supports /check/url and /analyze-url)
    */
   async checkUrl(payload, options = {}) {
     return request('/check/url', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      ...options
+    });
+  },
+
+  /**
+   * Dedicated analyze URL endpoint
+   */
+  async analyzeUrl(payload, options = {}) {
+    return request('/analyze-url', {
       method: 'POST',
       body: JSON.stringify(payload),
       ...options

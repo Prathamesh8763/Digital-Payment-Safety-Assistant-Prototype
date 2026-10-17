@@ -1,9 +1,11 @@
 import os
 import time
 import logging
+from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from pydantic import BaseModel
 
 from schemas.safety import (
     TextCheckRequest,
@@ -115,6 +117,25 @@ def health_check():
         "feedback_entries_count": engine.feedback_service.get_feedback_count()
     }
 
+class LegacyAnalyzeRequest(BaseModel):
+    message: Optional[str] = None
+    text: Optional[str] = None
+    use_ai: bool = False
+    language: str = "en"
+
+@app.post("/api/analyze", response_model=SafetyAssessmentResponse)
+@app.post("/analyze", response_model=SafetyAssessmentResponse)
+async def analyze_message_endpoint(payload: LegacyAnalyzeRequest):
+    raw_text = payload.text or payload.message
+    if not raw_text or len(raw_text.strip()) < 3:
+        raise HTTPException(status_code=400, detail="Please provide a message or description of at least 3 characters.")
+    check_req = TextCheckRequest(
+        text=raw_text.strip(),
+        use_ai=payload.use_ai,
+        language=payload.language
+    )
+    return await engine.analyze_text_with_ai_option(check_req)
+
 @app.post("/api/check/text", response_model=SafetyAssessmentResponse)
 async def check_text(payload: TextCheckRequest):
     if not payload.text or len(payload.text.strip()) < 3:
@@ -126,9 +147,9 @@ def check_guided(payload: GuidedCheckRequest):
     return engine.analyze_guided(payload)
 
 @app.post("/api/check/url", response_model=URLCheckResponse)
+@app.post("/api/analyze-url", response_model=URLCheckResponse)
+@app.post("/analyze-url", response_model=URLCheckResponse)
 def check_url(payload: URLCheckRequest):
-    if not payload.url or len(payload.url.strip()) < 3:
-        raise HTTPException(status_code=400, detail="Please provide a valid web link or URL.")
     return engine.analyze_url(payload)
 
 @app.post("/api/check/qr", response_model=QRCheckResponse)

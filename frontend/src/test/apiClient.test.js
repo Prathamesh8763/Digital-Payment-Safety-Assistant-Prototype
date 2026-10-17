@@ -198,3 +198,53 @@ test('apiClient: handles network connection failure gracefully', async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test('apiClient: analyzeMessage calls /analyze endpoint', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    let capturedUrl = null;
+    globalThis.fetch = async (url) => {
+      capturedUrl = url;
+      return {
+        ok: true,
+        json: async () => ({ risk_level: 'HIGH', status: 'flagged', detected_urls: ['http://bad.top'] })
+      };
+    };
+
+    const res = await apiClient.analyzeMessage({ message: 'Pay now http://bad.top' });
+    assert.equal(capturedUrl, 'http://localhost:8000/api/analyze');
+    assert.equal(res.status, 'flagged');
+    assert.equal(res.detected_urls.length, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('apiClient: analyzeUrl calls /analyze-url and preserves unverified status', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    let capturedUrl = null;
+    globalThis.fetch = async (url) => {
+      capturedUrl = url;
+      return {
+        ok: true,
+        json: async () => ({
+          risk_level: 'UNABLE_TO_ASSESS',
+          status: 'unverified',
+          domain: 'fake-bank-verify.example',
+          why_suspicious: ['Synthetic test domain cannot be verified as safe.']
+        })
+      };
+    };
+
+    const res = await apiClient.analyzeUrl({ url: 'https://fake-bank-verify.example/confirm' });
+    assert.equal(capturedUrl, 'http://localhost:8000/api/analyze-url');
+    assert.equal(res.status, 'unverified');
+    assert.equal(res.risk_level, 'UNABLE_TO_ASSESS');
+    assert.notEqual(res.status, 'pass');
+    assert.notEqual(res.risk_level, 'LOW');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+

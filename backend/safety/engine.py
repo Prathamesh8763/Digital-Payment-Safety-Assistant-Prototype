@@ -94,6 +94,22 @@ class SafetyEngine:
             golden_rule=golden_rule
         )
 
+        detected_urls = detection.get("detected_urls", [])
+        url_assessments = []
+        checks_performed = ["text_pattern_matching", "credential_check", "urgency_check"]
+        if detected_urls:
+            checks_performed.append("url_extraction")
+            for u in detected_urls[:5]:
+                u_check = self.url_checker.analyze_url(URLCheckRequest(url=u, language=request.language))
+                url_assessments.append({
+                    "url": u,
+                    "domain": u_check.domain,
+                    "status": u_check.status,
+                    "risk_level": u_check.risk_level,
+                    "risk_score": u_check.risk_score,
+                    "why_suspicious": u_check.why_suspicious
+                })
+
         return SafetyAssessmentResponse(
             risk_level=risk_level,
             risk_score=risk_score,
@@ -103,6 +119,10 @@ class SafetyEngine:
             why_suspicious=rec_data["why_suspicious"],
             recommended_actions=actions,
             educational_concept=edu_concept,
+            detected_urls=detected_urls,
+            url_assessments=url_assessments,
+            checks_performed=checks_performed,
+            checks_unavailable=[],
             is_safe_practice=is_standard_notification,
             ai_enhanced=False,
             confidence_rating="Deterministic Rule Baseline",
@@ -290,7 +310,8 @@ class SafetyEngine:
         res = self.url_checker.analyze_url(request)
         res.reference_id = self._generate_ref_id("URL")
         res.language = request.language
-        res.uncertainty_note = self._build_uncertainty_note(res.risk_level, len(res.indicators))
+        if not res.uncertainty_note:
+            res.uncertainty_note = self._build_uncertainty_note(res.risk_level, len(res.indicators))
         return res
 
     def analyze_qr(self, request: QRCheckRequest) -> QRCheckResponse:

@@ -1,37 +1,45 @@
-# Digital Payment Safety Assistant (ClearPay - V5)
+# Digital Payment Safety Assistant (ClearPay - V6)
 
 [![Python](https://img.shields.io/badge/Python-3.14%2B-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-3.0.0-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF.svg)](https://vitejs.dev)
-[![Design](https://img.shields.io/badge/Design-V5_Landing_Page-0284c7.svg)](docs/design-references/v5-landing-page-reference.png)
+[![Design](https://img.shields.io/badge/Design-V6_Analyze_Page-2563eb.svg)](docs/design-references/v6-analyze-page-reference.png)
 [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG_2.2_AA-blueviolet.svg)](frontend/src/styles/tokens.css)
-[![Evaluation](https://img.shields.io/badge/Benchmark_Accuracy-100%25-brightgreen.svg)](V3_EVALUATION_REPORT.md)
+[![Tests](https://img.shields.io/badge/Pytest-59%20passed-brightgreen.svg)](backend/tests/)
 
-A calm, privacy-first digital-payment safety assistant designed to help people recognize fraud, inspect suspicious messages and QR codes, pause before taking risky financial actions, and learn safe verification habits.
+A calm, privacy-first digital-payment safety assistant designed to help people recognize fraud, inspect suspicious messages and web links, pause before taking risky financial actions, and verify independently through official channels.
 
 ---
 
-## 1. V5 Public Landing Page & Design Specification
+## 1. V6 Release: URL Safety & Analyze Page Upgrade
 
-- **Primary Design Reference (`docs/design-references/v5-landing-page-reference.png`):**
-  - Fully implements the visual design, typography hierarchy, section sequence, and palette defined in the reference image.
-  - Recreated with editable, accessible React components and responsive CSS (not a flattened screenshot).
-- **Public Website Information Architecture:**
-  - **`/` (Public Landing Page):**
-    - **Top Announcement Bar:** Subtle notice with direct navigation to how it works.
-    - **Main Navigation Bar:** ClearPay brand mark, navigation links (`How it works`, `Learn`, `Privacy`), and high-contrast `Analyze a message ↗` action CTA.
-    - **Hero Section:** Clear headline (`Pause before you pay. Know before you trust.`), `Check a message` CTA, `How it works` anchor, and privacy reassurance.
-    - **Interactive Demo Card:** Live preview of suspicious SMS message evaluation with `HIGH RISK` warning signs and actionable safe next steps.
-    - **Trust & Confidence Bar:** Process anchors (`01 Understand the warning signs`, `02 Get a clear next step`, `03 Stay in control`).
-    - **Feature Overview Section (`#learn`):** Three distinct guidance cards for suspicious messages, urgency pressure, and safer verification steps.
-    - **Three Simple Steps Section (`#how-it-works`):** Dark navy contrast section (`01 Share the message`, `02 Review the signals`, `03 Choose a safe next step`).
-    - **Privacy Callout Section (`#privacy`):** Visible privacy guarantees confirming zero credential collection and zero transaction execution.
-    - **Vibrant Blue CTA Banner:** Final high-visibility call-to-action to check a message.
-    - **Footer:** Brand notice, educational disclaimer, and anchor links.
-  - **`/analyze` (Safety Analysis Workspace):**
-    - The complete multimodal analysis suite: Text Check, Voice Input, Screenshot OCR, Link & QR Inspector, "I'm Not Sure" Guided Wizard, Local History Drawer, and Feedback Workflow.
-    - Includes a convenient `← Home` return link in the header.
+- **Core V6 Invariant:**
+  > **"No match is not proof of safety. Unknown results must stay unknown."**
+  A fabricated, test-reserved, or unlisted website domain is **never** labelled as "Safe" or "Pass" merely because it was not found in a local threat list. Unknown domains return `unverified` with `UNABLE_TO_ASSESS` risk level.
+
+- **Primary Design Reference (`docs/design-references/v6-analyze-page-reference.png`):**
+  - Fully recreates the user-provided Analyze page screenshot:
+    - **Header:** ClearPay logo mark (`C`), navigation links (`How it works`, `Learn`, `Privacy`), and `← Back to home` pill button.
+    - **Breadcrumbs & Eyebrow:** `Home / Analyze a message` with `MESSAGE SAFETY CHECK` pill.
+    - **Headline & Reassurance:** `Check a message before you act.` with prominent green privacy guarantee banner.
+    - **Two-Column Grid:**
+      - Left: Main analysis card with Message and Link modes, character counter (`0 / 2,000`), example chips (`Account blocked`, `Unexpected UPI request`, `Urgent payment demand`), credential warning, and blue `Analyze message →` CTA.
+      - Right: `A quick guide` (3 numbered steps) and Dark Navy `What we look for` warning-signs card.
+    - **Lower Section:** `What makes a message suspicious?` with 3 horizontal pattern cards (`Pressure to act now`, `Secrets or credentials`, `Unusual payment steps`).
+    - **Guidance Banner:** Blue advisory banner reminding users that analysis is guidance, not a guarantee.
+    - **Footer:** Brand identity and educational disclaimer.
+
+- **Structured Verification Statuses:**
+  - `flagged`: Confirmed threat match, malware/APK download, or brand impersonation.
+  - `suspicious`: Warning indicators present (URL shortener, suspicious TLD, deceptive userinfo structure).
+  - `no_known_threat_found`: Matches verified official financial domain directory with valid HTTPS (never "100% Safe").
+  - `unverified`: Syntactically valid URL on an unknown, unlisted, or reserved test domain (`.invalid`, `.example`, `.test`, `.localhost`, private IP) — clearly communicates uncertainty.
+  - `invalid_input`: Malformed syntax, unsupported schemes (`javascript:`, `data:`, `intent:`), missing host, or excessive length.
+  - `provider_unavailable`: Reputation provider timeout, rate limit, or service error.
+
+- **Message URL Extraction (P0):**
+  - Plain text messages automatically extract all HTTP/HTTPS links, sanitize trailing punctuation (`.`, `,`, `!`, `?`), deduplicate, and offer explicit safe `Inspect link →` actions without auto-opening or navigating.
 
 ---
 

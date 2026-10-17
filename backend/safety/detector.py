@@ -269,9 +269,49 @@ def detect_indicators_in_text(text: str) -> Dict[str, Any]:
 
     is_standard_notification = (len(legit_clues) > 0 and len(detected_indicators) == 0)
 
+    detected_urls = extract_urls_from_text(text)
+
     return {
         "indicators": detected_indicators,
         "categories": list(detected_categories),
         "legitimate_clues": legit_clues,
-        "is_standard_notification": is_standard_notification
+        "is_standard_notification": is_standard_notification,
+        "detected_urls": detected_urls
     }
+
+def extract_urls_from_text(text: str) -> List[str]:
+    """
+    Extracts HTTP and HTTPS URLs from raw text.
+    Safely strips trailing sentence punctuation (.,;:!?)]} etc.)
+    and deduplicates while preserving order.
+    Does NOT auto-fetch or open any URLs.
+    """
+    if not text:
+        return []
+
+    # Match http:// or https:// followed by non-whitespace/control characters
+    url_pattern = re.compile(r'https?://[^\s<>"\'`]+', re.IGNORECASE)
+    matches = url_pattern.findall(text)
+
+    cleaned_urls: List[str] = []
+    seen = set()
+
+    trailing_chars = ".,;:!?)]}\"'\u2019\u201d>"
+
+    for raw in matches:
+        candidate = raw.strip()
+        # Strip trailing punctuation
+        while candidate and candidate[-1] in trailing_chars:
+            if candidate.endswith(')'):
+                if candidate.count('(') >= candidate.count(')'):
+                    break
+            candidate = candidate[:-1]
+
+        # Strip leading punctuation if any
+        candidate = candidate.lstrip("([{<\"'")
+
+        if candidate and candidate not in seen:
+            seen.add(candidate)
+            cleaned_urls.append(candidate)
+
+    return cleaned_urls

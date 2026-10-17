@@ -20,9 +20,13 @@ def calculate_risk(indicators: List[Dict[str, Any]], is_standard_notification: b
         if severity == "high":
             score += 35
         elif severity == "medium":
-            score += 15
+            score += 20
         else:
             score += 5
+
+    # Any medium severity indicator warrants at least MEDIUM risk (score >= 35)
+    if any(ind.get("severity") == "medium" for ind in indicators):
+        score = max(score, 35)
 
     # Critical override rules based on payment fraud principles
     if "sensitive_credential_request" in indicator_ids:

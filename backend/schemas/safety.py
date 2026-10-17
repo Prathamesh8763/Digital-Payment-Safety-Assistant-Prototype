@@ -70,15 +70,26 @@ class EducationalConcept(BaseModel):
     concept: str
     golden_rule: str
 
+URLVerificationStatus = Literal["flagged", "suspicious", "no_known_threat_found", "unverified", "invalid_input", "provider_unavailable"]
+
 class SafetyAssessmentResponse(BaseModel):
     risk_level: RiskLevel
     risk_score: int = Field(..., ge=0, le=100, description="Risk score from 0 (very safe) to 100 (critical risk)")
     summary: str
+    status: Optional[str] = "analyzed"
+    input_type: str = "message"
     detected_categories: List[str]
     indicators: List[DetectedIndicator]
     why_suspicious: List[str]
+    reasons: Optional[List[str]] = None
     recommended_actions: List[str]
+    recommendation: Optional[str] = None
     educational_concept: EducationalConcept
+    detected_urls: List[str] = []
+    url_assessments: List[Dict[str, Any]] = []
+    checks_performed: List[str] = []
+    checks_unavailable: List[str] = []
+    checked_at: Optional[str] = None
     is_safe_practice: bool = False
     ai_enhanced: bool = False
     ai_analysis_summary: Optional[str] = None
@@ -94,11 +105,17 @@ class SafetyAssessmentResponse(BaseModel):
         "A low-risk score is not a guarantee of safety. Never share your UPI PIN or OTP with anyone."
     )
 
+    def model_post_init(self, __context: Any) -> None:
+        if self.reasons is None:
+            self.reasons = list(self.why_suspicious)
+        if self.recommendation is None and self.recommended_actions:
+            self.recommendation = self.recommended_actions[0]
+
 class URLCheckRequest(BaseModel):
     url: str = Field(
         ...,
-        min_length=3,
-        max_length=2000,
+        min_length=1,
+        max_length=5000,
         description="The web address or link found in a suspicious message or email."
     )
     context: Optional[str] = Field(
@@ -111,6 +128,8 @@ class URLCheckRequest(BaseModel):
 class URLCheckResponse(BaseModel):
     risk_level: RiskLevel
     risk_score: int = Field(..., ge=0, le=100)
+    status: URLVerificationStatus = "unverified"
+    input_type: str = "url"
     url_submitted: str
     normalized_url: str
     domain: str
@@ -122,7 +141,12 @@ class URLCheckResponse(BaseModel):
     impersonated_brand: Optional[str] = None
     indicators: List[DetectedIndicator]
     why_suspicious: List[str]
+    reasons: Optional[List[str]] = None
     recommended_actions: List[str]
+    recommendation: Optional[str] = None
+    checks_performed: List[str] = []
+    checks_unavailable: List[str] = []
+    checked_at: Optional[str] = None
     educational_concept: EducationalConcept
     reference_id: str = "REF-URL-0000"
     uncertainty_note: str = "Inspected without navigating to the destination. Unflagged domains may still host unknown threats."
@@ -131,6 +155,12 @@ class URLCheckResponse(BaseModel):
         "Inspected safely without visiting the link. A low-risk result does not guarantee that the destination is safe. "
         "Always verify official bank and payment websites directly from known sources."
     )
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.reasons is None:
+            self.reasons = list(self.why_suspicious)
+        if self.recommendation is None and self.recommended_actions:
+            self.recommendation = self.recommended_actions[0]
 
 class QRCheckRequest(BaseModel):
     payload: str = Field(
