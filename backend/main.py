@@ -252,3 +252,39 @@ def get_demonstration_scenarios():
             "text": "I opened the official PhonePe app and paid my electricity bill of ₹850. Debited from my bank account with normal transaction ID."
         }
     ]
+
+
+def free_port_if_in_use(port: int = 8000, host: str = "127.0.0.1") -> bool:
+    """Detects and frees any stale process holding the server port to prevent socket binding errors."""
+    import socket
+    import subprocess
+    import sys
+    
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        if s.connect_ex((host, port)) != 0:
+            return True  # Port is free
+            
+    logger.warning(f"Port {port} is occupied. Attempting to free port for clean startup...")
+    try:
+        if sys.platform == "win32":
+            output = subprocess.check_output(f"netstat -ano | findstr :{port}", shell=True, text=True)
+            for line in output.strip().splitlines():
+                parts = line.split()
+                if len(parts) >= 5 and parts[1].endswith(f":{port}"):
+                    pid = parts[-1]
+                    if pid != str(os.getpid()) and pid != "0":
+                        logger.info(f"Terminating stale process holding port {port} (PID: {pid})")
+                        subprocess.run(f"taskkill /F /PID {pid}", shell=True, capture_output=True)
+                        time.sleep(0.5)
+        else:
+            subprocess.run(f"fuser -k {port}/tcp", shell=True, capture_output=True)
+    except Exception as exc:
+        logger.warning(f"Could not automatically free port {port}: {exc}")
+    return True
+
+
+if __name__ == "__main__":
+    import uvicorn
+    free_port_if_in_use(8000)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+
