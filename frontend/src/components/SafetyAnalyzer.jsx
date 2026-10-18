@@ -16,7 +16,8 @@ import {
   MessageSquareText, 
   HelpCircle, 
   History as HistoryIcon,
-  Globe
+  Globe,
+  Compass
 } from 'lucide-react';
 
 const HISTORY_STORAGE_KEY = 'payment_safety_assistant_history_v2';
@@ -72,7 +73,7 @@ const LINK_EXAMPLES = [
   }
 ];
 
-export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initialTab = 'message' }) {
+export default function SafetyAnalyzer({ onNavigateHome, onNavigateGuided, initialText = '', initialTab = 'message' }) {
   const [activeTab, setActiveTab] = useState(initialTab === 'url' ? 'link' : (initialTab || 'message')); // 'message' | 'link' | 'guided' | 'history'
   const [language, setLanguage] = useState('en');
   const [messageText, setMessageText] = useState(initialText || '');
@@ -521,7 +522,50 @@ export default function SafetyAnalyzer({ onNavigateHome, initialText = '', initi
 
               {/* Mode 3: Guided Questionnaire Mode (P1) */}
               {activeTab === 'guided' && (
-                <GuidedCheck onAnalyze={handleAnalyzeGuided} loading={loading} />
+                <div>
+                  {onNavigateGuided && (
+                    <div style={{
+                      background: '#eff6ff',
+                      border: '1px solid #bfdbfe',
+                      borderRadius: '12px',
+                      padding: '0.85rem 1rem',
+                      marginBottom: '1.25rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '0.5rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Compass size={18} style={{ color: '#2563eb' }} aria-hidden="true" />
+                        <span style={{ fontSize: '0.86rem', color: '#1e40af', fontWeight: 600 }}>
+                          Prefer visual scenario cards?
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={onNavigateGuided}
+                        style={{
+                          background: '#ffffff',
+                          border: '1px solid #93c5fd',
+                          borderRadius: '9999px',
+                          color: '#2563eb',
+                          padding: '0.35rem 0.85rem',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem'
+                        }}
+                      >
+                        <span>Open Guided Help Workspace</span>
+                        <ArrowRight size={13} aria-hidden="true" />
+                      </button>
+                    </div>
+                  )}
+                  <GuidedCheck onAnalyze={handleAnalyzeGuided} loading={loading} />
+                </div>
               )}
 
               {/* Mode 4: Local History Mode (P1) */}

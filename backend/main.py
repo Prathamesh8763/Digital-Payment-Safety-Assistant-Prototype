@@ -99,7 +99,7 @@ engine = SafetyEngine()
 def root():
     return {
         "service": "Digital Payment Safety Assistant API",
-        "version": "8.0.0",
+        "version": "9.0.0",
         "documentation": "/docs"
     }
 
@@ -111,7 +111,7 @@ def health_check():
     return {
         "status": "healthy",
         "service": "Digital Payment Safety Assistant API",
-        "version": "8.0.0",
+        "version": "9.0.0",
         "uptime_state": "operational",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "feedback_entries_count": engine.feedback_service.get_feedback_count()
@@ -143,6 +143,8 @@ async def check_text(payload: TextCheckRequest):
     return await engine.analyze_text_with_ai_option(payload)
 
 @app.post("/api/check/guided", response_model=SafetyAssessmentResponse)
+@app.post("/api/guided-help", response_model=SafetyAssessmentResponse)
+@app.post("/guided-help", response_model=SafetyAssessmentResponse)
 def check_guided(payload: GuidedCheckRequest):
     return engine.analyze_guided(payload)
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
 
-export default function LandingNavbar({ onAnalyzeClick, onNavigateSection }) {
+export default function LandingNavbar({ onAnalyzeClick, onNavigateSection, onNavigateGuided }) {
   const handleNavClick = (sectionId) => (e) => {
     e.preventDefault();
     if (onNavigateSection) {
@@ -39,6 +39,16 @@ export default function LandingNavbar({ onAnalyzeClick, onNavigateSection }) {
           <li>
             <a href="#privacy" onClick={handleNavClick('privacy')} className="landing-nav-link">
               Privacy
+            </a>
+          </li>
+          <li>
+            <a
+              href="/guided-help"
+              onClick={(e) => { e.preventDefault(); if (onNavigateGuided) onNavigateGuided(); }}
+              className="landing-nav-link"
+              style={{ color: '#2563eb', fontWeight: 600 }}
+            >
+              I'm Not Sure
             </a>
           </li>
         </ul>

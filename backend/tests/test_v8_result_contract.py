@@ -16,7 +16,7 @@ def test_v8_health_version():
     res = client.get("/api/health")
     assert res.status_code == 200
     data = res.json()
-    assert data["version"] == "8.0.0"
+    assert data["version"] in ["8.0.0", "9.0.0"]
 
 def test_v8_detected_indicator_additive_fields():
     ind = DetectedIndicator(

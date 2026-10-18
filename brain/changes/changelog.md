@@ -12,6 +12,50 @@ Format per change entry:
 
 ---
 
+## [V9.0.0] - 2026-10-18
+
+### 1. Guided Help Experience & Mandatory Reference Fidelity
+- **Change:** Built `GuidedHelpPage.jsx` and created `frontend/src/styles/guidedHelp.css` matching mandatory reference asset `docs/design-references/v9-guided-help-reference.png`. Implemented 3x2 rounded scenario cards (`Someone asked for my OTP or PIN`, `A message says my account will be blocked`, `I received an unexpected payment request`, `I'm unsure about a link or QR code`, `I'm not sure / something else`, and `Your safety comes first` reassurance card), breadcrumbs, `GUIDED SAFETY CHECK` and `START HERE - NO JUDGEMENT` badges, prominent red-tinted urgent action banner, security reassurance lines, and footer.
+- **Reason:** Fulfill V9 PRD P0 requirement to turn the Guided Help visual concept into an accessible, interactive, non-judgemental safety guidance flow.
+- **Affected Area:** `frontend/src/components/GuidedHelpPage.jsx`, `frontend/src/styles/guidedHelp.css`, `frontend/src/utils/guidedHelpData.js`.
+- **Impact:** Users who feel rushed or uncertain can identify their situation, review plain-English warning signs, and follow actionable, numbered safety steps without entering confidential credentials.
+- **Evidence:** `docs/design-references/v9-guided-help-reference.png`, `frontend/src/components/GuidedHelpPage.jsx`, 5 unit tests in `frontend/src/test/guidedHelp.test.js`.
+- **Status:** [Verified]
+
+### 2. Client-Side `/guided-help` Route & Universal Navigation
+- **Change:** Integrated `/guided-help` (and `/guided` alias) into `App.jsx` client-side router with popstate support. Updated `LandingNavbar.jsx` with an explicit "I'm Not Sure" link. Updated `SafetyAnalyzer.jsx` to render an "Open Guided Help Workspace" banner on the guided tab and receive `onNavigateGuided`.
+- **Reason:** Eliminate dead links and ensure seamless, responsive navigation across Home, Analyze, and Guided Help workspaces.
+- **Affected Area:** `frontend/src/App.jsx`, `frontend/src/components/landing/LandingNavbar.jsx`, `frontend/src/components/landing/LandingPage.jsx`, `frontend/src/components/SafetyAnalyzer.jsx`.
+- **Impact:** Direct access to `/guided-help` renders Guided Help immediately; users can move between tools without page reload or state loss.
+- **Evidence:** `frontend/src/App.jsx` lines 5-48, `npm run build` passing.
+- **Status:** [Verified]
+
+### 3. Immediate Urgent Compromise Action Path
+- **Change:** Created a dedicated urgent guidance path accessible from the top banner (`Get urgent steps →`), question options ("Yes, I shared it", "Entered details"), and footer controls. Outlines 5 immediate steps: freezing accounts/cards in-app, changing PINs/passwords from a clean device, calling the Indian National Cybercrime Helpline 1930 / cybercrime.gov.in, uninstalling screen-sharing apps, and saving evidence.
+- **Reason:** High-stress emergency triage must never force users through lengthy questionnaires before advising account protection.
+- **Affected Area:** `frontend/src/utils/guidedHelpData.js`, `frontend/src/components/GuidedHelpPage.jsx`.
+- **Impact:** Compromised users get immediate, non-judgemental emergency instructions within one click.
+- **Evidence:** `GUIDANCES.urgent_compromise`, `test/guidedHelp.test.js`.
+- **Status:** [Verified]
+
+### 4. Adversarial Security & Robustness Test Suite (SEC-001 through SEC-030)
+- **Change:** Created `backend/tests/test_v9_adversarial_security.py` covering 15 automated server-side adversarial scenarios: XSS script injection, unsupported URL schemes (`javascript:`, `data:`, `file:`), userinfo credentials in URLs, incomplete/cut-off URLs, reserved test domains, unknown valid domains (false-pass prevention), multiple URLs with punctuation, deceptive subdomains, punycode/IDN, private/localhost IP targets, oversized payloads, invalid JSON, and ordinary payment alerts.
+- **Reason:** Strictly verify security boundaries and ensure backend fails closed without leaking credentials, stack traces, or returning false passes.
+- **Affected Area:** `backend/tests/test_v9_adversarial_security.py`, `backend/safety/detector.py`, `backend/main.py`.
+- **Impact:** Automated test suite expanded to 79 backend tests (100% pass) and 22 frontend tests (100% pass).
+- **Evidence:** `pytest backend/tests` (79 passed in 2.39s), `npm test` (22 passed in 0.29s).
+- **Status:** [Verified]
+
+### 5. Backend Version Upgrade to 9.0.0 & Guided Route Aliases
+- **Change:** Updated backend service version to `9.0.0` in `backend/main.py`. Added `/api/guided-help` and `/guided-help` aliases to `check_guided` endpoint. Expanded `URGENCY_PATTERNS` to catch "immediate action" and "action required".
+- **Reason:** Track product iteration and provide standard API endpoints for guided evaluations.
+- **Affected Area:** `backend/main.py`, `backend/safety/detector.py`.
+- **Impact:** Backend reports version 9.0.0 on health checks; correctly flags urgency coercion across diverse phrasing.
+- **Evidence:** `backend/main.py` lines 102, 114, 144; `test_sec_029_urgent_message_with_unverified_url`.
+- **Status:** [Verified]
+
+---
+
 ## [V8.0.0] - 2026-10-18
 
 ### 1. Analysis Result Experience Visual Redesign (Reference Fidelity)

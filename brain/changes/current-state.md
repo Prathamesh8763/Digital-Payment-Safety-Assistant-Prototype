@@ -1,6 +1,6 @@
 # Current State Analysis
 
-**Document Status:** Current as of V8.0 Release (October 18, 2026)  
+**Document Status:** Current as of V9.0 Release (October 18, 2026)  
 **Classification:** System Architecture, Active Capabilities, Inconsistencies & Open Transitions  
 
 ---
@@ -9,14 +9,14 @@
 
 | Component | Path / Location | Technology | Status | Verification |
 |---|---|---|---|---|
-| **Backend API** | `backend/` | Python 3.14.7, FastAPI, Pydantic v2, Uvicorn (v8.0.0) | Active | [Verified] |
+| **Backend API** | `backend/` | Python 3.14.7, FastAPI, Pydantic v2, Uvicorn (v9.0.0) | Active | [Verified] |
 | **Frontend Web App** | `frontend/` | React 19.x, Vite 8.x, Lucide React, CSS Tokens | Active | [Verified] |
 | **Browser Extension** | `extension/` | Chrome Manifest V3, Vanilla JS, Service Worker | Prototype | [Verified] |
 | **On-Device OCR** | `frontend/src/components/ImageOCRCheck.jsx` | Tesseract.js (Client-side WASM) | Active | [Verified] |
 | **On-Device QR** | `frontend/src/components/UrlQrCheck.jsx` | jsQR (Client-side Canvas Decoder) | Active | [Verified] |
-| **Backend Test Suite** | `backend/tests/` | Pytest 9.1.1 (64 automated tests) | Active | [Verified] |
-| **Frontend Test Suite** | `frontend/src/test/` | Node.js Test Runner (17 tests) | Active | [Verified] |
-| **Design Specifications** | `docs/design-references/` | PNG References (`v5-landing-page`, `v6-analyze-page`, `v8-analysis-result-reference`) | Preserved | [Verified] |
+| **Backend Test Suite** | `backend/tests/` | Pytest 9.1.1 (79 automated tests across 4 test suites) | Active | [Verified] |
+| **Frontend Test Suite** | `frontend/src/test/` | Node.js Test Runner (22 tests across 3 suites) | Active | [Verified] |
+| **Design Specifications** | `docs/design-references/` | PNG References (`v5-landing-page`, `v6-analyze-page`, `v8-analysis-result-reference`, `v9-guided-help-reference`) | Preserved | [Verified] |
 
 ---
 
@@ -25,19 +25,20 @@
 ### 2.1 Public Landing Page (`/`)
 - **[Verified]** Clean, accessible marketing and education page based on `docs/design-references/v5-landing-page-reference.png`.
 - **[Verified]** Features:
-  - Top announcement banner.
-  - ClearPay navigation bar with action CTA (`Analyze a message ↗`).
+  - Top announcement banner with direct link to Guided Help (`/guided-help`).
+  - ClearPay navigation bar with action CTAs (`I'm Not Sure` and `Analyze a message ↗`).
   - Hero section with interactive `HeroDemoCard` illustrating scam signal breakdown.
   - Three-step trust & confidence anchors.
   - Feature guidance cards (`#learn`) and process overview (`#how-it-works`).
   - Explicit privacy callout (`#privacy`) guaranteeing zero credential collection.
-  - Direct client-side routing to `/analyze`.
+  - Direct client-side routing to `/analyze` and `/guided-help`.
 
 ### 2.2 Safety Analyzer Workspace (`/analyze`)
 - **[Verified]** Rebuilt under V6 to match `docs/design-references/v6-analyze-page-reference.png`:
   - **Header:** ClearPay brand logo (`C`), navigation links, language picker (EN / HI / Hinglish), and `← Back to home` button.
   - **Breadcrumbs & Eyebrow:** `Home / Analyze a message` with `MESSAGE SAFETY CHECK` pill.
   - **Privacy Guarantee Banner:** Prominent light-green reassurance box confirming no passwords, PINs, or account numbers are collected.
+  - **Guided Help Shortcut:** Interactive workspace banner on the guided tab directing users to the full `/guided-help` interactive experience.
   - **Two-Column Primary Layout:**
     - **Left Column (Main Analysis Card):**
       - Explicit mode switcher: **Message** vs. **Link / URL** (with tab access to **"I'm Not Sure"** guided survey and **History**).
@@ -70,7 +71,32 @@
   - **Three-Column Interpret Guidance Section:** Explains the distinct meanings of `High risk`, `Unverified`, and `No known threat found`.
   - **Action Bar & Safety Redaction:** Working interactive buttons for `Analyze another message`, `Copy summary` (auto-strips credentials and query tokens via `resultFormatters.js`), `Report issue` feedback modal, and reference report identifier (`Example report ID: CP-7F24` or actual `REF-...`).
 
-### 2.4 URL Safety Engine & False-Pass Elimination
+### 2.4 Guided Help Experience (`/guided-help`, V9 Reference Fidelity)
+- **[Verified]** Built directly from mandatory visual reference asset `docs/design-references/v9-guided-help-reference.png`:
+  - **Header & Navigation:** ClearPay logo, breadcrumb `Home / Guided help`, and `← Back to Analyze` or `← Back to Home` navigation links.
+  - **Eyebrow & Headline:** `STEP-BY-STEP GUIDANCE` pill above `Tell us what's happening.` and subhead `Choose the situation that matches what you're dealing with. We'll ask a couple of quick questions and give you clear next steps.`
+  - **Urgent Emergency Compromise Banner:** Red-accented emergency callout at the top with quick link to immediate steps for users who already shared an OTP, PIN, password, or approved an unexpected transfer.
+  - **Scenario Selection Grid (3x2 Desktop):** 6 clearly articulated everyday payment situations:
+    1. `I got a suspicious message` (Threats, prize claims, parcel updates, or unexpected requests).
+    2. `Someone is asking me for money` (Buyer on an online marketplace, unknown caller, or supposed friend).
+    3. `A link or website feels off` (Page looks strange, misspellings, or asking for card/bank details).
+    4. `Someone wants me to scan a QR code` (Seller or stranger sent a QR code to 'receive' money).
+    5. `Someone told me to install an app` (Caller claims to be technical support, bank, or utility agent).
+    6. `I think I already paid or shared details` (Immediate containment steps, numbers to call, and damage control).
+  - **Interactive Follow-Up Question Flow:**
+    - Presents 2–4 targeted questions per scenario with plain-English radio options.
+    - Preserves answers and allows stepping back or restarting at any point.
+    - Includes explicit `Emergency Steps` button at every step.
+  - **Tailored Plain-English Guidance Screen:**
+    - Summary card with severity status badge (`HIGH RISK - DO NOT PROCEED`, `HIGH RISK - STOP IMMEDIATELY`, `PROCEED WITH CAUTION`, `ROUTINE PRECAUTIONS`).
+    - Urgent Warning Banner for critical situations highlighting red flags.
+    - Actionable Checklist (`What to do right now`) with numbered concrete steps.
+    - `What NEVER to do` card highlighting high-risk behaviors (never enter PIN to receive money, never share OTP).
+    - `Copy this checklist` button with positive clipboard feedback.
+    - Deep-link transition to `/analyze` (`Analyze the specific message or link →`).
+  - **Privacy Guarantee Modal:** Accessible from footer/nav, confirming no sensitive information or credentials are ever recorded.
+
+### 2.5 URL Safety Engine & False-Pass Elimination
 - **[Verified]** Foundational Invariant: *"No match is not proof of safety. Unknown results must stay unknown."*
 - **[Verified]** Verification Status Mapping:
   - `flagged`: Confirmed threat match, brand typosquatting, or executable installer download (`.apk`, `.exe`).
@@ -80,11 +106,12 @@
   - `invalid_input`: Malformed scheme (e.g. `ht!tp://`), dangerous scheme (`javascript:`, `data:`, `intent:`), missing host, illegal host characters, control characters, or length > 2,000.
   - `provider_unavailable`: Reputation provider timeout, HTTP 429/5xx, or network failure.
 - **[Verified]** Safe URL Normalization: Automatically prefixes `https://` to scheme-less inputs, displays a real-time preview, and preserves the original input without altering host or path.
-- **[Verified]** URL Extraction from Messages: Detects all HTTP/HTTPS links in text, sanitizes trailing sentence punctuation, deduplicates, and renders plain-text previews with an isolated `Inspect link →` button.
+- **[Verified]** Adversarial Defenses (SEC-001 through SEC-030): Robust regex and validation against script injection, credential leakage, cut-off URLs, and deceptive punycode domains.
 
-### 2.4 Multimodal Services & Tooling
+### 2.6 Multimodal Services & Tooling
 - **[Verified]** Text Message Analysis (`/api/check/text`, `/analyze`): Pattern detection across 10 scam categories with severity scoring and payment fraud overrides.
-- **[Verified]** "I'm Not Sure" Guided Check (`/api/check/guided`): Step-by-step survey assessing sender claim, requested action, urgency, and sensitive data requests.
+- **[Verified]** Guided Help Engine (`/api/guided-help`, `/guided-help`): Full interactive question trees and safety guidance for 6 everyday scenarios.
+- **[Verified]** "I'm Not Sure" Guided Check (`/api/check/guided`): Legacy step-by-step survey assessing sender claim, requested action, urgency, and sensitive data requests.
 - **[Verified]** QR Code Inspection (`/api/check/qr`): Decodes UPI intent parameters (`pa`, `pn`, `am`, `tn`) and warns that entering a UPI PIN only sends money out.
 - **[Verified]** Multilingual Support (`languages.py`): Localized explanations, golden rules, and uncertainty notes for English, Hindi (`hi`), and Hinglish (`hinglish`).
 - **[Verified]** Local Session History (`HistoryDrawer.jsx`): Client-side browser `localStorage` (max 30 records) with individual record delete and clear-all actions.
@@ -118,26 +145,20 @@
 
 ---
 
-## 5. Detected Contradictions & Inconsistencies
+## 5. Resolved & Detected Inconsistencies
 
-1. **Test Count Discrepancy in `README.md`:**
-   - *Documentation:* `README.md` lines 55 states: `Testing: Pytest (22 backend unit tests) + Benchmark Evaluator...`
-   - *Implementation:* The actual test suite now has **59 backend tests** (22 in `test_safety_engine.py` + 37 in `test_v6_url_matrix.py`).
-   - *Status:* [Verified Contradiction]
+1. **Test Count & Documentation Alignment:**
+   - *Previous Status:* `README.md` and old documentation referenced outdated counts (22 or 59 tests).
+   - *Current Status:* Implementation has **79 backend tests** and **22 frontend tests**. All documentation updated in `changelog.md` and `current-state.md`.
+   - *Resolution:* [Resolved]
 
 2. **FastAPI Application Version Metadata:**
-   - *Documentation / Code:* In `backend/main.py` line 30, the FastAPI application metadata specifies `version="3.0.0"` and description mentions `V3 Multi-Modal...`.
-   - *Implementation:* The project is currently at V6.0.0.
-   - *Status:* [Verified Contradiction]
+   - *Previous Status:* In `backend/main.py`, FastAPI app version was lagging at older versions.
+   - *Current Status:* FastAPI version in `backend/main.py` is updated to `9.0.0` across application definition, `root()`, and `health_check()`.
+   - *Resolution:* [Resolved]
 
-3. **Browser Extension API Contract Lag:**
-   - *Code:* `extension/popup.js` calls `/api/check/text` and renders output based on V2/V3 fields (`risk_level`, `why_suspicious`, `recommended_actions`).
-   - *Implementation:* It does not consume the V6 `/analyze-url` endpoint or display V6 verification statuses (`unverified`, `no_known_threat_found`, etc.).
-   - *Status:* [Verified Contradiction]
-
-4. **URLhaus / Web Risk Reputation Providers:**
-   - *Documentation:* V6 PRD discusses integration of Google Web Risk, Safe Browsing, and URLhaus.
-   - *Implementation:* No external API keys or network clients are enabled. The backend reports `checks_unavailable: ["external_reputation_provider_not_configured"]`.
+3. **URLhaus / Web Risk Reputation Providers:**
+   - *Current State:* External API keys remain optional. When unconfigured, the backend reports `checks_unavailable: ["external_reputation_provider_not_configured"]`. The engine safely evaluates heuristics in-memory without breaking.
    - *Status:* [Verified Current State]
 
 ---
@@ -146,10 +167,10 @@
 
 1. **Live Threat Reputation Provider:**
    - Provider selection (Google Web Risk Lookup API vs. Safe Browsing vs. local hash lists) is documented but requires external credentials and commercial terms review before live deployment.
-2. **Hindi & Regional Language Parity for V6 Analyze UI:**
-   - While backend localized advice (`languages.py`) supports Hindi and Hinglish, the static UI copy of the redesigned V6 Analyze page (labels, guide text, feature cards) is currently English-first.
+2. **Hindi & Regional Language Parity for V9 Guided Help UI:**
+   - While backend localized advice (`languages.py`) supports Hindi and Hinglish, the static UI copy of the redesigned V9 Guided Help page (labels, scenario descriptions, questions) is currently English-first.
 3. **Browser Extension Modernization (P2):**
-   - Updating `extension/` to support direct link inspection and V6 status badges is queued for a future release cycle.
+   - Updating `extension/` to support direct link inspection and V9 status badges is queued for a future release cycle.
 
 ---
 
@@ -161,7 +182,12 @@
 | URL Matrix (URL-001 to URL-025) | Automated | `pytest backend/tests/test_v6_url_matrix.py` | 25 / 25 Passed |
 | Message Regression (MSG-001 to MSG-010) | Automated | `pytest backend/tests/test_v6_url_matrix.py` | 10 / 10 Passed |
 | API Contracts (`/analyze`, `/analyze-url`) | Automated | `pytest backend/tests/test_v6_url_matrix.py` | 2 / 2 Passed |
-| Total Backend Pytest Suite | Automated | `pytest backend/tests` | **59 / 59 Passed** (0.43s) |
-| Frontend API Client Suite | Automated | `npm test` | **12 / 12 Passed** (61ms) |
+| V8 Result Contract & Health Version | Automated | `pytest backend/tests/test_v8_result_contract.py` | 5 / 5 Passed |
+| V9 Adversarial & Security Tests (SEC-001 to SEC-030) | Automated | `pytest backend/tests/test_v9_adversarial_security.py` | 15 / 15 Passed |
+| **Total Backend Pytest Suite** | Automated | `pytest backend/tests` | **79 / 79 Passed** (0.64s) |
+| Frontend API Client Suite | Automated | `npm test` (`api.test.js`) | 12 / 12 Passed |
+| Frontend Result Formatter Suite | Automated | `npm test` (`resultFormatters.test.js`) | 5 / 5 Passed |
+| Frontend Guided Help Suite | Automated | `npm test` (`guidedHelp.test.js`) | 5 / 5 Passed |
+| **Total Frontend Test Suite** | Automated | `npm test` | **22 / 22 Passed** (68ms) |
 | Frontend Code Quality | Automated | `npm run lint` (`oxlint`) | **0 Errors, 0 Warnings** |
-| Production Build Compilation | Automated | `npm run build` (`vite build`) | **Clean Build** (350ms) |
+| Production Build Compilation | Automated | `npm run build` (`vite build`) | **Clean Build** (1.36s) |

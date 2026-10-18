@@ -13,7 +13,7 @@ SENSITIVE_CREDENTIAL_PATTERNS = [
 ]
 
 URGENCY_PATTERNS = [
-    (r"\b(immediately|right\s+now|urgent|urgently|hurry|asap|without\s+delay|verify\s+now|act\s+now|do\s+it\s+now)\b", "Immediate action demand"),
+    (r"\b(immediately|immediate(\s+action)?|right\s+now|urgent|urgently|hurry|asap|without\s+delay|verify\s+now|act\s+now|do\s+it\s+now|action\s+required)\b", "Immediate action demand"),
     (r"\b(within\s+\d+\s*(hours?|hrs?|mins?|minutes?)|in\s+\d+\s*(hours?|minutes?))\b", "Short time limit"),
     (r"\b(today\s+itself|(blocked|suspended|action\s+required|closed|disconnected)\s+today|before\s+(tonight|midnight|evening))\b", "Strict same-day deadline"),
     (r"\b(last\s+chance|final\s+warning|limited\s+time|expires\s+soon)\b", "Artificial urgency / last chance")

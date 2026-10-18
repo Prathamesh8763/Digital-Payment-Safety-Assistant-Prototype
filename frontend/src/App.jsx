@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import LandingPage from './components/landing/LandingPage';
 import SafetyAnalyzer from './components/SafetyAnalyzer';
+import GuidedHelpPage from './components/GuidedHelpPage';
 
 function getInitialRoute() {
   if (typeof window === 'undefined') return '/';
-  return window.location.pathname.startsWith('/analyze') ? '/analyze' : '/';
+  const path = window.location.pathname;
+  if (path.startsWith('/guided-help') || path.startsWith('/guided')) return '/guided-help';
+  if (path.startsWith('/analyze')) return '/analyze';
+  return '/';
 }
 
 export default function App() {
@@ -14,8 +18,14 @@ export default function App() {
 
   useEffect(() => {
     const handlePopState = () => {
-      const currentPath = window.location.pathname.startsWith('/analyze') ? '/analyze' : '/';
-      setRoute(currentPath);
+      const path = window.location.pathname;
+      if (path.startsWith('/guided-help') || path.startsWith('/guided')) {
+        setRoute('/guided-help');
+      } else if (path.startsWith('/analyze')) {
+        setRoute('/analyze');
+      } else {
+        setRoute('/');
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -32,10 +42,20 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  if (route === '/guided-help') {
+    return (
+      <GuidedHelpPage
+        onNavigateHome={() => navigateTo('/')}
+        onNavigateAnalyze={() => navigateTo('/analyze')}
+      />
+    );
+  }
+
   if (route === '/analyze') {
     return (
       <SafetyAnalyzer
         onNavigateHome={() => navigateTo('/')}
+        onNavigateGuided={() => navigateTo('/guided-help')}
         initialText={prefilledText}
         initialTab={initialTab}
       />
@@ -45,7 +65,8 @@ export default function App() {
   return (
     <LandingPage
       onNavigateAnalyze={(prefill) => navigateTo('/analyze', prefill, 'text')}
-      onNavigateMode={(mode) => navigateTo('/analyze', '', mode)}
+      onNavigateMode={(mode) => (mode === 'guided' ? navigateTo('/guided-help') : navigateTo('/analyze', '', mode))}
+      onNavigateGuided={() => navigateTo('/guided-help')}
     />
   );
 }
