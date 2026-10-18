@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Digital Payment Safety Assistant",
+  "version": "2.0.0",
+  "description": "Inspect suspicious messages, links, and payment claims safely before taking risky financial actions.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Check Payment Safety"
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

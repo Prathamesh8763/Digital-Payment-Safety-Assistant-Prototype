@@ -1,0 +1,10 @@
+{
+  "entries": [
+    {
+      "path": "plugins",
+      "exclude": [
+        "googlecloudtools\\.datacloud_telemetry"
+      ]
+    }
+  ]
+}

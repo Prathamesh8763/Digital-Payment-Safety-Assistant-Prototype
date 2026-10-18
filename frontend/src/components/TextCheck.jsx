@@ -1,0 +1,181 @@
+import React, { useState, useEffect } from 'react';
+import { Send, RotateCcw, Sparkles, Bot } from 'lucide-react';
+import VoiceInput from './VoiceInput';
+import Button from './ui/Button';
+import Textarea from './ui/Textarea';
+import apiClient from '../services/apiClient';
+
+const FALLBACK_SCENARIOS = [
+  {
+    id: "fake_bank_support",
+    title: "Fake Bank Call (OTP)",
+    type: "scam",
+    text: "Someone called me saying they are from SBI Customer Care. They said my account had a fraudulent debit and asked me to share my OTP immediately to reverse it."
+  },
+  {
+    id: "fake_kyc_blocking",
+    title: "KYC Account Block Threat",
+    type: "scam",
+    text: "Dear customer, your bank account will be blocked today within 2 hours because KYC is incomplete. Call 9876543210 or install this APK file to update immediately."
+  },
+  {
+    id: "fake_refund",
+    title: "Accidental Refund Trap",
+    type: "scam",
+    text: "I received a message: 'I sent you ₹5,000 by mistake instead of ₹500. Please scan this QR code or accept the collect request to refund my money.'"
+  },
+  {
+    id: "prize_reward",
+    title: "Lottery Advance Fee",
+    type: "scam",
+    text: "Congratulations! You have won ₹25,000 in the Lucky Draw. To claim your prize money, pay ₹499 registration fee first to UPI ID: winnerclaim@upi."
+  },
+  {
+    id: "remote_access_anydesk",
+    title: "AnyDesk Screen Share App",
+    type: "scam",
+    text: "Caller said my payment failed and told me to install AnyDesk or QuickSupport app from Play Store so they can guide me through the refund process."
+  },
+  {
+    id: "upi_pin_to_receive",
+    title: "Enter PIN to Receive Money",
+    type: "scam",
+    text: "A buyer on OLX sent me a QR code saying: 'Scan this QR code and enter your UPI PIN to receive ₹3,500 advance payment for your sofa.'"
+  },
+  {
+    id: "legitimate_tea_stall",
+    title: "Legitimate Tea Stall Payment",
+    type: "legitimate",
+    text: "I scanned the merchant QR code at Sharma Tea Stall and paid ₹40 using Google Pay. Received standard debit confirmation SMS from HDFC Bank."
+  },
+  {
+    id: "legitimate_bill_payment",
+    title: "Legitimate Electricity Bill",
+    type: "legitimate",
+    text: "I opened the official PhonePe app and paid my electricity bill of ₹850. Debited from my bank account with normal transaction ID."
+  }
+];
+
+export default function TextCheck({ onAnalyze, loading, initialText = '' }) {
+  const [text, setText] = useState(initialText);
+  const [useAi, setUseAi] = useState(false);
+  const [scenarios, setScenarios] = useState(FALLBACK_SCENARIOS);
+
+  useEffect(() => {
+    let isMounted = true;
+    apiClient.fetchScenarios()
+      .then((data) => {
+        if (isMounted && data && Array.isArray(data) && data.length > 0) {
+          setScenarios(data);
+        }
+      })
+      .catch(() => {
+        // Fallback scenarios already set as default
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!text.trim() || loading) return;
+    onAnalyze({ text: text.trim(), use_ai: useAi });
+  };
+
+  const handleSelectScenario = (scenario) => {
+    setText(scenario.text);
+  };
+
+  const handleVoiceTranscript = (spokenText) => {
+    setText((prev) => (prev ? `${prev} ${spokenText}` : spokenText));
+  };
+
+  const handleClear = () => {
+    setText('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="text-check-form" aria-label="Suspicious message analysis form">
+      <Textarea
+        id="situation-text"
+        label="Describe what happened or paste the suspicious message:"
+        helperText="Include what the person claimed and asked you to do. (Never include real PINs, passwords, or full card details!)"
+        placeholder="Example: Someone called me saying they are from my bank. They said my account will be blocked today unless I pay ₹2,000 or share my OTP..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={5}
+        required
+        showCount
+      />
+
+      {/* Voice input component */}
+      <VoiceInput onTranscriptReady={handleVoiceTranscript} disabled={loading} />
+
+      {/* Optional AI Enhancement Toggle (FR-03) */}
+      <div style={{ margin: '0.85rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <input
+          type="checkbox"
+          id="ai-toggle"
+          checked={useAi}
+          onChange={(e) => setUseAi(e.target.checked)}
+          style={{ width: '18px', height: '18px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+        />
+        <label
+          htmlFor="ai-toggle"
+          style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+        >
+          <Bot size={15} style={{ color: 'var(--primary)' }} aria-hidden="true" />
+          <span>Enable AI-Assisted Explanation Enhancement (Supplements rule engine; safe fallback if offline)</span>
+        </label>
+      </div>
+
+      <div className="btn-row">
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={text.trim().length < 3 || loading}
+          loading={loading}
+          loadingText="Analyzing Situation..."
+          leftIcon={Send}
+        >
+          Check Safety
+        </Button>
+
+        {text && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleClear}
+            disabled={loading}
+            leftIcon={RotateCcw}
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+
+      <div className="scenarios-section">
+        <div className="scenarios-title">
+          <Sparkles size={14} style={{ display: 'inline', marginRight: '4px' }} aria-hidden="true" />
+          Try Demonstration Scenarios (Click to test):
+        </div>
+        <div className="scenarios-grid">
+          {scenarios.map((sc) => (
+            <button
+              key={sc.id}
+              type="button"
+              className={`scenario-pill ${sc.type === 'legitimate' ? 'legit-pill' : ''}`}
+              onClick={() => handleSelectScenario(sc)}
+              title={sc.text}
+            >
+              <span aria-hidden="true">{sc.type === 'legitimate' ? '✓ ' : '⚠️ '}</span>
+              <span>{sc.title}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </form>
+  );
+}
