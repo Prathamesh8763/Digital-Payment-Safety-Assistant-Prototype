@@ -1,3 +1,4 @@
+import time
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 
@@ -82,7 +83,11 @@ class EducationalConcept(BaseModel):
     concept: str
     golden_rule: str
 
-URLVerificationStatus = Literal["flagged", "suspicious", "no_known_threat_found", "unverified", "invalid_input", "provider_unavailable"]
+URLVerificationStatus = Literal[
+    "flagged", "suspicious", "no_known_threat_found", "unverified", "invalid_input",
+    "provider_unavailable", "known_threat", "suspicious_indicators", "partial_result",
+    "check_unavailable", "qr_decode_failed"
+]
 
 class SafetyAssessmentResponse(BaseModel):
     risk_level: RiskLevel
@@ -176,6 +181,11 @@ class URLCheckResponse(BaseModel):
     educational_concept: EducationalConcept
     reference_id: str = "REF-URL-0000"
     analysis_id: Optional[str] = None
+    platform_category: Optional[str] = None
+    platform_name: Optional[str] = None
+    is_checkout_detected: bool = False
+    multi_parameter_scorecard: Optional[Dict[str, Any]] = None
+    safety_guidance: Optional[List[str]] = None
     uncertainty_note: str = "Inspected without navigating to the destination. Unflagged domains may still host unknown threats."
     language: str = "en"
     disclaimer: str = (
@@ -199,6 +209,76 @@ class URLCheckResponse(BaseModel):
                 [{"name": c, "status": "completed"} for c in self.checks_performed] +
                 [{"name": c, "status": "not_configured"} for c in self.checks_unavailable]
             )
+
+class CheckLinkRequest(BaseModel):
+    url: str = Field(
+        ...,
+        min_length=1,
+        max_length=5000,
+        description="The web address or link found in a suspicious message or email."
+    )
+    include_reputation: bool = Field(
+        default=True,
+        description="Whether to query configured external reputation providers."
+    )
+    language: str = Field(default="en")
+
+class CheckLinkFinding(BaseModel):
+    title: str
+    description: str
+    evidence: Optional[str] = None
+    severity: str = "medium"
+
+class CheckLinkResponse(BaseModel):
+    status: URLVerificationStatus = "unverified"
+    summary: str
+    normalized_url: str
+    display_url: Optional[str] = None
+    checks: Dict[str, str] = Field(
+        default_factory=lambda: {
+            "syntax": "passed",
+            "host_analysis": "completed",
+            "reputation": "unavailable"
+        }
+    )
+    findings: List[CheckLinkFinding] = Field(default_factory=list)
+    recommendations: List[str] = Field(default_factory=list)
+    checked_at: str = Field(default_factory=lambda: time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+    risk_level: RiskLevel = "UNABLE_TO_ASSESS"
+    risk_score: int = 40
+    domain: str = ""
+    protocol: str = "https"
+    is_https: bool = True
+    is_shortened: bool = False
+    is_ip_address: bool = False
+    is_suspicious_tld: bool = False
+    impersonated_brand: Optional[str] = None
+    indicators: List[DetectedIndicator] = Field(default_factory=list)
+    why_suspicious: List[str] = Field(default_factory=list)
+    reasons: Optional[List[str]] = None
+    checks_performed: List[str] = Field(default_factory=list)
+    checks_unavailable: List[str] = Field(default_factory=list)
+    reference_id: str = "REF-URL-0000"
+    analysis_id: Optional[str] = None
+    platform_category: Optional[str] = None
+    platform_name: Optional[str] = None
+    is_checkout_detected: bool = False
+    multi_parameter_scorecard: Optional[Dict[str, Any]] = None
+    safety_guidance: Optional[List[str]] = None
+    educational_concept: Optional[EducationalConcept] = None
+    uncertainty_note: str = "Inspected safely without visiting the destination. Absence of a threat match does NOT prove safety."
+    disclaimer: str = (
+        "Inspected safely without visiting the link. A low-risk result does not guarantee that the destination is safe. "
+        "Always verify official bank and payment websites directly from known sources."
+    )
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.reasons is None:
+            self.reasons = list(self.why_suspicious)
+        if self.analysis_id is None:
+            self.analysis_id = self.reference_id
+        if self.display_url is None:
+            self.display_url = self.domain
 
 class QRCheckRequest(BaseModel):
     payload: str = Field(

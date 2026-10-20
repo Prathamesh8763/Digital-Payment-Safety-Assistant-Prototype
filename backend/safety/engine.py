@@ -9,7 +9,9 @@ from schemas.safety import (
     URLCheckRequest,
     URLCheckResponse,
     QRCheckRequest,
-    QRCheckResponse
+    QRCheckResponse,
+    CheckLinkRequest,
+    CheckLinkResponse
 )
 from safety.detector import detect_indicators_in_text
 from safety.risk import calculate_risk
@@ -371,4 +373,10 @@ class SafetyEngine:
         res.verification_status = "flagged" if res.risk_level == "HIGH" else "unverified"
         res.language = request.language
         res.uncertainty_note = self._build_uncertainty_note(res.risk_level, len(res.indicators))
+        return res
+
+    def check_link(self, request: CheckLinkRequest) -> CheckLinkResponse:
+        res = self.url_checker.check_link(request)
+        res.reference_id = self._generate_ref_id("URL")
+        res.analysis_id = res.reference_id
         return res

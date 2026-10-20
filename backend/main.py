@@ -1,11 +1,12 @@
 import os
+import re
 import time
 import logging
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from schemas.safety import (
     TextCheckRequest,
@@ -17,7 +18,9 @@ from schemas.safety import (
     QRCheckResponse,
     FeedbackRequest,
     FeedbackResponse,
-    EvaluationMetrics
+    EvaluationMetrics,
+    CheckLinkRequest,
+    CheckLinkResponse
 )
 from safety.engine import SafetyEngine
 from tests.evaluate_model import run_benchmark_evaluation
@@ -28,8 +31,8 @@ logger = logging.getLogger("safety.api")
 
 app = FastAPI(
     title="Digital Payment Safety Assistant API",
-    description="V8 Multi-Modal Payment Safety, Scam Prevention, and Uncertainty-Aware Engine",
-    version="8.0.0"
+    description="V10 Link & QR Safety, Scam Prevention, and Uncertainty-Aware Engine",
+    version="10.0.0"
 )
 
 # 1. Security Headers Middleware (FR-09/FR-11)
@@ -99,7 +102,7 @@ engine = SafetyEngine()
 def root():
     return {
         "service": "Digital Payment Safety Assistant API",
-        "version": "9.0.0",
+        "version": "10.0.0",
         "documentation": "/docs"
     }
 
@@ -111,7 +114,7 @@ def health_check():
     return {
         "status": "healthy",
         "service": "Digital Payment Safety Assistant API",
-        "version": "9.0.0",
+        "version": "10.0.0",
         "uptime_state": "operational",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "feedback_entries_count": engine.feedback_service.get_feedback_count()
@@ -148,6 +151,11 @@ async def check_text(payload: TextCheckRequest):
 def check_guided(payload: GuidedCheckRequest):
     return engine.analyze_guided(payload)
 
+@app.post("/api/check-link", response_model=CheckLinkResponse)
+@app.post("/check-link", response_model=CheckLinkResponse)
+def check_link_endpoint(payload: CheckLinkRequest):
+    return engine.check_link(payload)
+
 @app.post("/api/check/url", response_model=URLCheckResponse)
 @app.post("/api/analyze-url", response_model=URLCheckResponse)
 @app.post("/analyze-url", response_model=URLCheckResponse)
@@ -167,6 +175,121 @@ def submit_feedback(payload: FeedbackRequest, request: Request):
     """
     client_ip = request.client.host if request.client else "127.0.0.1"
     return engine.feedback_service.record_feedback(payload, client_ip=client_ip)
+
+class SubscriptionCheckRequest(BaseModel):
+    text: str = Field(..., min_length=3, max_length=5000)
+    service_name: Optional[str] = None
+    billing_frequency: Optional[str] = "monthly"
+    amount: Optional[float] = None
+    language: str = "en"
+
+@app.get("/api/directory")
+def get_verified_directory():
+    """Returns directory of verified payment gateways, subscription services, and banking institutions."""
+    from safety.url_checker import VERIFIED_PAYMENT_GATEWAYS, VERIFIED_SUBSCRIPTION_PLATFORMS, VERIFIED_BANKING_DOMAINS
+    return {
+        "payment_gateways": [
+            {"domain": k, "name": v, "category": "payment_gateway"} for k, v in VERIFIED_PAYMENT_GATEWAYS.items()
+        ],
+        "subscription_platforms": [
+            {"domain": k, "name": v, "category": "subscription_service"} for k, v in VERIFIED_SUBSCRIPTION_PLATFORMS.items()
+        ],
+        "banking_institutions": [
+            {"domain": k, "name": v, "category": "financial_institution"} for k, v in VERIFIED_BANKING_DOMAINS.items()
+        ]
+    }
+
+@app.post("/api/subscriptions/analyze")
+def analyze_subscription_endpoint(payload: SubscriptionCheckRequest):
+    """
+    Analyzes subscription renewal emails, messages, and invoices for fake renewal traps and auto-debit risks.
+    """
+    text_lower = payload.text.lower()
+    indicators = []
+    why_suspicious = []
+
+    fake_invoice_brands = ["geek squad", "norton", "mcafee", "paypal invoice", "best buy", "windows defender", "apple bill"]
+    matched_brand = next((b for b in fake_invoice_brands if b in text_lower), None)
+
+    has_call_to_cancel = bool(re.search(r"\b(call\s+(us|now|helpdesk|toll[- ]?free|support)|reach\s+us\s+at|\+?1?[- ]?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4})\b", text_lower))
+    has_refund_claim = bool(re.search(r"\b(refund|dispute|cancel\s+(within|immediately|order)|auto[- ]?renewed|charged\s*[$₹]\s*\d+)\b", text_lower))
+    has_remote_access = bool(re.search(r"\b(anydesk|teamviewer|quicksupport|ultraviewer|screen\s+share)\b", text_lower))
+
+    is_scam_invoice = False
+    if matched_brand and (has_call_to_cancel or has_refund_claim):
+        is_scam_invoice = True
+        indicators.append({
+            "id": "fake_subscription_invoice",
+            "title": "Fake Subscription Renewal / Refund Trap",
+            "severity": "high",
+            "description": f"The message mimics an automated subscription renewal from {matched_brand.title()} asking you to call a number for a refund or cancellation."
+        })
+        why_suspicious.append(f"Scammers send fake {matched_brand.title()} invoices claiming large sums (e.g. $299 to $499) were charged, baiting victims into calling fake support lines.")
+
+    if has_remote_access:
+        is_scam_invoice = True
+        indicators.append({
+            "id": "remote_access_subscription_scam",
+            "title": "Remote Access Takeover Request",
+            "severity": "high",
+            "description": "The communication requests you to install remote control software (AnyDesk, TeamViewer) to process your refund."
+        })
+        why_suspicious.append("Legitimate subscription providers (Netflix, Spotify, Apple, Google) NEVER request remote access to your computer or phone to cancel charges.")
+
+    risk_level = "HIGH" if is_scam_invoice else "LOW"
+
+    cancellation_guides = {
+        "upi_autopay": [
+            "Open your UPI App (Google Pay / PhonePe / Paytm / BHIM).",
+            "Go to Profile → 'AutoPay' or 'Recurring Payments'.",
+            "Find the active mandate and tap 'Pause' or 'Cancel AutoPay'.",
+            "Enter your UPI PIN to authenticate mandate cancellation."
+        ],
+        "card_emandate": [
+            "Log in to your bank's official netbanking or mobile app.",
+            "Navigate to 'Cards' → 'Manage Standing Instructions / e-Mandates'.",
+            "View all registered merchant subscriptions.",
+            "Select the unwanted subscription and click 'Cancel / Modify Mandate'."
+        ],
+        "google_play": [
+            "Open the Google Play Store app on your Android device.",
+            "Tap your profile icon in top right → 'Payments & subscriptions' → 'Subscriptions'.",
+            "Select the subscription you want to cancel.",
+            "Tap 'Cancel subscription' and follow the on-screen instructions."
+        ],
+        "apple_app_store": [
+            "Open the Settings app on your iPhone or iPad.",
+            "Tap your name at the top → 'Subscriptions'.",
+            "Tap the subscription you want to manage.",
+            "Tap 'Cancel Subscription'."
+        ],
+        "paypal": [
+            "Log in to your PayPal account at paypal.com.",
+            "Go to Settings (gear icon) → 'Payments'.",
+            "Click 'Manage Automatic Payments'.",
+            "Select the merchant and click 'Cancel' to stop future debits."
+        ]
+    }
+
+    return {
+        "is_scam_invoice": is_scam_invoice,
+        "risk_level": risk_level,
+        "risk_score": 85 if is_scam_invoice else 15,
+        "summary": (
+            "⚠️ High-Risk Subscription Scam Detected: This message displays classic signs of a fake renewal invoice designed to trick you into calling a fraudulent refund helpline."
+            if is_scam_invoice else
+            "✅ No obvious subscription scam indicators detected in this notification. Follow official cancellation steps if you wish to stop recurring charges."
+        ),
+        "indicators": indicators,
+        "why_suspicious": why_suspicious,
+        "cancellation_guides": cancellation_guides,
+        "recommended_actions": [
+            "Never call phone numbers printed on unrequested invoice emails.",
+            "Do NOT install AnyDesk, TeamViewer, or screen-sharing software.",
+            "Verify your bank account or card statement directly via your official bank app.",
+            "To cancel a genuine subscription, visit the official website or app settings directly."
+        ]
+    }
 
 @app.get("/api/evaluation/benchmark", response_model=EvaluationMetrics)
 def get_evaluation_benchmark():

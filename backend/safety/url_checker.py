@@ -8,7 +8,10 @@ from schemas.safety import (
     DetectedIndicator,
     EducationalConcept,
     URLVerificationStatus,
-    RiskLevel
+    RiskLevel,
+    CheckLinkRequest,
+    CheckLinkResponse,
+    CheckLinkFinding
 )
 
 SUSPICIOUS_TLDS = {
@@ -26,6 +29,140 @@ RESERVED_TLDS = {
     "invalid", "example", "test", "localhost", "local", "onion"
 }
 
+# Verified Payment Gateways & Processors
+VERIFIED_PAYMENT_GATEWAYS: Dict[str, str] = {
+    # Global Payment Gateways
+    "stripe.com": "Stripe",
+    "checkout.stripe.com": "Stripe Checkout",
+    "buy.stripe.com": "Stripe Payment Link",
+    "paypal.com": "PayPal",
+    "paypal.me": "PayPal.Me",
+    "braintreepayments.com": "Braintree",
+    "adyen.com": "Adyen",
+    "squareup.com": "Square",
+    "square.site": "Square Online",
+    "klarna.com": "Klarna",
+    "shopify.com": "Shopify Checkout",
+    "shop.app": "Shop Pay (Shopify)",
+    "myshopify.com": "Shopify Store",
+    "paddle.com": "Paddle",
+    "paddle.net": "Paddle Buyer Checkout",
+    "fastspring.com": "FastSpring",
+    "gumroad.com": "Gumroad",
+    "lemonsqueezy.com": "Lemon Squeezy",
+    "worldpay.com": "Worldpay",
+    # India Payment Gateways & Aggregators
+    "razorpay.com": "Razorpay",
+    "rzp.io": "Razorpay Payment Link",
+    "pages.razorpay.com": "Razorpay Payment Page",
+    "cashfree.com": "Cashfree Payments",
+    "billdesk.com": "BillDesk",
+    "billdesk.io": "BillDesk",
+    "payu.in": "PayU India",
+    "payubiz.in": "PayU Biz",
+    "ccavenue.com": "CCAvenue",
+    "instamojo.com": "Instamojo",
+    "cred.club": "CRED",
+    "paytm.com": "Paytm",
+    "paytmbank.com": "Paytm Payments Bank",
+    "phonepe.com": "PhonePe",
+    "bhimupi.org.in": "BHIM UPI (NPCI)",
+    "npci.org.in": "National Payments Corporation of India"
+}
+
+# Verified Subscription & Digital Platforms
+VERIFIED_SUBSCRIPTION_PLATFORMS: Dict[str, str] = {
+    # Streaming & Media Subscriptions
+    "netflix.com": "Netflix",
+    "spotify.com": "Spotify",
+    "youtube.com": "YouTube Memberships & Premium",
+    "youtu.be": "YouTube Official Links",
+    "hotstar.com": "Disney+ Hotstar",
+    "disneyplus.com": "Disney+",
+    "primevideo.com": "Amazon Prime Video",
+    "jiocinema.com": "JioCinema",
+    "zee5.com": "Zee5",
+    "sonyliv.com": "SonyLIV",
+    "crunchyroll.com": "Crunchyroll",
+    "twitch.tv": "Twitch",
+    "audible.com": "Audible",
+    "audible.in": "Audible India",
+    # AI, Cloud, Productivity & SaaS Subscriptions
+    "openai.com": "OpenAI",
+    "chatgpt.com": "ChatGPT Plus",
+    "google.com": "Google",
+    "google.co.in": "Google India",
+    "pay.google.com": "Google Pay & Subscriptions",
+    "payments.google.com": "Google Payments Center",
+    "play.google.com": "Google Play Subscriptions",
+    "microsoft.com": "Microsoft",
+    "office.com": "Microsoft 365",
+    "live.com": "Microsoft Live",
+    "xbox.com": "Xbox",
+    "apple.com": "Apple",
+    "icloud.com": "Apple iCloud",
+    "github.com": "GitHub",
+    "adobe.com": "Adobe Creative Cloud",
+    "canva.com": "Canva",
+    "notion.so": "Notion",
+    "slack.com": "Slack",
+    "zoom.us": "Zoom",
+    "atlassian.com": "Atlassian",
+    "atlassian.net": "Atlassian Cloud",
+    "trello.com": "Trello",
+    "dropbox.com": "Dropbox",
+    "linkedin.com": "LinkedIn Premium",
+    "coursera.org": "Coursera",
+    "udemy.com": "Udemy",
+    "substack.com": "Substack",
+    "patreon.com": "Patreon",
+    "midjourney.com": "Midjourney",
+    "figma.com": "Figma",
+    "discord.com": "Discord",
+    "discord.gg": "Discord",
+    "steampowered.com": "Steam Store",
+    "steamcommunity.com": "Steam Community",
+    "epicgames.com": "Epic Games",
+    # E-Commerce & Daily Essentials
+    "amazon.com": "Amazon",
+    "amazon.in": "Amazon India",
+    "pay.amazon.in": "Amazon Pay India",
+    "flipkart.com": "Flipkart",
+    "myntra.com": "Myntra",
+    "swiggy.com": "Swiggy",
+    "zomato.com": "Zomato",
+    "uber.com": "Uber",
+    "olacabs.com": "Ola Cabs",
+    "makemytrip.com": "MakeMyTrip",
+    "irctc.co.in": "IRCTC",
+    "bookmyshow.com": "BookMyShow"
+}
+
+# Verified Financial Institutions & Regulators
+VERIFIED_BANKING_DOMAINS: Dict[str, str] = {
+    "onlinesbi.sbi": "State Bank of India (SBI)",
+    "sbi.co.in": "State Bank of India (SBI)",
+    "hdfcbank.com": "HDFC Bank",
+    "icicibank.com": "ICICI Bank",
+    "axisbank.com": "Axis Bank",
+    "pnbindia.in": "Punjab National Bank (PNB)",
+    "canarabank.com": "Canara Bank",
+    "kotak.com": "Kotak Mahindra Bank",
+    "bankofbaroda.in": "Bank of Baroda",
+    "indusind.com": "IndusInd Bank",
+    "yesbank.in": "Yes Bank",
+    "idfcfirstbank.com": "IDFC FIRST Bank",
+    "federalbank.co.in": "Federal Bank",
+    "rbi.org.in": "Reserve Bank of India (RBI)",
+    "incometax.gov.in": "Income Tax Department"
+}
+
+OFFICIAL_AUTHORIZED_DOMAINS = (
+    set(VERIFIED_PAYMENT_GATEWAYS.keys()) |
+    set(VERIFIED_SUBSCRIPTION_PLATFORMS.keys()) |
+    set(VERIFIED_BANKING_DOMAINS.keys())
+)
+
 FINANCIAL_TARGET_BRANDS = [
     ("sbi", "State Bank of India (SBI)"),
     ("hdfc", "HDFC Bank"),
@@ -41,17 +178,55 @@ FINANCIAL_TARGET_BRANDS = [
     ("yono", "SBI YONO"),
     ("canara", "Canara Bank"),
     ("kotak", "Kotak Mahindra Bank"),
-    ("bob", "Bank of Baroda")
+    ("bob", "Bank of Baroda"),
+    ("youtube", "YouTube"),
+    ("google", "Google"),
+    ("razorpay", "Razorpay"),
+    ("stripe", "Stripe"),
+    ("paypal", "PayPal"),
+    ("netflix", "Netflix"),
+    ("spotify", "Spotify"),
+    ("openai", "OpenAI"),
+    ("chatgpt", "ChatGPT"),
+    ("amazon", "Amazon"),
+    ("apple", "Apple"),
+    ("microsoft", "Microsoft"),
+    ("hotstar", "Disney+ Hotstar"),
+    ("jiocinema", "JioCinema"),
+    ("coursera", "Coursera"),
+    ("udemy", "Udemy"),
+    ("swiggy", "Swiggy"),
+    ("zomato", "Zomato"),
+    ("steam", "Steam"),
+    ("canva", "Canva"),
+    ("patreon", "Patreon")
 ]
 
-OFFICIAL_AUTHORIZED_DOMAINS = {
-    "onlinesbi.sbi", "sbi.co.in", "hdfcbank.com", "icicibank.com",
-    "axisbank.com", "pnbindia.in", "rbi.org.in", "paytm.com",
-    "phonepe.com", "google.com", "pay.google.com", "bhimupi.org.in",
-    "npci.org.in", "canarabank.com", "kotak.com", "bankofbaroda.in"
+DANGEROUS_EXTENSIONS = [".apk", ".exe", ".scr", ".bat", ".cmd", ".vbs", ".msi", ".jar", ".com"]
+
+FAKE_LINK_AND_LOGGER_DOMAINS = {
+    # Grabify & IP Logger domains
+    "grabify.link", "iplogger.org", "iplogger.com", "iplogger.ru", "2no.co", "yip.su",
+    "iplis.ru", "02ip.ru", "ezstat.ru", "whatsmydns.me", "curiouscat.club", "bmwforum.co",
+    "leancoding.co", "quicksend.ch", "spottyfly.com", "stopify.co", "screener.one",
+    "xda-developers.us", "fortnight.space", "freegiftcards.co", "dateing.club",
+    "disord.gifts", "steamcomminuty.com", "steamcommunity.ru.com", "shsec.org",
+    "pranklink.com", "fakelinkgenerator.com", "fakeupdate.net", "fakerat.com",
+    # Tunnel & disposable forwarding domains commonly abused for fake links
+    "ngrok-free.app", "ngrok.io", "trycloudflare.com", "loca.lt", "serveo.net",
+    "pagekite.me", "telebit.io", "glitch.me", "000webhostapp.com"
 }
 
-DANGEROUS_EXTENSIONS = [".apk", ".exe", ".scr", ".bat", ".cmd", ".vbs", ".msi", ".jar", ".com"]
+DECEPTIVE_LURE_PATTERNS = [
+    # Generic fake/prank/phish keywords
+    r"\b(fake|prank|generator|iplog|grabify|phish|spoofer|cloner|deceptive)\b",
+    # Financial scam lure patterns
+    r"(free[-_]?recharge|free[-_]?gift|claim[-_]?reward|win[-_]?cash|lucky[-_]?draw|lottery[-_]?win|airdrop[-_]?claim|giveaway|spin[-_]?wheel)",
+    # Threat / urgency lure patterns
+    r"(kyc[-_]?verify|pan[-_]?update|account[-_]?unblock|card[-_]?block|sim[-_]?block|bill[-_]?unpaid|electricity[-_]?cut)",
+    # Fake portal patterns
+    r"(secure[-_]?login|bank[-_]?verify|pay[-_]?confirm|refund[-_]?approved|cashback[-_]?offer|reward[-_]?point)"
+]
 
 class URLChecker:
     """
@@ -119,6 +294,148 @@ class URLChecker:
     def _sanitize_for_display(self, text: str) -> str:
         """Strips control characters from user text for safe display."""
         return re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text)
+
+    def _identify_platform(self, host_clean: str) -> Tuple[str, Optional[str]]:
+        """
+        Categorizes the host into:
+          - 'payment_gateway', name
+          - 'subscription_service', name
+          - 'financial_institution', name
+          - 'standard_commercial', None
+          - 'unverified', None
+        """
+        for dom, name in VERIFIED_PAYMENT_GATEWAYS.items():
+            if host_clean == dom or host_clean.endswith("." + dom):
+                return "payment_gateway", name
+        for dom, name in VERIFIED_SUBSCRIPTION_PLATFORMS.items():
+            if host_clean == dom or host_clean.endswith("." + dom):
+                return "subscription_service", name
+        for dom, name in VERIFIED_BANKING_DOMAINS.items():
+            if host_clean == dom or host_clean.endswith("." + dom):
+                return "financial_institution", name
+        tld = host_clean.split(".")[-1] if "." in host_clean else ""
+        if tld not in SUSPICIOUS_TLDS and tld not in RESERVED_TLDS:
+            return "standard_commercial", None
+        return "unverified", None
+
+    def _detect_checkout_intent(self, path: str, query: str) -> bool:
+        """Determines if the URL points to an active checkout, payment, or subscription flow."""
+        target = f"{path}/{query}".lower()
+        patterns = [
+            r"\b(checkout|pay|payment|billing|subscribe|subscription|purchase|pricing|cart|order|membership|invoice|plans)\b",
+            r"(c/pay|buy/|checkoutnow|paid_memberships|signup/payment)"
+        ]
+        return any(re.search(p, target) for p in patterns)
+
+    def _build_multi_parameter_scorecard(
+        self,
+        host_clean: str,
+        is_https: bool,
+        is_ip: bool,
+        is_suspicious_tld: bool,
+        is_official: bool,
+        platform_category: str,
+        platform_name: Optional[str],
+        is_checkout: bool,
+        impersonated_brand: Optional[str],
+        is_fake_generator: bool,
+        has_dangerous_ext: bool
+    ) -> Dict[str, Any]:
+        tld = host_clean.split(".")[-1] if "." in host_clean else ""
+        return {
+            "transport_security": {
+                "status": "passed" if is_https else "failed",
+                "label": "HTTPS Encrypted" if is_https else "Insecure Plain HTTP",
+                "score": 100 if is_https else 0,
+                "details": "Encrypted using modern SSL/TLS web protocol." if is_https else "Unencrypted plain-text transport. Credentials and card numbers can be intercepted."
+            },
+            "domain_hierarchy": {
+                "status": "warning" if (is_suspicious_tld or is_ip) else "passed",
+                "label": f"TLD: .{tld}" if not is_ip else "Numerical IP Address",
+                "score": 40 if (is_suspicious_tld or is_ip) else 100,
+                "details": f"Clean domain ending in .{tld}" if not is_suspicious_tld and not is_ip else "Domain uses a disposable, high-risk, or non-standard TLD."
+            },
+            "brand_integrity": {
+                "status": "threat" if impersonated_brand else "passed",
+                "label": "Authentic Entity" if not impersonated_brand else f"Impersonating {impersonated_brand}",
+                "score": 0 if impersonated_brand else 100,
+                "details": "No unauthorized brand lookalike found." if not impersonated_brand else f"The host pretends to be affiliated with {impersonated_brand} on an external unverified domain."
+            },
+            "platform_verification": {
+                "status": "verified" if is_official else "unverified",
+                "category": platform_category,
+                "label": platform_name or ("Standard Web Merchant" if platform_category == "standard_commercial" else "Unverified Web Host"),
+                "score": 100 if is_official else (60 if platform_category == "standard_commercial" else 30),
+                "details": f"Verified official directory listing for {platform_name}." if is_official else "Independent host not in accredited banking/gateway directories."
+            },
+            "checkout_context": {
+                "detected": is_checkout,
+                "label": "Payment / Subscription Flow" if is_checkout else "Standard Web Page",
+                "details": f"Active checkout/subscription parameters detected on {platform_name or host_clean}." if is_checkout else "General informational page."
+            },
+            "threat_reputation": {
+                "status": "threat" if (is_fake_generator or has_dangerous_ext) else "clean",
+                "label": "No Threat Reports" if not (is_fake_generator or has_dangerous_ext) else "Threat Flagged",
+                "score": 0 if (is_fake_generator or has_dangerous_ext) else 100,
+                "details": "No matches in active fake link generators, IP tracking loggers, or malicious APK downloads." if not (is_fake_generator or has_dangerous_ext) else "Address flagged in threat intelligence feeds for malicious tools or phishing."
+            }
+        }
+
+    def _generate_safety_guidance(
+        self,
+        is_official: bool,
+        platform_category: str,
+        platform_name: Optional[str],
+        is_checkout: bool,
+        is_https: bool,
+        impersonated_brand: Optional[str]
+    ) -> List[str]:
+        if impersonated_brand:
+            return [
+                f"Do NOT enter passwords, OTPs, or cards. This address mimics {impersonated_brand}.",
+                f"Official operations for {impersonated_brand} never take place on this domain.",
+                "Report this link to cybercrime authorities or close the page immediately."
+            ]
+        if not is_https:
+            return [
+                "Do NOT enter passwords, card numbers, or personal info over plain HTTP.",
+                "Legitimate payment portals and checkout systems always require HTTPS encryption."
+            ]
+        if is_official:
+            if platform_category == "payment_gateway":
+                return [
+                    f"This address belongs to {platform_name}, a verified payment processor.",
+                    "Verify the merchant business name and charge amount displayed on the payment sheet.",
+                    "Payment processors never ask for your ATM PIN or UPI PIN to accept a card payment."
+                ]
+            elif platform_category == "subscription_service":
+                return [
+                    f"This address belongs to {platform_name}, an official subscription service.",
+                    "Check billing frequency (monthly vs annual) and trial renewal terms before confirming.",
+                    "You can manage or cancel auto-debits anytime in your official account billing settings."
+                ]
+            elif platform_category == "financial_institution":
+                return [
+                    f"This address matches official domain directory records for {platform_name}.",
+                    "Verify the SSL certificate padlock in your browser address bar.",
+                    "Banks will never ask you to transfer money to another account to unblock your profile."
+                ]
+            else:
+                return [
+                    f"This address belongs to verified official platform {platform_name}.",
+                    "Ensure you typed or navigated to this destination from official apps or bookmarks."
+                ]
+        if is_checkout:
+            return [
+                "This is an independent merchant checkout page with HTTPS encryption.",
+                "Confirm the seller's legitimacy, refund policy, and contact info before purchasing.",
+                "Check that payment processing takes place via trusted gateways (e.g. Stripe, Razorpay, PayPal).",
+                "Never enter banking passwords or UPI PINs on unfamiliar checkout portals."
+            ]
+        return [
+            "Do NOT enter login credentials, passwords, or UPI PINs on unfamiliar web addresses.",
+            "If this link was sent regarding a payment dispute or account alert, open your official banking app directly instead."
+        ]
 
     def analyze_url(self, request: URLCheckRequest) -> URLCheckResponse:
         raw_input = request.url
@@ -562,6 +879,44 @@ class URLChecker:
             why_suspicious.append("Shortened links conceal the actual destination server to hide phishing portals or APK malware downloads.")
             recommended_actions.append("Do NOT enter any login credentials or payment info if you follow a shortened link.")
 
+        # 7b. Official domain check for subsequent lure bypass
+        is_official = any(host_clean == off or host_clean.endswith("." + off) for off in OFFICIAL_AUTHORIZED_DOMAINS)
+
+        # Fake Link & IP Logger Generator Check
+        is_fake_generator = any(
+            host_clean == f_dom or host_clean.endswith("." + f_dom) or ("fake" in host_clean and "link" in host_clean) or ("iplog" in host_clean) or ("grabify" in host_clean)
+            for f_dom in FAKE_LINK_AND_LOGGER_DOMAINS
+        )
+        if is_fake_generator:
+            indicators.append(DetectedIndicator(
+                id="fake_link_generator_detected",
+                name="Fake Link Generator / IP Logger Service",
+                description="This address originates from a known fake link generator, prank tool, or IP logging service used to disguise real destinations or harvest private IP and location data.",
+                severity="high",
+                matched_clues=[f"Fake link / tracking host: {host_clean}"]
+            ))
+            why_suspicious.append("The link was generated using a known fake link generator or IP logger service designed to disguise destination URLs.")
+            recommended_actions.append("Do NOT open this link. Block the sender who provided this fake link.")
+
+        # 7c. Deceptive Lure / Fake Scam Keywords Check
+        matched_lure = None
+        if not is_official:
+            check_string = f"{host_clean}/{path}"
+            for pattern in DECEPTIVE_LURE_PATTERNS:
+                m = re.search(pattern, check_string, re.IGNORECASE)
+                if m:
+                    matched_lure = m.group(0)
+                    indicators.append(DetectedIndicator(
+                        id="deceptive_lure_detected",
+                        name="Deceptive Scam / Lure Keyword Pattern",
+                        description=f"The address contains suspicious lure keywords ('{matched_lure}') commonly used in fake links, prize scams, or phishing traps.",
+                        severity="high",
+                        matched_clues=[f"Deceptive pattern in address: {matched_lure}"]
+                    ))
+                    why_suspicious.append(f"The address contains deceptive bait keywords ('{matched_lure}') often used by fake link generators and fraud campaigns.")
+                    recommended_actions.append("Legitimate institutions do not distribute links with lure terms like this. Do not visit.")
+                    break
+
         # 8. Suspicious TLD Check
         tld = host_clean.split(".")[-1] if "." in host_clean else ""
         is_suspicious_tld = tld in SUSPICIOUS_TLDS
@@ -577,7 +932,6 @@ class URLChecker:
 
         # 9. Brand Impersonation & Typosquatting (URL-015)
         impersonated_brand = None
-        is_official = any(host_clean == off or host_clean.endswith("." + off) for off in OFFICIAL_AUTHORIZED_DOMAINS)
 
         if not is_official:
             for keyword, brand_name in FINANCIAL_TARGET_BRANDS:
@@ -623,7 +977,33 @@ class URLChecker:
             why_suspicious.append("Scammers circulate fake banking apps via direct APK downloads to bypass Google Play Store security checks.")
             recommended_actions.append("Do NOT download or install the file. Only install banking apps from Google Play Store or Apple App Store.")
 
-        # 12. Verification Status & Scoring
+        # 12. Verification Status & Multi-Parameter Scoring
+        platform_category, platform_name = self._identify_platform(host_clean)
+        is_checkout = self._detect_checkout_intent(path, parsed.query if parsed else "")
+
+        scorecard = self._build_multi_parameter_scorecard(
+            host_clean=host_clean,
+            is_https=is_https,
+            is_ip=is_ip,
+            is_suspicious_tld=is_suspicious_tld,
+            is_official=is_official,
+            platform_category=platform_category,
+            platform_name=platform_name,
+            is_checkout=is_checkout,
+            impersonated_brand=impersonated_brand,
+            is_fake_generator=is_fake_generator,
+            has_dangerous_ext=has_dangerous_ext
+        )
+
+        safety_guidance = self._generate_safety_guidance(
+            is_official=is_official,
+            platform_category=platform_category,
+            platform_name=platform_name,
+            is_checkout=is_checkout,
+            is_https=is_https,
+            impersonated_brand=impersonated_brand
+        )
+
         status: URLVerificationStatus
         risk_level: RiskLevel
         score: int
@@ -633,17 +1013,14 @@ class URLChecker:
             risk_level = "LOW"
             score = 10
             why_suspicious = ["The domain matches a known, authorized financial institution domain in verified directories."]
-            recommended_actions = [
-                "Verify the exact SSL padlock and domain spelling in your browser address bar.",
-                "Ensure you typed the address yourself rather than following an untrusted forwarded link."
-            ]
-        elif impersonated_brand or has_dangerous_ext:
+            recommended_actions = safety_guidance
+        elif impersonated_brand or has_dangerous_ext or is_fake_generator:
             status = "flagged"
             risk_level = "HIGH"
             score = 90
-        elif userinfo or is_ip or is_shortened or is_suspicious_tld or not is_https:
+        elif userinfo or is_ip or is_shortened or is_suspicious_tld or matched_lure or not is_https:
             status = "suspicious"
-            score = 55
+            score = 75 if matched_lure else 55
             for ind in indicators:
                 if ind.severity == "high":
                     score = max(score, 85)
@@ -654,22 +1031,25 @@ class URLChecker:
             status = "unverified"
             risk_level = "UNABLE_TO_ASSESS"
             score = 40
+            ind_desc = (
+                f"The domain '{host_clean}' is an independent merchant address. Standard HTTPS encryption is present, but independent sellers require independent verification."
+                if is_checkout else
+                f"The domain '{host_clean}' is not recognized in official directories. Independent websites require independent verification before entering sensitive details."
+            )
             indicators.append(DetectedIndicator(
                 id="unknown_unverified_domain",
-                name="Unverified / Unknown Web Domain",
-                description=f"The domain '{host_clean}' is not recognized in official financial directories, and external threat feeds are not configured.",
+                name="Unverified / Unrecognized Web Domain",
+                description=ind_desc,
                 severity="medium",
                 matched_clues=[f"Unverified public host: {host_clean}"]
             ))
             why_suspicious = [
-                f"The domain '{host_clean}' is not recognized in official financial directories.",
-                "No match is not proof of safety. Unknown, newly registered, or unlisted websites cannot be certified as safe.",
+                f"The domain '{host_clean}' is completely unrecognized in verified institutional directories.",
+                "Fake link generators, phishing traps, and tracking tools frequently use newly registered or disposable domains.",
+                "No match is not proof of safety. Unknown websites cannot be certified as safe.",
                 "External threat-intelligence feeds are not configured to certify this domain."
             ]
-            recommended_actions = [
-                "Do NOT enter login credentials, passwords, or UPI PINs on unfamiliar web addresses.",
-                "If this link was sent regarding a payment or account, open your official banking app directly instead."
-            ]
+            recommended_actions = safety_guidance
 
         checks_performed.append("domain_whitelist_check")
         if has_dangerous_ext:
@@ -701,5 +1081,127 @@ class URLChecker:
             checks_performed=checks_performed,
             checks_unavailable=checks_unavailable,
             educational_concept=educational,
-            uncertainty_note="Inspected safely without visiting the destination. Absence of a threat match does NOT prove safety."
+            uncertainty_note="Inspected safely without visiting the destination. Absence of a threat match does NOT prove safety.",
+            platform_category=platform_category,
+            platform_name=platform_name,
+            is_checkout_detected=is_checkout,
+            multi_parameter_scorecard=scorecard,
+            safety_guidance=safety_guidance
+        )
+
+    def check_link(self, request: CheckLinkRequest) -> CheckLinkResponse:
+        """
+        V10 Core Link Checker Service complying with PRD Section 7, 9, 11, and 12.1.
+        Produces explainable, uncertainty-honest, plain-English results.
+        Never converts absence of a threat match into a 'safe' verdict.
+        """
+        raw_url = request.url if request.url else ""
+        u_res = self.analyze_url(URLCheckRequest(url=raw_url, language=request.language))
+
+        # Map to V10 status and plain-English summary (PRD Table 7 & Appendix A)
+        status: URLVerificationStatus
+        summary: str
+        checks: Dict[str, str]
+
+        if u_res.status == "invalid_input":
+            status = "invalid_input"
+            summary = "This address looks incomplete. Check the full link and try again."
+            checks = {
+                "syntax": "failed",
+                "host_analysis": "not_performed",
+                "reputation": "unavailable"
+            }
+        elif u_res.status == "flagged":
+            status = "known_threat"
+            summary = "A known threat was reported by a checked source."
+            checks = {
+                "syntax": "passed",
+                "host_analysis": "completed",
+                "reputation": "completed" if "external_reputation" in u_res.checks_performed else "heuristic_flagged"
+            }
+        elif u_res.status == "suspicious":
+            status = "suspicious_indicators"
+            summary = "This link has suspicious signs. Don't open it until you've checked it independently."
+            checks = {
+                "syntax": "passed",
+                "host_analysis": "completed",
+                "reputation": "unavailable"
+            }
+        elif u_res.status == "no_known_threat_found":
+            status = "no_known_threat_found"
+            summary = "No known threat was found in the sources checked. This is not proof that the link is safe."
+            if u_res.platform_name:
+                summary += f" Verified {u_res.platform_name}."
+            checks = {
+                "syntax": "passed",
+                "host_analysis": "completed",
+                "reputation": "verified_directory"
+            }
+        elif u_res.status == "provider_unavailable":
+            status = "check_unavailable"
+            summary = "We couldn't finish checking this link. Try again later, or verify it another way."
+            checks = {
+                "syntax": "passed",
+                "host_analysis": "completed",
+                "reputation": "unavailable"
+            }
+        else:
+            status = "unverified"
+            summary = "We couldn't verify this link. That doesn't mean it is safe."
+            if u_res.is_checkout_detected:
+                summary += " Independent merchant checkout detected; verify seller reputation before paying."
+            checks = {
+                "syntax": "passed",
+                "host_analysis": "completed",
+                "reputation": "unavailable"
+            }
+
+        # Format findings with title, description, evidence, and severity
+        findings = [
+            CheckLinkFinding(
+                title=ind.title or ind.name,
+                description=ind.description,
+                evidence=ind.evidence_excerpt or (ind.matched_clues[0] if ind.matched_clues else None),
+                severity=ind.severity
+            )
+            for ind in u_res.indicators
+        ]
+
+        # Plain-English recommendations
+        recommendations = list(u_res.recommended_actions) if u_res.recommended_actions else [
+            "Do not enter private details until you verify the destination independently."
+        ]
+
+        import time
+        return CheckLinkResponse(
+            status=status,
+            summary=summary,
+            normalized_url=u_res.normalized_url,
+            display_url=u_res.display_url or u_res.domain,
+            checks=checks,
+            findings=findings,
+            recommendations=recommendations,
+            checked_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            risk_level=u_res.risk_level,
+            risk_score=u_res.risk_score,
+            domain=u_res.domain,
+            protocol=u_res.protocol,
+            is_https=u_res.is_https,
+            is_shortened=u_res.is_shortened,
+            is_ip_address=u_res.is_ip_address,
+            is_suspicious_tld=u_res.is_suspicious_tld,
+            impersonated_brand=u_res.impersonated_brand,
+            indicators=u_res.indicators,
+            why_suspicious=u_res.why_suspicious,
+            checks_performed=u_res.checks_performed,
+            checks_unavailable=u_res.checks_unavailable,
+            reference_id=u_res.reference_id,
+            educational_concept=u_res.educational_concept,
+            uncertainty_note=u_res.uncertainty_note,
+            disclaimer=u_res.disclaimer,
+            platform_category=u_res.platform_category,
+            platform_name=u_res.platform_name,
+            is_checkout_detected=u_res.is_checkout_detected,
+            multi_parameter_scorecard=u_res.multi_parameter_scorecard,
+            safety_guidance=u_res.safety_guidance
         )

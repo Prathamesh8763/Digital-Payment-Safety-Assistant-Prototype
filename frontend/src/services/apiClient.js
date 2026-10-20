@@ -170,6 +170,18 @@ export const apiClient = {
   },
 
   /**
+   * V10 Dedicated Check Link endpoint
+   */
+  async checkLink(payload, options = {}) {
+    return request('/check-link', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      ...options
+    });
+  },
+
+
+  /**
    * Inspect a QR code payload
    */
   async checkQr(payload, options = {}) {
@@ -207,6 +219,27 @@ export const apiClient = {
   async fetchHealth(options = {}) {
     return request('/health', {
       method: 'GET',
+      ...options
+    });
+  },
+
+  /**
+   * Fetch verified directory of payment gateways and subscription platforms
+   */
+  async fetchDirectory(options = {}) {
+    return request('/directory', {
+      method: 'GET',
+      ...options
+    });
+  },
+
+  /**
+   * Analyze subscription renewal message or invoice
+   */
+  async analyzeSubscription(payload, options = {}) {
+    return request('/subscriptions/analyze', {
+      method: 'POST',
+      body: JSON.stringify(payload),
       ...options
     });
   }

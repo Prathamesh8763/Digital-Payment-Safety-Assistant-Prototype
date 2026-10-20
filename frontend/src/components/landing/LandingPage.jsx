@@ -10,7 +10,7 @@ import CtaBannerSection from './CtaBannerSection';
 import LandingFooter from './LandingFooter';
 import '../../styles/landing.css';
 
-export default function LandingPage({ onNavigateAnalyze, onNavigateMode, onNavigateGuided }) {
+export default function LandingPage({ onNavigateAnalyze, onNavigateMode, onNavigateGuided, onNavigateCheckLink, onNavigateSubscriptions }) {
   const scrollToSection = (sectionId) => {
     const el = document.getElementById(sectionId);
     if (el) {
@@ -48,6 +48,8 @@ export default function LandingPage({ onNavigateAnalyze, onNavigateMode, onNavig
         onAnalyzeClick={handleAnalyzeClick}
         onNavigateSection={scrollToSection}
         onNavigateGuided={onNavigateGuided}
+        onNavigateCheckLink={onNavigateCheckLink}
+        onNavigateSubscriptions={onNavigateSubscriptions}
       />
 
       <main id="main-content">
