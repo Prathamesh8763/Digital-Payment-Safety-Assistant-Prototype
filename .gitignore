@@ -43,6 +43,11 @@ frontend/.vite/
 .env.*.local
 *.pem
 *.key
+credentials.txt
+*credential*
+*secret*
+*.token
+*.password
 
 # IDE & OS
 .vscode/

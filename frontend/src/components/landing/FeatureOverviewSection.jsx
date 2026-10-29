@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check, CreditCard } from 'lucide-react';
 
 export default function FeatureOverviewSection({ onExploreClick }) {
   const cards = [
@@ -26,6 +26,14 @@ export default function FeatureOverviewSection({ onExploreClick }) {
       title: 'Safer next steps',
       desc: 'Get practical suggestions for verifying requests through channels you trust.',
       mode: 'text'
+    },
+    {
+      icon: <CreditCard size={20} strokeWidth={2.5} />,
+      iconClass: 'purple',
+      tag: 'RECURRING SAFETY',
+      title: 'Subscriptions & Invoices',
+      desc: 'Detect fake renewal notices, check payment gateways, and manage auto-debits.',
+      mode: 'subscriptions'
     }
   ];
 

@@ -541,7 +541,7 @@
 
 @media (min-width: 768px) {
   .landing-cards-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 }
 
@@ -587,6 +587,11 @@
 .landing-card-icon-wrap.green {
   background-color: #f0fdf4;
   color: #16a34a;
+}
+
+.landing-card-icon-wrap.purple {
+  background-color: #faf5ff;
+  color: #9333ea;
 }
 
 .landing-card-tag {

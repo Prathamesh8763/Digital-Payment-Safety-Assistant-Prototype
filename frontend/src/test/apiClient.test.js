@@ -248,3 +248,93 @@ test('apiClient: analyzeUrl calls /analyze-url and preserves unverified status',
   }
 });
 
+test('apiClient: checkLink calls /check-link with typed options', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    let capturedUrl = null;
+    let capturedBody = null;
+    globalThis.fetch = async (url, options) => {
+      capturedUrl = url;
+      capturedBody = JSON.parse(options.body);
+      return {
+        ok: true,
+        json: async () => ({
+          status: 'unverified',
+          summary: "We couldn't verify this link. That doesn't mean it is safe.",
+          normalized_url: 'https://unverified-sample.org',
+          checks: { syntax: 'passed', host_analysis: 'completed', reputation: 'unavailable' },
+          findings: [],
+          recommendations: ['Verify independently before entering details.']
+        })
+      };
+    };
+
+    const res = await apiClient.checkLink({ url: 'https://unverified-sample.org', include_reputation: true });
+    assert.equal(capturedUrl, 'http://localhost:8000/api/check-link');
+    assert.equal(capturedBody.url, 'https://unverified-sample.org');
+    assert.equal(capturedBody.include_reputation, true);
+    assert.equal(res.status, 'unverified');
+    assert.equal(res.checks.syntax, 'passed');
+    assert.notEqual(res.status, 'safe');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('apiClient: fetchDirectory calls /directory endpoint', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    let capturedUrl = null;
+    globalThis.fetch = async (url) => {
+      capturedUrl = url;
+      return {
+        ok: true,
+        json: async () => ({
+          status: 'success',
+          gateways: [{ domain: 'stripe.com', name: 'Stripe', category: 'payment_gateway' }],
+          subscriptions: [{ domain: 'netflix.com', name: 'Netflix', category: 'subscription_platform' }],
+          banks: [{ domain: 'hdfcbank.com', name: 'HDFC Bank', category: 'bank' }]
+        })
+      };
+    };
+
+    const res = await apiClient.fetchDirectory();
+    assert.equal(capturedUrl, 'http://localhost:8000/api/directory');
+    assert.equal(res.status, 'success');
+    assert.equal(res.gateways.length, 1);
+    assert.equal(res.subscriptions.length, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('apiClient: analyzeSubscription calls /subscriptions/analyze endpoint', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    let capturedUrl = null;
+    let capturedBody = null;
+    globalThis.fetch = async (url, options) => {
+      capturedUrl = url;
+      capturedBody = JSON.parse(options.body);
+      return {
+        ok: true,
+        json: async () => ({
+          threat_level: 'scam_impersonation',
+          confidence: 'HIGH',
+          platform_identified: 'Geek Squad',
+          summary: 'Detected fake Geek Squad invoice scam.',
+          warning_signals: ['Fake call center helpline'],
+          actionable_steps: ['Never call the phone number in the message.']
+        })
+      };
+    };
+
+    const res = await apiClient.analyzeSubscription({ text: 'Geek squad renewal $499' });
+    assert.equal(capturedUrl, 'http://localhost:8000/api/subscriptions/analyze');
+    assert.equal(capturedBody.text, 'Geek squad renewal $499');
+    assert.equal(res.threat_level, 'scam_impersonation');
+    assert.equal(res.platform_identified, 'Geek Squad');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

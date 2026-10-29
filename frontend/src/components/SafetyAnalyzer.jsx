@@ -455,6 +455,47 @@ export default function SafetyAnalyzer({ onNavigateHome, onNavigateGuided, initi
               {/* Mode 2: Direct Link Check Mode (V6 Core P0) */}
               {activeTab === 'link' && (
                 <form onSubmit={handleAnalyzeUrl}>
+                  <div style={{
+                    background: '#eff6ff',
+                    border: '1px solid #bfdbfe',
+                    borderRadius: '12px',
+                    padding: '0.85rem 1rem',
+                    marginBottom: '1.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <LinkIcon size={18} style={{ color: '#2563eb' }} aria-hidden="true" />
+                      <span style={{ fontSize: '0.85rem', color: '#1e40af', fontWeight: 600 }}>
+                        Need to check a QR code image or deep-inspect a link?
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          window.history.pushState(null, '', '/check-link');
+                          window.dispatchEvent(new PopStateEvent('popstate'));
+                        }
+                      }}
+                      style={{
+                        background: '#2563eb',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '0.35rem 0.75rem',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Open Link & QR Checker →
+                    </button>
+                  </div>
+
                   <label htmlFor="v6-link-input" className="v6-input-label">
                     Web address or domain
                   </label>
