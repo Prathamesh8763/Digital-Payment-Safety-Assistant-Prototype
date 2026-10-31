@@ -4,6 +4,7 @@ import LandingNavbar from './LandingNavbar';
 import HeroSection from './HeroSection';
 import TrustBar from './TrustBar';
 import FeatureOverviewSection from './FeatureOverviewSection';
+import DetectionScopeSection from './DetectionScopeSection';
 import ThreeStepsSection from './ThreeStepsSection';
 import PrivacyCalloutSection from './PrivacyCalloutSection';
 import CtaBannerSection from './CtaBannerSection';
@@ -76,6 +77,9 @@ export default function LandingPage({
         {/* 5. Feature Overview Section */}
         <FeatureOverviewSection onExploreClick={handleExploreClick} />
 
+        {/* 5b. Detection Scope & Boundaries Section */}
+        <DetectionScopeSection onNavigateReport={onNavigateReport} />
+
         {/* 6. Three Simple Steps Section */}
         <ThreeStepsSection />
 
@@ -87,7 +91,15 @@ export default function LandingPage({
       </main>
 
       {/* 9. Landing Footer */}
-      <LandingFooter onNavigateSection={scrollToSection} />
+      <LandingFooter
+        onNavigateSection={scrollToSection}
+        onNavigateAnalyze={handleAnalyzeClick}
+        onNavigateCheckLink={onNavigateCheckLink}
+        onNavigateSubscriptions={onNavigateSubscriptions}
+        onNavigateGuided={onNavigateGuided}
+        onNavigateScamGuide={onNavigateScamGuide}
+        onNavigateReport={onNavigateReport}
+      />
     </div>
   );
 }

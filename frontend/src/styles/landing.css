@@ -923,3 +923,20 @@
 .landing-footer-link:hover {
   color: #2563eb;
 }
+
+/* Responsive Navigation Styles */
+@media (max-width: 900px) {
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.dropdown-item:hover {
+  background-color: #f1f5f9;
+}
+

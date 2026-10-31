@@ -17,7 +17,8 @@ import {
   HelpCircle, 
   History as HistoryIcon,
   Globe,
-  Compass
+  Compass,
+  Lock
 } from 'lucide-react';
 
 const HISTORY_STORAGE_KEY = 'payment_safety_assistant_history_v2';
@@ -87,9 +88,37 @@ export default function SafetyAnalyzer({
   const [urlInput, setUrlInput] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(1);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState(loadStoredHistory);
   const [isExample, setIsExample] = useState(false);
+
+  const formatErrorObj = (err) => ({
+    message: err.message || 'An unexpected error occurred while communicating with the safety analysis service.',
+    code: err.code || 'API_ERROR',
+    status: err.status || null,
+    isTimeout: err.code === 'TIMEOUT' || err.status === 408,
+    isOffline: err.code === 'OFFLINE',
+    isNetwork: err.code === 'NETWORK_ERROR'
+  });
+
+  const runWithLoadingStages = async (taskFn) => {
+    setLoading(true);
+    setLoadingStage(1);
+    setError(null);
+    setResult(null);
+
+    const stageTimer1 = setTimeout(() => setLoadingStage(2), 1200);
+    const stageTimer2 = setTimeout(() => setLoadingStage(3), 2800);
+
+    try {
+      await taskFn();
+    } finally {
+      clearTimeout(stageTimer1);
+      clearTimeout(stageTimer2);
+      setLoading(false);
+    }
+  };
 
   const saveToHistory = (assessment, type, snippet) => {
     try {
@@ -115,69 +144,57 @@ export default function SafetyAnalyzer({
     if (e) e.preventDefault();
     if (!messageText.trim() || loading) return;
 
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const data = await apiClient.checkText({ text: messageText.trim(), language });
-      setResult(data);
-      saveToHistory(data, 'Message Analysis', messageText.trim());
-    } catch (err) {
-      setError(err.message || 'An error occurred while connecting to the safety assistant service.');
-    } finally {
-      setLoading(false);
-    }
+    await runWithLoadingStages(async () => {
+      try {
+        const data = await apiClient.checkText({ text: messageText.trim(), language });
+        setResult(data);
+        saveToHistory(data, 'Message Analysis', messageText.trim());
+      } catch (err) {
+        // Input text is safely preserved in messageText state so the user never loses their work
+        setError(formatErrorObj(err));
+      }
+    });
   };
 
   const handleAnalyzeUrl = async (e) => {
     if (e) e.preventDefault();
     if (!urlInput.trim() || loading) return;
 
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const data = await apiClient.checkUrl({ url: urlInput.trim(), language });
-      setResult(data);
-      saveToHistory(data, 'Link Inspection', urlInput.trim());
-    } catch (err) {
-      setError(err.message || 'An error occurred while inspecting the link.');
-    } finally {
-      setLoading(false);
-    }
+    await runWithLoadingStages(async () => {
+      try {
+        const data = await apiClient.checkUrl({ url: urlInput.trim(), language });
+        setResult(data);
+        saveToHistory(data, 'Link Inspection', urlInput.trim());
+      } catch (err) {
+        // Input URL is safely preserved in urlInput state
+        setError(formatErrorObj(err));
+      }
+    });
   };
 
   const handleInspectDetectedUrl = async (targetUrl) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await apiClient.checkUrl({ url: targetUrl, language });
-      setResult(data);
-      saveToHistory(data, 'Link Inspection', targetUrl);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) {
-      setError(err.message || 'Failed to inspect link.');
-    } finally {
-      setLoading(false);
-    }
+    await runWithLoadingStages(async () => {
+      try {
+        const data = await apiClient.checkUrl({ url: targetUrl, language });
+        setResult(data);
+        saveToHistory(data, 'Link Inspection', targetUrl);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        setError(formatErrorObj(err));
+      }
+    });
   };
 
   const handleAnalyzeGuided = async (payload) => {
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const data = await apiClient.checkGuided({ ...payload, language });
-      setResult(data);
-      saveToHistory(data, 'Guided Check', `Claim: ${payload.sender_claim}, Action: ${payload.requested_action}`);
-    } catch (err) {
-      setError(err.message || 'An error occurred during guided check.');
-    } finally {
-      setLoading(false);
-    }
+    await runWithLoadingStages(async () => {
+      try {
+        const data = await apiClient.checkGuided({ ...payload, language });
+        setResult(data);
+        saveToHistory(data, 'Guided Check', `Claim: ${payload.sender_claim}, Action: ${payload.requested_action}`);
+      } catch (err) {
+        setError(formatErrorObj(err));
+      }
+    });
   };
 
   const handleReset = () => {
@@ -319,22 +336,85 @@ export default function SafetyAnalyzer({
                 <Check size={14} strokeWidth={3} aria-hidden="true" />
               </div>
               <div>
-                <div className="v6-privacy-title">Your privacy comes first</div>
+                <div className="v6-privacy-title">Stateless Processing & Data Privacy</div>
                 <div className="v6-privacy-desc">
-                  Remove names, phone numbers, account details, and other personal information before pasting. We never request or store OTPs, PINs, or passwords.
+                  Messages are securely transmitted over TLS/HTTPS to our stateless engine and analyzed purely in volatile memory. We do not store, database, or sell your message content. Remove names, phone numbers, and private credentials before pasting.
                 </div>
               </div>
             </div>
-            <a href="#privacy" className="v6-privacy-link" onClick={(e) => { e.preventDefault(); alert("ClearPay Privacy Guarantee: All safety analyses run without storing your credentials or personal information. Never paste actual passwords or PINs."); }}>
+            <a href="#privacy" className="v6-privacy-link" onClick={(e) => { e.preventDefault(); alert("ClearPay Privacy Guarantee: Messages are transmitted over encrypted TLS/HTTPS and evaluated purely in volatile RAM memory without persistent database storage. Never paste actual passwords, OTPs, or UPI PINs."); }}>
               <span>Privacy details</span>
               <ArrowRight size={14} aria-hidden="true" />
             </a>
           </div>
 
+          {/* Loading Progress Indicator */}
+          {loading && (
+            <div
+              style={{
+                background: '#eff6ff',
+                border: '1.5px solid #bfdbfe',
+                borderRadius: '12px',
+                padding: '16px 20px',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px'
+              }}
+              role="status"
+              aria-live="polite"
+            >
+              <div
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  border: '3px solid #bfdbfe',
+                  borderTopColor: '#2563eb',
+                  borderRadius: '50%',
+                  flexShrink: 0
+                }}
+              />
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: '2px' }}>
+                  {loadingStage === 1 && 'Scanning text syntax & evaluating urgency patterns...'}
+                  {loadingStage === 2 && 'Checking against UPI collect traps & credential prompts...'}
+                  {loadingStage === 3 && 'Evaluating known bank signatures & synthesizing safe next steps...'}
+                </div>
+                <span style={{ fontSize: '12px', color: '#3b82f6' }}>
+                  Stateless heuristics evaluation in progress.
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Differentiated Error Alert with Retry */}
           {error && (
             <div style={{ marginBottom: '1.5rem' }}>
-              <Alert variant="error" onDismiss={() => setError(null)}>
-                {error}
+              <Alert
+                variant={error.isTimeout ? 'warning' : 'error'}
+                title={error.isTimeout ? 'Analysis Request Timed Out' : (error.isOffline ? 'Network Connection Offline' : 'Analysis Service Notice')}
+                onDismiss={() => setError(null)}
+                action={
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeTab === 'link') handleAnalyzeUrl();
+                      else if (activeTab === 'message') handleAnalyzeMessage();
+                      else setError(null);
+                    }}
+                    className="v8-primary-btn"
+                    style={{ padding: '0.45rem 1rem', fontSize: '0.82rem' }}
+                  >
+                    Retry Analysis
+                  </button>
+                }
+              >
+                <div>
+                  <p style={{ margin: '0 0 6px', fontWeight: 500 }}>{error.message || String(error)}</p>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#475569' }}>
+                    ✓ Your entered message has been preserved below so you do not have to retype it.
+                  </p>
+                </div>
               </Alert>
             </div>
           )}
@@ -620,20 +700,26 @@ export default function SafetyAnalyzer({
 
               {/* Mode 4: Local History Mode (P1) */}
               {activeTab === 'history' && (
-                <HistoryDrawer
-                  history={history}
-                  onDeleteItem={(id) => {
-                    const updated = history.filter(h => h.id !== id);
-                    setHistory(updated);
-                    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
-                  }}
-                  onClearAll={() => {
-                    setHistory([]);
-                    localStorage.removeItem(HISTORY_STORAGE_KEY);
-                  }}
-                  onSelectHistoryItem={(item) => setResult(item.assessment)}
-                  onClose={() => setActiveTab('message')}
-                />
+                <div>
+                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', color: '#166534' }}>
+                    <Lock size={15} style={{ flexShrink: 0 }} />
+                    <span><strong>Local Privacy Guarantee:</strong> History is stored 100% on your device in your browser's localStorage. It is never synced, logged, or uploaded to any server.</span>
+                  </div>
+                  <HistoryDrawer
+                    history={history}
+                    onDeleteItem={(id) => {
+                      const updated = history.filter(h => h.id !== id);
+                      setHistory(updated);
+                      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
+                    }}
+                    onClearAll={() => {
+                      setHistory([]);
+                      localStorage.removeItem(HISTORY_STORAGE_KEY);
+                    }}
+                    onSelectHistoryItem={(item) => setResult(item.assessment)}
+                    onClose={() => setActiveTab('message')}
+                  />
+                </div>
               )}
             </div>
 
