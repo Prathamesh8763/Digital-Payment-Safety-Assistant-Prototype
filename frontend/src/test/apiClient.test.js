@@ -388,3 +388,23 @@ test('apiClient: fetchReportingGuide calls /reporting-guide endpoint', async () 
     globalThis.fetch = originalFetch;
   }
 });
+
+test('apiClient: pingHealth calls /health endpoint', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    let capturedUrl = null;
+    globalThis.fetch = async (url) => {
+      capturedUrl = url;
+      return {
+        ok: true,
+        json: async () => ({ status: 'healthy', uptime_state: 'operational' })
+      };
+    };
+
+    const res = await apiClient.pingHealth();
+    assert.equal(capturedUrl, 'http://localhost:8000/api/health');
+    assert.equal(res.status, 'healthy');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

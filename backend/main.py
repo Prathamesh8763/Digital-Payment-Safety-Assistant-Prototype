@@ -84,13 +84,17 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(RateLimitingMiddleware)
 
-# 3. CORS setup
-allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000")
+# 3. CORS setup (Supports ALLOWED_ORIGIN, ALLOWED_ORIGINS, and all Vercel deployments)
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS") or os.getenv("ALLOWED_ORIGIN") or "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000"
 origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+
+# Regex to permit all Vercel preview & production branches
+allow_origin_regex = os.getenv("ALLOW_ORIGIN_REGEX", r"^https://.*\.vercel\.app$")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins if origins else ["*"],
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -6,6 +6,7 @@ import CheckLinkPage from './components/CheckLinkPage';
 import SubscriptionSafetyPage from './components/SubscriptionSafetyPage';
 import IndianScamGuidePage from './components/IndianScamGuidePage';
 import ReportGuidancePage from './components/ReportGuidancePage';
+import apiClient from './services/apiClient';
 
 function getInitialRoute() {
   if (typeof window === 'undefined') return '/';
@@ -25,6 +26,9 @@ export default function App() {
   const [initialTab, setInitialTab] = useState('text');
 
   useEffect(() => {
+    // Silently pre-warm sleeping backend on cloud hosting (Render free tier)
+    apiClient.pingHealth();
+
     const handlePopState = () => {
       const path = window.location.pathname;
       if (path.startsWith('/check-link') || path.startsWith('/check')) {

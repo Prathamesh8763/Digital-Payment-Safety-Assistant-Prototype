@@ -8,7 +8,7 @@ const API_BASE =
   (typeof process !== 'undefined' && process.env && process.env.VITE_API_BASE_URL) ||
   'http://localhost:8000/api';
 
-const DEFAULT_TIMEOUT_MS = 8000;
+const DEFAULT_TIMEOUT_MS = 45000;
 
 export class ApiError extends Error {
   constructor(message, status = null, code = 'API_ERROR') {
@@ -94,7 +94,7 @@ export async function request(endpoint, options = {}) {
 
     if (err.name === 'AbortError') {
       throw new ApiError(
-        'Request timed out. The safety analysis service took too long to respond. Please check your connection and retry.',
+        'The safety analysis service took too long to respond. On free-tier cloud hosting (Render), the backend server may take up to 45 seconds to wake up from idle sleep on the first request. Please wait a moment and try again.',
         408,
         'TIMEOUT'
       );
@@ -105,8 +105,13 @@ export async function request(endpoint, options = {}) {
     }
 
     // Network / CORS / DNS failure
+    const isLocalhost = API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1');
+    const networkMsg = isLocalhost
+      ? 'Unable to connect to the safety assistant service. Ensure the local backend server is running on http://localhost:8000.'
+      : 'Unable to reach the safety assistant service. The backend server may be waking up from idle sleep or temporarily unreachable. Please retry in a few moments.';
+
     throw new ApiError(
-      'Unable to connect to the safety assistant service. Ensure the local backend server is running on http://localhost:8000.',
+      networkMsg,
       null,
       'NETWORK_ERROR'
     );
@@ -262,6 +267,21 @@ export const apiClient = {
       method: 'GET',
       ...options
     });
+  },
+
+  /**
+   * Background health ping to pre-warm sleep instances on Render
+   */
+  async pingHealth(options = {}) {
+    try {
+      return await request('/health', {
+        method: 'GET',
+        timeout: 45000,
+        ...options
+      });
+    } catch {
+      return null;
+    }
   }
 };
 
