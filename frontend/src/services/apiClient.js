@@ -37,7 +37,9 @@ export async function request(endpoint, options = {}) {
   const timer = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
+    const cleanBase = (API_BASE || '').replace(/\/+$/, '');
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `${cleanBase}${cleanEndpoint}`;
     const response = await fetch(url, {
       ...fetchOptions,
       headers: {

@@ -111,6 +111,7 @@ def root():
     }
 
 @app.get("/api/health")
+@app.get("/health")
 def health_check():
     """
     FR-10: Operational health status without leaking configuration or secrets.
@@ -144,12 +145,14 @@ async def analyze_message_endpoint(payload: LegacyAnalyzeRequest):
     return await engine.analyze_text_with_ai_option(check_req)
 
 @app.post("/api/check/text", response_model=SafetyAssessmentResponse)
+@app.post("/check/text", response_model=SafetyAssessmentResponse)
 async def check_text(payload: TextCheckRequest):
     if not payload.text or len(payload.text.strip()) < 3:
         raise HTTPException(status_code=400, detail="Please provide a message or description of at least 3 characters.")
     return await engine.analyze_text_with_ai_option(payload)
 
 @app.post("/api/check/guided", response_model=SafetyAssessmentResponse)
+@app.post("/check/guided", response_model=SafetyAssessmentResponse)
 @app.post("/api/guided-help", response_model=SafetyAssessmentResponse)
 @app.post("/guided-help", response_model=SafetyAssessmentResponse)
 def check_guided(payload: GuidedCheckRequest):
@@ -161,18 +164,21 @@ def check_link_endpoint(payload: CheckLinkRequest):
     return engine.check_link(payload)
 
 @app.post("/api/check/url", response_model=URLCheckResponse)
+@app.post("/check/url", response_model=URLCheckResponse)
 @app.post("/api/analyze-url", response_model=URLCheckResponse)
 @app.post("/analyze-url", response_model=URLCheckResponse)
 def check_url(payload: URLCheckRequest):
     return engine.analyze_url(payload)
 
 @app.post("/api/check/qr", response_model=QRCheckResponse)
+@app.post("/check/qr", response_model=QRCheckResponse)
 def check_qr(payload: QRCheckRequest):
     if not payload.payload or len(payload.payload.strip()) < 1:
         raise HTTPException(status_code=400, detail="QR payload cannot be empty.")
     return engine.analyze_qr(payload)
 
 @app.post("/api/feedback", response_model=FeedbackResponse)
+@app.post("/feedback", response_model=FeedbackResponse)
 def submit_feedback(payload: FeedbackRequest, request: Request):
     """
     FR-04: User feedback and correction workflow.
@@ -188,6 +194,7 @@ class SubscriptionCheckRequest(BaseModel):
     language: str = "en"
 
 @app.get("/api/directory")
+@app.get("/directory")
 def get_verified_directory():
     """Returns directory of verified payment gateways, subscription services, and banking institutions."""
     from safety.url_checker import VERIFIED_PAYMENT_GATEWAYS, VERIFIED_SUBSCRIPTION_PLATFORMS, VERIFIED_BANKING_DOMAINS
@@ -206,6 +213,7 @@ def get_verified_directory():
     }
 
 @app.post("/api/subscriptions/analyze")
+@app.post("/subscriptions/analyze")
 def analyze_subscription_endpoint(payload: SubscriptionCheckRequest):
     """
     Analyzes subscription renewal emails, messages, and invoices for fake renewal traps and auto-debit risks.
@@ -394,6 +402,7 @@ def get_demonstration_scenarios():
 
 
 @app.get("/api/reporting-guide")
+@app.get("/reporting-guide")
 def get_cybercrime_reporting_guide():
     """Returns official Indian cybercrime reporting instructions and helpline resources."""
     from safety.engine import CYBERCRIME_REPORTING_GUIDE, TRUST_TRANSPARENCY_DETAILS
@@ -404,6 +413,7 @@ def get_cybercrime_reporting_guide():
     }
 
 @app.get("/api/scam-guide")
+@app.get("/scam-guide")
 def get_scam_awareness_guide():
     """Returns educational modules on prevalent Indian digital payment scams."""
     return {
