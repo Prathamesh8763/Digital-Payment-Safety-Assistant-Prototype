@@ -93,12 +93,16 @@ export function generateRedactedSummary({
   nextSteps = [],
   disclaimer = 'This result is guidance, not a guarantee. If money or account access may be at risk, contact your bank through a verified official channel.'
 }) {
-  const signs = indicators.length > 0 
-    ? indicators.map(i => `• ${i.title || i.name}: ${redactSensitiveText(i.description)}`).join('\n')
-    : (displayReasons.length > 0 ? displayReasons.map(r => `• ${redactSensitiveText(r)}`).join('\n') : '• None detected.');
+  const safeIndicators = Array.isArray(indicators) ? indicators : [];
+  const safeDisplayReasons = Array.isArray(displayReasons) ? displayReasons : [];
+  const safeNextSteps = Array.isArray(nextSteps) ? nextSteps : [];
 
-  const steps = nextSteps.length > 0
-    ? nextSteps.map(s => `• ${s.title}: ${s.desc}`).join('\n')
+  const signs = safeIndicators.length > 0 
+    ? safeIndicators.map(i => `• ${i.title || i.name}: ${redactSensitiveText(i.description)}`).join('\n')
+    : (safeDisplayReasons.length > 0 ? safeDisplayReasons.map(r => `• ${redactSensitiveText(r)}`).join('\n') : '• None detected.');
+
+  const steps = safeNextSteps.length > 0
+    ? safeNextSteps.map(s => `• ${s.title}: ${s.desc}`).join('\n')
     : '• Pause and verify independently with official contacts.';
 
   return [

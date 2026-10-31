@@ -1,20 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send, RotateCcw, ArrowRight, ArrowLeft } from 'lucide-react';
 import Button from './ui/Button';
 
+const STORAGE_DATA_KEY = 'cp_guided_wizard_data';
+const STORAGE_STEP_KEY = 'cp_guided_wizard_step';
+
+const INITIAL_FORM_DATA = {
+  contact_source: 'unknown_call',
+  sender_claim: 'bank_alert',
+  requested_action: 'share_otp_pin',
+  has_urgency_pressure: true,
+  demands_money: false,
+  asks_sensitive_data: true,
+  additional_notes: ''
+};
+
 export default function GuidedCheck({ onAnalyze, loading }) {
-  const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
 
-  const [formData, setFormData] = useState({
-    contact_source: 'unknown_call',
-    sender_claim: 'bank_alert',
-    requested_action: 'share_otp_pin',
-    has_urgency_pressure: true,
-    demands_money: false,
-    asks_sensitive_data: true,
-    additional_notes: ''
+  const [currentStep, setCurrentStep] = useState(() => {
+    try {
+      const savedStep = sessionStorage.getItem(STORAGE_STEP_KEY);
+      if (savedStep) {
+        const parsed = parseInt(savedStep, 10);
+        if (parsed >= 1 && parsed <= totalSteps) return parsed;
+      }
+    } catch {
+      // Storage unavailable
+    }
+    return 1;
   });
+
+  const [formData, setFormData] = useState(() => {
+    try {
+      const savedData = sessionStorage.getItem(STORAGE_DATA_KEY);
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            ...INITIAL_FORM_DATA,
+            ...parsed,
+            has_urgency_pressure: Boolean(parsed.has_urgency_pressure),
+            demands_money: Boolean(parsed.demands_money),
+            asks_sensitive_data: Boolean(parsed.asks_sensitive_data),
+            additional_notes: typeof parsed.additional_notes === 'string' ? parsed.additional_notes : ''
+          };
+        }
+      }
+    } catch {
+      // Storage unavailable
+    }
+    return INITIAL_FORM_DATA;
+  });
+
+  // Preserve form data to session storage on change
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_DATA_KEY, JSON.stringify(formData));
+    } catch {
+      // Non-blocking fallback
+    }
+  }, [formData]);
+
+  // Preserve step to session storage on change
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_STEP_KEY, String(currentStep));
+    } catch {
+      // Non-blocking fallback
+    }
+  }, [currentStep]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -26,21 +81,25 @@ export default function GuidedCheck({ onAnalyze, loading }) {
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep((prev) => prev + 1);
+      setCurrentStep((prev) => Math.min(totalSteps, prev + 1));
     }
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
+      setCurrentStep((prev) => Math.max(1, prev - 1));
     }
   };
 
   const handleReset = () => {
+    try {
+      sessionStorage.removeItem(STORAGE_DATA_KEY);
+      sessionStorage.removeItem(STORAGE_STEP_KEY);
+    } catch {
+      // Storage unavailable
+    }
     setFormData({
-      contact_source: 'unknown_call',
-      sender_claim: 'bank_alert',
-      requested_action: 'share_otp_pin',
+      ...INITIAL_FORM_DATA,
       has_urgency_pressure: false,
       demands_money: false,
       asks_sensitive_data: false,
@@ -223,11 +282,11 @@ export default function GuidedCheck({ onAnalyze, loading }) {
               5. Review Your Answers & Additional Notes:
             </label>
             <div style={{ background: 'var(--color-bg-subtle)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', marginBottom: '1rem', fontSize: 'var(--font-size-sm)' }}>
-              <div style={{ marginBottom: '0.35rem' }}><strong>Contact:</strong> {formData.contact_source.replace(/_/g, ' ')}</div>
-              <div style={{ marginBottom: '0.35rem' }}><strong>Their Claim:</strong> {formData.sender_claim.replace(/_/g, ' ')}</div>
-              <div style={{ marginBottom: '0.35rem' }}><strong>Demanded Action:</strong> {formData.requested_action.replace(/_/g, ' ')}</div>
+              <div style={{ marginBottom: '0.35rem' }}><strong>Contact:</strong> {(formData.contact_source || '').replace(/_/g, ' ')}</div>
+              <div style={{ marginBottom: '0.35rem' }}><strong>Their Claim:</strong> {(formData.sender_claim || '').replace(/_/g, ' ')}</div>
+              <div style={{ marginBottom: '0.35rem' }}><strong>Demanded Action:</strong> {(formData.requested_action || '').replace(/_/g, ' ')}</div>
               <div>
-                <strong>Warning Flags:</strong> {formData.has_urgency_pressure ? 'Urgency pressure' : ''}{formData.demands_money ? ', Demanded money' : ''}{formData.asks_sensitive_data ? ', Asked credentials' : ''}{(!formData.has_urgency_pressure && !formData.demands_money && !formData.asks_sensitive_data) ? 'None reported' : ''}
+                <strong>Warning Flags:</strong> {formData.has_urgency_pressure ? 'Urgency pressure' : ''}{formData.demands_money ? (formData.has_urgency_pressure ? ', ' : '') + 'Demanded money' : ''}{formData.asks_sensitive_data ? ((formData.has_urgency_pressure || formData.demands_money) ? ', ' : '') + 'Asked credentials' : ''}{(!formData.has_urgency_pressure && !formData.demands_money && !formData.asks_sensitive_data) ? 'None reported' : ''}
               </div>
             </div>
 

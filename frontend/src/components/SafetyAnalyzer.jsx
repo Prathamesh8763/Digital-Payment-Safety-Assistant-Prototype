@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ResultDisplay from './ResultDisplay';
 import GuidedCheck from './GuidedCheck';
 import HistoryDrawer from './HistoryDrawer';
+import FeatureErrorBoundary from './FeatureErrorBoundary';
 import Alert from './ui/Alert';
 import apiClient from '../services/apiClient';
 import '../styles/analyze.css';
@@ -283,15 +284,21 @@ export default function SafetyAnalyzer({
               </Alert>
             </div>
           )}
-          <ResultDisplay 
-            result={result} 
-            onReset={handleReset} 
-            onInspectUrl={handleInspectDetectedUrl} 
-            reviewedText={activeTab === 'link' ? urlInput : messageText}
-            isExample={isExample}
-            onNavigateReport={onNavigateReport}
-            onNavigateScamGuide={onNavigateScamGuide}
-          />
+          <FeatureErrorBoundary
+            featureName="Safety Analysis Results"
+            onReset={handleReset}
+            resetLabel="Analyze Another Message"
+          >
+            <ResultDisplay 
+              result={result} 
+              onReset={handleReset} 
+              onInspectUrl={handleInspectDetectedUrl} 
+              reviewedText={activeTab === 'link' ? urlInput : messageText}
+              isExample={isExample}
+              onNavigateReport={onNavigateReport}
+              onNavigateScamGuide={onNavigateScamGuide}
+            />
+          </FeatureErrorBoundary>
           <footer className="v6-footer">
             <div className="v6-footer-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
               <div className="v6-footer-brand">
@@ -694,7 +701,15 @@ export default function SafetyAnalyzer({
                       </button>
                     </div>
                   )}
-                  <GuidedCheck onAnalyze={handleAnalyzeGuided} loading={loading} />
+                  <FeatureErrorBoundary
+                    featureName="Guided Situation Check"
+                    onReset={() => setActiveTab('guided')}
+                    resetLabel="Reset Questionnaire"
+                    secondaryActionLabel="Switch to Message Check"
+                    onSecondaryAction={() => setActiveTab('message')}
+                  >
+                    <GuidedCheck onAnalyze={handleAnalyzeGuided} loading={loading} />
+                  </FeatureErrorBoundary>
                 </div>
               )}
 

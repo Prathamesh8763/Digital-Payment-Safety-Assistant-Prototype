@@ -1,6 +1,6 @@
 import time
 from typing import List, Optional, Literal, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 RiskLevel = Literal["LOW", "MEDIUM", "HIGH", "UNABLE_TO_ASSESS"]
 
@@ -113,18 +113,18 @@ class SafetyAssessmentResponse(BaseModel):
         default=None,
         description="Transparency statement on zero message retention, analysis methodology, and advisory boundaries."
     )
-    detected_categories: List[str]
-    indicators: List[DetectedIndicator]
-    why_suspicious: List[str]
-    reasons: Optional[List[str]] = None
-    recommended_actions: List[str]
+    detected_categories: List[str] = Field(default_factory=list)
+    indicators: List[DetectedIndicator] = Field(default_factory=list)
+    why_suspicious: List[str] = Field(default_factory=list)
+    reasons: List[str] = Field(default_factory=list)
+    recommended_actions: List[str] = Field(default_factory=list)
     recommendation: Optional[str] = None
     educational_concept: EducationalConcept
-    detected_urls: List[str] = []
-    url_assessments: List[Dict[str, Any]] = []
-    urls: Optional[List[Dict[str, Any]]] = None
-    checks_performed: List[str] = []
-    checks_unavailable: List[str] = []
+    detected_urls: List[str] = Field(default_factory=list)
+    url_assessments: List[Dict[str, Any]] = Field(default_factory=list)
+    urls: List[Dict[str, Any]] = Field(default_factory=list)
+    checks_performed: List[str] = Field(default_factory=list)
+    checks_unavailable: List[str] = Field(default_factory=list)
     checked_at: Optional[str] = None
     is_safe_practice: bool = False
     ai_enhanced: bool = False
@@ -142,8 +142,18 @@ class SafetyAssessmentResponse(BaseModel):
         "A low-risk score is not a guarantee of safety. Never share your UPI PIN or OTP with anyone."
     )
 
+    @field_validator(
+        "detected_categories", "indicators", "why_suspicious", "reasons", 
+        "recommended_actions", "detected_urls", "url_assessments", "urls", 
+        "checks_performed", "checks_unavailable", "context_tags",
+        mode="before"
+    )
+    @classmethod
+    def coerce_none_to_empty_list(cls, v: Any) -> Any:
+        return [] if v is None else v
+
     def model_post_init(self, __context: Any) -> None:
-        if self.reasons is None:
+        if not self.reasons and self.why_suspicious:
             self.reasons = list(self.why_suspicious)
         if self.recommendation is None and self.recommended_actions:
             self.recommendation = self.recommended_actions[0]
@@ -151,7 +161,7 @@ class SafetyAssessmentResponse(BaseModel):
             self.verification_status = self.status
         if self.analysis_id is None:
             self.analysis_id = self.reference_id
-        if self.urls is None and self.url_assessments:
+        if not self.urls and self.url_assessments:
             self.urls = self.url_assessments
 
 class URLCheckRequest(BaseModel):

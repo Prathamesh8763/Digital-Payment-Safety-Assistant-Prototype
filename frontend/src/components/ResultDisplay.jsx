@@ -33,43 +33,45 @@ export default function ResultDisplay({
   const [copied, setCopied] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
-  if (!result) return null;
+  if (!result || typeof result !== 'object') return null;
 
   const {
     risk_level = 'UNABLE_TO_ASSESS',
     status = 'unverified',
     verification_status,
     summary = '',
-    indicators = [],
-    why_suspicious = [],
-    reasons = [],
-    recommended_actions = [],
     disclaimer = 'This result is guidance, not a guarantee. If money or account access may be at risk, contact your bank through a verified official channel. Never share your OTP or UPI PIN.',
     reference_id = 'CP-7F24',
     analysis_id,
     domain,
     url_submitted,
     display_url,
-    detected_urls = [],
-    urls = [],
-    url_assessments = [],
     detected_platform,
-    context_tags = [],
     cybercrime_reporting,
     trust_transparency
   } = result;
 
+  // Safe array normalization against null/undefined API responses
+  const safeUrls = Array.isArray(result.urls) ? result.urls : [];
+  const safeUrlAssessments = Array.isArray(result.url_assessments) ? result.url_assessments : [];
+  const safeDetectedUrls = Array.isArray(result.detected_urls) ? result.detected_urls : [];
+  const safeIndicators = Array.isArray(result.indicators) ? result.indicators : [];
+  const safeWhySuspicious = Array.isArray(result.why_suspicious) ? result.why_suspicious : [];
+  const safeReasons = Array.isArray(result.reasons) ? result.reasons : [];
+  const safeRecommendedActions = Array.isArray(result.recommended_actions) ? result.recommended_actions : [];
+  const safeContextTags = Array.isArray(result.context_tags) ? result.context_tags : [];
+
   const activeStatus = verification_status || status || 'unverified';
   const activeReportId = analysis_id || reference_id || 'CP-7F24';
-  const displayReasons = why_suspicious.length > 0 ? why_suspicious : (reasons.length > 0 ? reasons : []);
+  const displayReasons = safeWhySuspicious.length > 0 ? safeWhySuspicious : safeReasons;
   
   // Normalized URL list
-  const allUrls = urls.length > 0 
-    ? urls 
-    : (url_assessments.length > 0 
-        ? url_assessments 
-        : (detected_urls.length > 0 
-            ? detected_urls.map((u, i) => ({ url_id: `url-${i+1}`, url: u, display_url: u, verification_status: 'unverified' }))
+  const allUrls = safeUrls.length > 0 
+    ? safeUrls 
+    : (safeUrlAssessments.length > 0 
+        ? safeUrlAssessments 
+        : (safeDetectedUrls.length > 0 
+            ? safeDetectedUrls.map((u, i) => ({ url_id: `url-${i+1}`, url: u, display_url: u, verification_status: 'unverified' }))
             : (domain ? [{ url_id: 'url-1', url: url_submitted || domain, display_url: display_url || domain, verification_status: activeStatus }] : [])
           )
       );
@@ -83,27 +85,27 @@ export default function ResultDisplay({
   const bannerCopy = getBannerCopy(bannerTheme, activeStatus);
 
   // Stat Count (distinct warning indicators)
-  const warningCount = indicators.length > 0 
-    ? indicators.length 
+  const warningCount = safeIndicators.length > 0 
+    ? safeIndicators.length 
     : (displayReasons.length > 0 ? displayReasons.length : (bannerTheme === 'high' ? 3 : (bannerTheme === 'medium' ? 1 : 0)));
 
   // Next Steps list matching V8 design
   const getNextSteps = () => {
-    if (recommended_actions && recommended_actions.length >= 3) {
+    if (safeRecommendedActions.length >= 3) {
       return [
         {
           title: "Don't open the link",
-          desc: recommended_actions[0] || 'Avoid tapping links in unexpected messages.',
+          desc: safeRecommendedActions[0] || 'Avoid tapping links in unexpected messages.',
           icon: 'link'
         },
         {
           title: "Keep credentials private",
-          desc: recommended_actions[1] || 'Never share an OTP, UPI PIN, or password.',
+          desc: safeRecommendedActions[1] || 'Never share an OTP, UPI PIN, or password.',
           icon: 'lock'
         },
         {
           title: "Verify through official channels",
-          desc: recommended_actions[2] || 'Use your bank\'s official app or known phone number.',
+          desc: safeRecommendedActions[2] || 'Use your bank\'s official app or known phone number.',
           icon: 'check'
         }
       ];
@@ -112,17 +114,17 @@ export default function ResultDisplay({
       return [
         {
           title: "Don't open the link",
-          desc: "Avoid tapping links in unexpected messages.",
+          desc: safeRecommendedActions[0] || "Avoid tapping links in unexpected messages.",
           icon: 'link'
         },
         {
           title: "Keep credentials private",
-          desc: "Never share an OTP, UPI PIN, or password.",
+          desc: safeRecommendedActions[1] || "Never share an OTP, UPI PIN, or password.",
           icon: 'lock'
         },
         {
           title: "Verify through official channels",
-          desc: "Use your bank's official app or known phone number.",
+          desc: safeRecommendedActions[2] || "Use your bank's official app or known phone number.",
           icon: 'check'
         }
       ];
@@ -130,17 +132,17 @@ export default function ResultDisplay({
     return [
       {
         title: "Verify independently",
-        desc: "Confirm unexpected payment requests via official apps directly.",
+        desc: safeRecommendedActions[0] || "Confirm unexpected payment requests via official apps directly.",
         icon: 'link'
       },
       {
         title: "Keep credentials private",
-        desc: "UPI PIN is only needed to SEND money, never to receive funds.",
+        desc: safeRecommendedActions[1] || "UPI PIN is only needed to SEND money, never to receive funds.",
         icon: 'lock'
       },
       {
         title: "Stay vigilant",
-        desc: "No automated tool can guarantee that a communication is 100% safe.",
+        desc: safeRecommendedActions[2] || "No automated tool can guarantee that a communication is 100% safe.",
         icon: 'check'
       }
     ];
@@ -154,7 +156,7 @@ export default function ResultDisplay({
       bannerCopy,
       activeStatus,
       activeReportId,
-      indicators,
+      indicators: safeIndicators,
       displayReasons,
       nextSteps,
       disclaimer
@@ -202,7 +204,7 @@ export default function ResultDisplay({
         </p>
 
         {/* Platform Context & Categorization Bar */}
-        {(detected_platform || (context_tags && context_tags.length > 0)) && (
+        {(detected_platform || safeContextTags.length > 0) && (
           <div className="v8-context-badge-bar" role="group" aria-label="Detected Platform & Context">
             {detected_platform && (
               <div className="v8-platform-pill">
@@ -210,7 +212,7 @@ export default function ResultDisplay({
                 <strong>{detected_platform}</strong>
               </div>
             )}
-            {context_tags && context_tags.map((tag, idx) => (
+            {safeContextTags.map((tag, idx) => (
               <span key={idx} className="v8-context-tag">
                 #{tag.replace(/_/g, ' ')}
               </span>
@@ -304,8 +306,8 @@ export default function ResultDisplay({
             </div>
 
             <div className="v8-evidence-list">
-              {indicators && indicators.length > 0 ? (
-                indicators.map((ind, idx) => {
+              {safeIndicators.length > 0 ? (
+                safeIndicators.map((ind, idx) => {
                   const isHigh = ind.severity === 'high';
                   const isLink = ind.id && ind.id.includes('url');
                   return (

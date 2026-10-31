@@ -62,10 +62,13 @@ export default class ErrorBoundary extends React.Component {
               </h2>
 
               <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', lineHeight: 'var(--line-height-relaxed)', marginBottom: '1.5rem' }}>
-                The safety assistant encountered an unexpected client error. Your payment information and data remain safe and were not exposed.
+                The safety assistant encountered an unexpected interface error. Any message or inputs you entered locally remain preserved in your browser.
               </p>
 
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Button variant="secondary" onClick={() => { window.location.href = '/'; }}>
+                  Return to Home
+                </Button>
                 <Button variant="secondary" onClick={this.handleReload}>
                   Reload page
                 </Button>
