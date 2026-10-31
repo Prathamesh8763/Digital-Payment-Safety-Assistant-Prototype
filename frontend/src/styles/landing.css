@@ -594,6 +594,11 @@
   color: #9333ea;
 }
 
+.landing-card-icon-wrap.red {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
 .landing-card-tag {
   font-size: 0.68rem;
   font-weight: 700;

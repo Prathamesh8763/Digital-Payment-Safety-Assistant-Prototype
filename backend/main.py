@@ -389,6 +389,109 @@ def get_demonstration_scenarios():
     ]
 
 
+@app.get("/api/reporting-guide")
+def get_cybercrime_reporting_guide():
+    """Returns official Indian cybercrime reporting instructions and helpline resources."""
+    from safety.engine import CYBERCRIME_REPORTING_GUIDE, TRUST_TRANSPARENCY_DETAILS
+    return {
+        "status": "success",
+        "reporting_guide": CYBERCRIME_REPORTING_GUIDE,
+        "trust_transparency": TRUST_TRANSPARENCY_DETAILS
+    }
+
+@app.get("/api/scam-guide")
+def get_scam_awareness_guide():
+    """Returns educational modules on prevalent Indian digital payment scams."""
+    return {
+        "status": "success",
+        "categories": [
+            {
+                "id": "upi_collect_fraud",
+                "title": "UPI Collect Request & QR Code Scam",
+                "icon": "Smartphone",
+                "risk_type": "Payment Authorization Trap",
+                "summary": "Scammer claims to buy your item or send a prize/refund, but sends a 'Collect Request' or asks you to enter your UPI PIN.",
+                "golden_rule": "You NEVER enter a UPI PIN or scan a QR code to receive money. Entering PIN = Money deducted.",
+                "red_flags": [
+                    "Buyer on OLX/Marketplace insists on paying advance via QR code",
+                    "Receiving a 'Collect Request' notification for money you are owed",
+                    "Caller tells you to enter 1 or your UPI PIN to 'verify' receiving funds"
+                ],
+                "safe_response": "Decline/reject the collect request immediately in your UPI app. Block the sender."
+            },
+            {
+                "id": "fake_payment_screenshot",
+                "title": "Fake Payment Screenshot & Spoofed Apps",
+                "icon": "FileCheck2",
+                "risk_type": "Fabricated Transaction Evidence",
+                "summary": "Fraudsters use fake payment generator apps (Paytm Spoof, GPay clone) that show a successful transfer screen and send fake SMS alerts.",
+                "golden_rule": "A screenshot or SMS from a regular 10-digit number is NOT proof of payment. Only money reflected in your official bank balance is real.",
+                "red_flags": [
+                    "Buyer shows screenshot on their phone but your bank balance hasn't changed",
+                    "Confirmation SMS comes from a private 10-digit mobile number, not a bank header (e.g. VK-HDFCBK)",
+                    "Buyer urges you to release goods quickly claiming 'server is slow'"
+                ],
+                "safe_response": "Wait until you see the funds in your official bank app statement or passbook before handing over goods."
+            },
+            {
+                "id": "electricity_utility_kyc",
+                "title": "Electricity Bill & KYC Disconnection Panic",
+                "icon": "AlertTriangle",
+                "risk_type": "Coercive Disconnection Scare",
+                "summary": "Threatening SMS stating: 'Your electricity power will be disconnected tonight at 9:30 PM due to unpaid bill. Call officer at 98xxxxxx.'",
+                "golden_rule": "Electricity boards NEVER send disconnection threats from personal mobile numbers or give 2-hour deadlines.",
+                "red_flags": [
+                    "Message lists an individual mobile number for 'Electricity Officer'",
+                    "Short deadline (tonight 9:30 PM / in 2 hours)",
+                    "Instruction to install a 'verification APK' or pay via a non-official link"
+                ],
+                "safe_response": "Check your official DISCOM app or official bill counter directly. Do not call the number in the SMS."
+            },
+            {
+                "id": "screen_sharing_takeover",
+                "title": "Screen-Sharing / AnyDesk Takeover Scam",
+                "icon": "Laptop",
+                "risk_type": "Full Device Control",
+                "summary": "Fake customer care executives tell you to install AnyDesk, TeamViewer, QuickSupport, or RustDesk to resolve a failed payment.",
+                "golden_rule": "Never install remote control or screen-sharing apps on instructions from an incoming caller.",
+                "red_flags": [
+                    "Caller asks for 9-digit code displayed in AnyDesk / TeamViewer",
+                    "They instruct you to open your banking or UPI app while connected",
+                    "They claim to be 'technical support' reversing an error"
+                ],
+                "safe_response": "Disconnect immediately, uninstall the app, and turn off your phone's Wi-Fi and mobile data."
+            },
+            {
+                "id": "fake_customer_care",
+                "title": "Fake Customer Care Google Search Scam",
+                "icon": "PhoneCall",
+                "risk_type": "Search Engine Poisoning",
+                "summary": "Fraudsters create fake Google Maps locations and web listings with their personal numbers as toll-free customer support for banks and UPI apps.",
+                "golden_rule": "Never search Google or Google Maps for customer care numbers. Use in-app help desks only.",
+                "red_flags": [
+                    "Customer care number is a normal 10-digit mobile number (+91 9xxxxxxxxx)",
+                    "Support executive asks you to send ₹1 to 'activate' account",
+                    "Executive asks you to share SMS OTP or install an APK file"
+                ],
+                "safe_response": "Open your official banking or UPI app and use the in-app 'Help & Support' section directly."
+            },
+            {
+                "id": "part_time_task_job",
+                "title": "Part-Time Task & Telegram Job Scam",
+                "icon": "TrendingUp",
+                "risk_type": "Ponzi Investment Trap",
+                "summary": "Offers to pay ₹1,000–₹5,000 daily for liking YouTube videos or rating hotels on Google Maps, escalating to 'prepaid investment tasks'.",
+                "golden_rule": "No legitimate employer asks you to pay money to receive salary or unlock earned commission.",
+                "red_flags": [
+                    "Recruiter messages from international numbers on WhatsApp (+62, +234, etc.)",
+                    "Small initial payout (₹150–₹500) to build trust",
+                    "Added to a Telegram group where you must transfer ₹10,000+ to 'unlock VIP tasks'"
+                ],
+                "safe_response": "Exit and report the Telegram/WhatsApp group immediately. Do not send any money."
+            }
+        ]
+    }
+
 def free_port_if_in_use(port: int = 8000, host: str = "127.0.0.1") -> bool:
     """Detects and frees any stale process holding the server port to prevent socket binding errors."""
     import socket

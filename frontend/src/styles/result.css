@@ -700,3 +700,192 @@
   font-family: var(--font-family-mono, monospace);
   font-weight: 500;
 }
+
+/* Platform Detection & Context Tags Bar */
+.v8-context-badge-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0.85rem;
+}
+
+.v8-platform-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.v8-context-tag {
+  display: inline-block;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Indian Cybercrime Helpline 1930 Callout Box */
+.v8-cybercrime-box {
+  background: #fff1f2;
+  border: 1.5px solid #fecdd3;
+  border-radius: 14px;
+  padding: 1.35rem 1.6rem;
+  margin-bottom: 1.75rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.v8-cybercrime-content {
+  flex: 1;
+  min-width: 280px;
+}
+
+.v8-cybercrime-badge {
+  display: inline-block;
+  background: #ffe4e6;
+  color: #e11d48;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  margin-bottom: 0.4rem;
+}
+
+.v8-cybercrime-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #9f1239;
+  margin: 0 0 0.35rem;
+}
+
+.v8-cybercrime-text {
+  font-size: 0.875rem;
+  color: #881337;
+  line-height: 1.48;
+  margin: 0;
+}
+
+.v8-cybercrime-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-self: center;
+}
+
+.v8-cybercrime-call-btn {
+  background: #e11d48;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0.6rem 1.15rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.2);
+  transition: background 0.15s ease;
+}
+
+.v8-cybercrime-call-btn:hover {
+  background: #be123c;
+}
+
+.v8-cybercrime-guide-btn {
+  background: #ffffff;
+  color: #9f1239;
+  border: 1px solid #fecdd3;
+  padding: 0.6rem 1.15rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.v8-cybercrime-guide-btn:hover {
+  background: #ffe4e6;
+}
+
+/* Trust & Transparency Details Section */
+.v8-transparency-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.v8-transparency-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.v8-transparency-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.v8-transparency-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.v8-transparency-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.v8-transparency-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.v8-transparency-item h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.35rem;
+}
+
+.v8-transparency-item p {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0;
+}
+

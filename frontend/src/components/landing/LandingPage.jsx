@@ -10,7 +10,15 @@ import CtaBannerSection from './CtaBannerSection';
 import LandingFooter from './LandingFooter';
 import '../../styles/landing.css';
 
-export default function LandingPage({ onNavigateAnalyze, onNavigateMode, onNavigateGuided, onNavigateCheckLink, onNavigateSubscriptions }) {
+export default function LandingPage({
+  onNavigateAnalyze,
+  onNavigateMode,
+  onNavigateGuided,
+  onNavigateCheckLink,
+  onNavigateSubscriptions,
+  onNavigateScamGuide,
+  onNavigateReport
+}) {
   const scrollToSection = (sectionId) => {
     const el = document.getElementById(sectionId);
     if (el) {
@@ -50,6 +58,8 @@ export default function LandingPage({ onNavigateAnalyze, onNavigateMode, onNavig
         onNavigateGuided={onNavigateGuided}
         onNavigateCheckLink={onNavigateCheckLink}
         onNavigateSubscriptions={onNavigateSubscriptions}
+        onNavigateScamGuide={onNavigateScamGuide}
+        onNavigateReport={onNavigateReport}
       />
 
       <main id="main-content">

@@ -73,7 +73,14 @@ const LINK_EXAMPLES = [
   }
 ];
 
-export default function SafetyAnalyzer({ onNavigateHome, onNavigateGuided, initialText = '', initialTab = 'message' }) {
+export default function SafetyAnalyzer({
+  onNavigateHome,
+  onNavigateGuided,
+  onNavigateReport,
+  onNavigateScamGuide,
+  initialText = '',
+  initialTab = 'message'
+}) {
   const [activeTab, setActiveTab] = useState(initialTab === 'url' ? 'link' : (initialTab || 'message')); // 'message' | 'link' | 'guided' | 'history'
   const [language, setLanguage] = useState('en');
   const [messageText, setMessageText] = useState(initialText || '');
@@ -265,6 +272,8 @@ export default function SafetyAnalyzer({ onNavigateHome, onNavigateGuided, initi
             onInspectUrl={handleInspectDetectedUrl} 
             reviewedText={activeTab === 'link' ? urlInput : messageText}
             isExample={isExample}
+            onNavigateReport={onNavigateReport}
+            onNavigateScamGuide={onNavigateScamGuide}
           />
           <footer className="v6-footer">
             <div className="v6-footer-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>

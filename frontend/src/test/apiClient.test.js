@@ -338,3 +338,53 @@ test('apiClient: analyzeSubscription calls /subscriptions/analyze endpoint', asy
     globalThis.fetch = originalFetch;
   }
 });
+
+test('apiClient: fetchScamGuide calls /scam-guide endpoint', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    let capturedUrl = null;
+    globalThis.fetch = async (url) => {
+      capturedUrl = url;
+      return {
+        ok: true,
+        json: async () => ({
+          status: 'success',
+          categories: ['UPI & QR Scams', 'Panic & Disconnection'],
+          scams: [{ id: 'upi_collect_fraud', title: 'UPI Collect Request Trap' }]
+        })
+      };
+    };
+
+    const res = await apiClient.fetchScamGuide();
+    assert.equal(capturedUrl, 'http://localhost:8000/api/scam-guide');
+    assert.equal(res.status, 'success');
+    assert.equal(res.scams.length, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('apiClient: fetchReportingGuide calls /reporting-guide endpoint', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    let capturedUrl = null;
+    globalThis.fetch = async (url) => {
+      capturedUrl = url;
+      return {
+        ok: true,
+        json: async () => ({
+          status: 'success',
+          helpline_1930: { number: '1930', name: 'Citizen Financial Cyber Fraud Reporting' },
+          portals: [{ name: 'National Cyber Crime Reporting Portal', url: 'https://cybercrime.gov.in' }]
+        })
+      };
+    };
+
+    const res = await apiClient.fetchReportingGuide();
+    assert.equal(capturedUrl, 'http://localhost:8000/api/reporting-guide');
+    assert.equal(res.status, 'success');
+    assert.equal(res.helpline_1930.number, '1930');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

@@ -4,6 +4,8 @@ import SafetyAnalyzer from './components/SafetyAnalyzer';
 import GuidedHelpPage from './components/GuidedHelpPage';
 import CheckLinkPage from './components/CheckLinkPage';
 import SubscriptionSafetyPage from './components/SubscriptionSafetyPage';
+import IndianScamGuidePage from './components/IndianScamGuidePage';
+import ReportGuidancePage from './components/ReportGuidancePage';
 
 function getInitialRoute() {
   if (typeof window === 'undefined') return '/';
@@ -11,6 +13,8 @@ function getInitialRoute() {
   if (path.startsWith('/check-link') || path.startsWith('/check')) return '/check-link';
   if (path.startsWith('/guided-help') || path.startsWith('/guided')) return '/guided-help';
   if (path.startsWith('/subscriptions') || path.startsWith('/subscription')) return '/subscriptions';
+  if (path.startsWith('/scam-guide') || path.startsWith('/scams')) return '/scam-guide';
+  if (path.startsWith('/report') || path.startsWith('/cybercrime')) return '/report';
   if (path.startsWith('/analyze')) return '/analyze';
   return '/';
 }
@@ -29,6 +33,10 @@ export default function App() {
         setRoute('/guided-help');
       } else if (path.startsWith('/subscriptions') || path.startsWith('/subscription')) {
         setRoute('/subscriptions');
+      } else if (path.startsWith('/scam-guide') || path.startsWith('/scams')) {
+        setRoute('/scam-guide');
+      } else if (path.startsWith('/report') || path.startsWith('/cybercrime')) {
+        setRoute('/report');
       } else if (path.startsWith('/analyze')) {
         setRoute('/analyze');
       } else {
@@ -79,11 +87,33 @@ export default function App() {
     );
   }
 
+  if (route === '/scam-guide') {
+    return (
+      <IndianScamGuidePage
+        onNavigateHome={() => navigateTo('/')}
+        onNavigateAnalyze={(sampleText) => navigateTo('/analyze', sampleText || '', 'message')}
+        onNavigateReport={() => navigateTo('/report')}
+      />
+    );
+  }
+
+  if (route === '/report') {
+    return (
+      <ReportGuidancePage
+        onNavigateHome={() => navigateTo('/')}
+        onNavigateScamGuide={() => navigateTo('/scam-guide')}
+        onNavigateAnalyze={(sampleText) => navigateTo('/analyze', sampleText || '', 'message')}
+      />
+    );
+  }
+
   if (route === '/analyze') {
     return (
       <SafetyAnalyzer
         onNavigateHome={() => navigateTo('/')}
         onNavigateGuided={() => navigateTo('/guided-help')}
+        onNavigateReport={() => navigateTo('/report')}
+        onNavigateScamGuide={() => navigateTo('/scam-guide')}
         initialText={prefilledText}
         initialTab={initialTab}
       />
@@ -97,11 +127,15 @@ export default function App() {
         if (mode === 'guided') navigateTo('/guided-help');
         else if (mode === 'url' || mode === 'qr') navigateTo('/check-link');
         else if (mode === 'subscriptions') navigateTo('/subscriptions');
+        else if (mode === 'scam-guide') navigateTo('/scam-guide');
+        else if (mode === 'report') navigateTo('/report');
         else navigateTo('/analyze', '', mode);
       }}
       onNavigateGuided={() => navigateTo('/guided-help')}
       onNavigateCheckLink={() => navigateTo('/check-link')}
       onNavigateSubscriptions={() => navigateTo('/subscriptions')}
+      onNavigateScamGuide={() => navigateTo('/scam-guide')}
+      onNavigateReport={() => navigateTo('/report')}
     />
   );
 }

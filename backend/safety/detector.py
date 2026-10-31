@@ -81,6 +81,56 @@ LEGITIMATE_TRANSACTION_PATTERNS = [
     (r"\b(paid\s+(electricity|water|wifi|broadband|gas|recharge|mobile)\s+bill)\b", "Standard utility bill payment")
 ]
 
+FAKE_SCREENSHOT_PATTERNS = [
+    (r"\b(screenshot|payment\s+slip|transfer\s+receipt|spoof\s+app|see\s+attached\s+screenshot|check\s+the\s+screenshot|fake\s+screenshot|paid\s+see\s+slip|payment\s+successful\s+screenshot|check\s+sms\s+or\s+screenshot)\b", "Fake payment screenshot / spoof app"),
+]
+
+PLATFORM_SIGNATURES: List[Tuple[str, List[str]]] = [
+    ("UPI App (PhonePe / Google Pay / Paytm / BHIM)", [
+        r"\b(upi|gpay|google\s*pay|phonepe|paytm|bhim|cred|amazon\s*pay|upi\s*id|vpa|@oksbi|@okhdfcbank|@okicici|@okaxis|@ybl|@ibl|@paytm)\b",
+        r"\b(collect\s*request|scan\s*qr|enter\s*(upi\s*)?pin|approve\s*request|qr\s*code|qr\s*scanner)\b"
+    ]),
+    ("Official Banking Channel / Bank SMS", [
+        r"\b(sbi|hdfc|icici|axis|pnb|canara|bank\s*of\s*baroda|kotak|rbi|debit\s*card|credit\s*card|netbanking|cif\s*no|a/c\s*no|savings\s*account|bank\s*balance|debited\s*by|credited\s*by)\b"
+    ]),
+    ("WhatsApp / Telegram Message", [
+        r"\b(whatsapp|telegram|chat\s*group|dm\s*me|join\s*channel|forwarded\s*message|channel\s*link|task\s*group)\b"
+    ]),
+    ("Electricity & Utility Department", [
+        r"\b(electricity|bijli|power\s*department|discom|bescom|tneb|mseb|dhbvn|uppcl|bill\s*due|power\s*cut|bill\s*unpaid)\b"
+    ]),
+    ("Courier & Delivery Service", [
+        r"\b(india\s*post|courier|fedex|dhl|blue\s*dart|parcel|delivery\s*agent|consignment|customs\s*office)\b"
+    ]),
+    ("Customer Care Helpline / Call Center", [
+        r"\b(customer\s*care|toll[- ]?free|support\s*desk|helpline|spoke\s*to\s*executive|called\s*the\s*number|helpdesk)\b"
+    ])
+]
+
+def identify_platform_context(clean_text: str) -> Tuple[str, List[str]]:
+    """Identifies the likely communication context (UPI, Bank, WhatsApp, Utility, etc.)."""
+    matched_platform = None
+    tags = []
+    for platform_name, patterns in PLATFORM_SIGNATURES:
+        for pattern in patterns:
+            if re.search(pattern, clean_text, re.IGNORECASE):
+                if not matched_platform:
+                    matched_platform = platform_name
+                if "UPI" in platform_name:
+                    tags.append("UPI")
+                elif "Banking" in platform_name:
+                    tags.append("Banking")
+                elif "WhatsApp" in platform_name:
+                    tags.append("Messaging")
+                elif "Electricity" in platform_name:
+                    tags.append("Utilities")
+                elif "Courier" in platform_name:
+                    tags.append("Delivery")
+                elif "Customer Care" in platform_name:
+                    tags.append("Helpline")
+                break
+    return matched_platform or "General Payment Message", list(dict.fromkeys(tags))
+
 def preprocess_text(text: str) -> str:
     """Cleans and normalizes user input text."""
     if not text:
@@ -260,7 +310,26 @@ def detect_indicators_in_text(text: str) -> Dict[str, Any]:
         })
         detected_categories.add("Part-Time Job / Task Scam")
 
-    # 10. Legitimate Transaction Signal
+    # 11. Fake Payment Screenshot / Spoof Alert
+    screenshot_clues = []
+    for pattern, name in FAKE_SCREENSHOT_PATTERNS:
+        match = re.search(pattern, clean_text, re.IGNORECASE)
+        if match:
+            screenshot_clues.append(name)
+    if screenshot_clues:
+        detected_indicators.append({
+            "id": "fake_payment_screenshot",
+            "name": "Fake Payment Screenshot / Spoofed Alert",
+            "description": "Stranger sends a payment screenshot or fake SMS alert claiming money was sent. Fraudsters frequently use spoof apps to generate fake payment screens without money actually reaching your bank account.",
+            "severity": "high",
+            "matched_clues": list(set(screenshot_clues))
+        })
+        detected_categories.add("Fake Payment Screenshot Scam")
+
+    # Identify Platform Context
+    detected_platform, context_tags = identify_platform_context(clean_text)
+
+    # 12. Legitimate Transaction Signal
     legit_clues = []
     for pattern, name in LEGITIMATE_TRANSACTION_PATTERNS:
         match = re.search(pattern, clean_text, re.IGNORECASE)
@@ -276,7 +345,9 @@ def detect_indicators_in_text(text: str) -> Dict[str, Any]:
         "categories": list(detected_categories),
         "legitimate_clues": legit_clues,
         "is_standard_notification": is_standard_notification,
-        "detected_urls": detected_urls
+        "detected_urls": detected_urls,
+        "detected_platform": detected_platform,
+        "context_tags": context_tags
     }
 
 def extract_urls_from_text(text: str) -> List[str]:

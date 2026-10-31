@@ -48,6 +48,14 @@ def generate_recommendations(
             ),
             "golden_rule": "Never install remote access or screen-sharing apps at the request of an unknown caller."
         },
+        "fake_screenshot_rule": {
+            "title": "Screenshots are Easily Faked with Spoof Apps",
+            "concept": (
+                "Scammers use fake payment generator apps that produce realistic payment success screens and fake SMS alerts. "
+                "Only money reflected in your official bank account balance is real."
+            ),
+            "golden_rule": "Always check your actual bank account statement. Never trust a screenshot or SMS alone."
+        },
         "legitimate_notice": {
             "title": "Safe Verification Habits",
             "concept": (
@@ -97,6 +105,11 @@ def generate_recommendations(
     if "untrusted_link_file" in indicator_ids:
         why_suspicious.append("You received an unknown link or were asked to install an APK file from outside the official Google Play Store or Apple App Store.")
         recommended_actions.append("Do NOT click the link or download any file. Delete the message and block the sender.")
+
+    if "fake_payment_screenshot" in indicator_ids:
+        why_suspicious.append("The sender references a payment screenshot, receipt, or transaction slip. Scammers use spoof apps to generate fake payment screens without transferring any funds.")
+        recommended_actions.append("Check your bank statement or transaction history directly inside your official bank app. Never trust a screenshot as proof of payment.")
+        educational = educational_concepts["fake_screenshot_rule"]
 
     # Fallbacks and Low Risk logic
     if risk_level == "LOW":

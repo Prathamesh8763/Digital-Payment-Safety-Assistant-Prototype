@@ -44,6 +44,9 @@ def calculate_risk(indicators: List[Dict[str, Any]], is_standard_notification: b
     if "refund_overpayment_trap" in indicator_ids:
         score = max(score, 80)
 
+    if "fake_payment_screenshot" in indicator_ids:
+        score = max(score, 78)
+
     if "fear_threat_manipulation" in indicator_ids and ("urgency_coercion" in indicator_ids or "authority_impersonation" in indicator_ids):
         score = max(score, 78)
 

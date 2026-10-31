@@ -97,6 +97,22 @@ class SafetyAssessmentResponse(BaseModel):
     verification_status: Optional[str] = None
     input_type: str = "message"
     reviewed_input: Optional[str] = None
+    detected_platform: Optional[str] = Field(
+        default=None,
+        description="Identified channel or platform context (e.g. UPI App, Bank SMS, WhatsApp, Electricity Utility, Customer Care Call)."
+    )
+    context_tags: List[str] = Field(
+        default=[],
+        description="Categorical context tags such as UPI, QR, OTP, KYC, Remote Access."
+    )
+    cybercrime_reporting: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Step-by-step reporting guide for Indian financial cybercrime (Helpline 1930, cybercrime.gov.in)."
+    )
+    trust_transparency: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Transparency statement on zero message retention, analysis methodology, and advisory boundaries."
+    )
     detected_categories: List[str]
     indicators: List[DetectedIndicator]
     why_suspicious: List[str]

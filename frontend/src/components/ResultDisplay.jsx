@@ -12,7 +12,10 @@ import {
   Lock, 
   Info, 
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  PhoneCall,
+  ExternalLink,
+  Shield
 } from 'lucide-react';
 import FeedbackModal from './FeedbackModal';
 import { getBannerTheme, getBannerCopy, generateRedactedSummary } from '../utils/resultFormatters';
@@ -23,7 +26,9 @@ export default function ResultDisplay({
   onReset, 
   onInspectUrl, 
   reviewedText = '', 
-  isExample = false 
+  isExample = false,
+  onNavigateReport,
+  onNavigateScamGuide
 }) {
   const [copied, setCopied] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -47,7 +52,11 @@ export default function ResultDisplay({
     display_url,
     detected_urls = [],
     urls = [],
-    url_assessments = []
+    url_assessments = [],
+    detected_platform,
+    context_tags = [],
+    cybercrime_reporting,
+    trust_transparency
   } = result;
 
   const activeStatus = verification_status || status || 'unverified';
@@ -192,6 +201,23 @@ export default function ResultDisplay({
           Review the warning signs and the link status, then choose a safer next step.
         </p>
 
+        {/* Platform Context & Categorization Bar */}
+        {(detected_platform || (context_tags && context_tags.length > 0)) && (
+          <div className="v8-context-badge-bar" role="group" aria-label="Detected Platform & Context">
+            {detected_platform && (
+              <div className="v8-platform-pill">
+                <span>Context:</span>
+                <strong>{detected_platform}</strong>
+              </div>
+            )}
+            {context_tags && context_tags.map((tag, idx) => (
+              <span key={idx} className="v8-context-tag">
+                #{tag.replace(/_/g, ' ')}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Wide Risk Summary Banner */}
         <div className={`v8-risk-banner ${bannerTheme}`} role="alert" aria-live="polite">
           <div className="v8-banner-left">
@@ -215,6 +241,55 @@ export default function ResultDisplay({
             </div>
           </div>
         </div>
+
+        {/* Cybercrime Helpline 1930 / Reporting Banner for High & Medium Risk */}
+        {(bannerTheme === 'high' || bannerTheme === 'medium' || cybercrime_reporting) && (
+          <div className="v8-cybercrime-box" role="region" aria-label="Cybercrime Reporting Alert">
+            <div className="v8-cybercrime-content">
+              <span className="v8-cybercrime-badge">National Cybercrime Assistance</span>
+              <h3 className="v8-cybercrime-title">Suspect Financial Cyber Fraud in India?</h3>
+              <p className="v8-cybercrime-text">
+                If you already sent money, shared an OTP/UPI PIN, or downloaded a remote app, act within the <strong>Golden Hour (1–2 hours)</strong>. Dial National Cybercrime Helpline <strong>1930</strong> or register on <strong>cybercrime.gov.in</strong> immediately so authorities can place an account hold before funds are withdrawn.
+              </p>
+            </div>
+            <div className="v8-cybercrime-actions">
+              <a href="tel:1930" className="v8-cybercrime-call-btn" title="Dial 1930 Helpline directly">
+                <PhoneCall size={16} aria-hidden="true" />
+                <span>Call Helpline 1930</span>
+              </a>
+              {onNavigateReport ? (
+                <button
+                  type="button"
+                  className="v8-cybercrime-guide-btn"
+                  onClick={onNavigateReport}
+                >
+                  <span>Reporting Steps Guide</span>
+                  <ExternalLink size={14} aria-hidden="true" />
+                </button>
+              ) : (
+                <a
+                  href="https://cybercrime.gov.in"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="v8-cybercrime-guide-btn"
+                >
+                  <span>cybercrime.gov.in</span>
+                  <ExternalLink size={14} aria-hidden="true" />
+                </a>
+              )}
+              {onNavigateScamGuide && (
+                <button
+                  type="button"
+                  className="v8-cybercrime-guide-btn"
+                  onClick={onNavigateScamGuide}
+                  style={{ background: '#ffffff', color: '#334155' }}
+                >
+                  <span>Browse Scam Guide</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Two-Column Middle Section: Warning signs vs What to do next */}
         <div className="v8-two-column-grid">
@@ -430,6 +505,30 @@ export default function ResultDisplay({
             </div>
           </div>
         </section>
+
+        {/* Trust & Transparency Section */}
+        <div className="v8-transparency-card" role="region" aria-label="Trust and Transparency">
+          <div className="v8-transparency-header">
+            <div className="v8-transparency-icon">
+              <Shield size={18} />
+            </div>
+            <h3 className="v8-transparency-title">Trust & Transparency Commitments</h3>
+          </div>
+          <div className="v8-transparency-grid">
+            <div className="v8-transparency-item">
+              <h4>Stateless Privacy Guarantee</h4>
+              <p>{trust_transparency?.zero_storage_guarantee || 'Your submitted text and links are processed purely in volatile memory. ClearPay does not store, log, or monetize your messages on server databases.'}</p>
+            </div>
+            <div className="v8-transparency-item">
+              <h4>Explainable Indicator Scoring</h4>
+              <p>{trust_transparency?.heuristics_summary || 'Risk levels are derived from visible, explainable fraud patterns (such as urgency cues, credential theft demands, spoofed screenshot claims, or unverified domains).'}</p>
+            </div>
+            <div className="v8-transparency-item">
+              <h4>Zero-Guarantee Safety Principle</h4>
+              <p>{trust_transparency?.limitation_disclaimer || 'Automated heuristics cannot catch every novel scam vector. A "Low" risk assessment is educational guidance, NOT a certification of legitimacy.'}</p>
+            </div>
+          </div>
+        </div>
 
         {/* Blue Advisory / Disclaimer Banner */}
         <div className="v8-advisory-banner" role="note" aria-label="Advisory note">

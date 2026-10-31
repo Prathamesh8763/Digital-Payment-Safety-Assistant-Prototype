@@ -217,3 +217,41 @@ def test_benchmark_evaluation_endpoint():
     assert metrics["accuracy_percentage"] >= 90.0
     assert metrics["precision_percentage"] >= 90.0
     assert metrics["recall_percentage"] >= 90.0
+
+# Scenario 20: Platform Context & Category Tag Detection
+def test_platform_context_and_tags_detection():
+    # UPI context
+    res_upi = engine.analyze_text(TextCheckRequest(text="Buyer sent a collect request on PhonePe and asked me to enter UPI PIN to receive ₹2,000."))
+    assert "UPI" in res_upi.detected_platform
+    assert "UPI" in res_upi.context_tags
+    assert res_upi.cybercrime_reporting is not None
+    assert res_upi.cybercrime_reporting["helpline"] == "1930"
+    assert res_upi.trust_transparency is not None
+
+    # Electricity context
+    res_elec = engine.analyze_text(TextCheckRequest(text="Dear consumer, electricity connection will be disconnected tonight at 9:30 PM due to pending bill."))
+    assert "Electricity" in res_elec.detected_platform
+
+    # Fake payment screenshot
+    res_screen = engine.analyze_text(TextCheckRequest(text="Buyer says payment is done and sent payment slip screenshot, but money not credited in bank balance."))
+    assert any(ind.id == "fake_payment_screenshot" for ind in res_screen.indicators)
+    assert res_screen.risk_level == "HIGH"
+
+# Scenario 21: Cybercrime Reporting & Scam Awareness Guide Endpoints
+def test_reporting_and_scam_guide_endpoints():
+    rep = client.get("/api/reporting-guide")
+    assert rep.status_code == 200
+    data_rep = rep.json()
+    assert data_rep["status"] == "success"
+    assert data_rep["reporting_guide"]["helpline"] == "1930"
+    assert "cybercrime.gov.in" in data_rep["reporting_guide"]["portal_url"]
+    assert "chakshu_url" in data_rep["reporting_guide"]
+
+    scam = client.get("/api/scam-guide")
+    assert scam.status_code == 200
+    data_scam = scam.json()
+    assert data_scam["status"] == "success"
+    assert len(data_scam["categories"]) >= 6
+    cat_ids = {c["id"] for c in data_scam["categories"]}
+    assert "upi_collect_fraud" in cat_ids
+    assert "fake_payment_screenshot" in cat_ids

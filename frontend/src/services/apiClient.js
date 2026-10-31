@@ -242,6 +242,26 @@ export const apiClient = {
       body: JSON.stringify(payload),
       ...options
     });
+  },
+
+  /**
+   * Fetch Indian digital payment scam awareness guide
+   */
+  async fetchScamGuide(options = {}) {
+    return request('/scam-guide', {
+      method: 'GET',
+      ...options
+    });
+  },
+
+  /**
+   * Fetch official Indian cybercrime reporting directory
+   */
+  async fetchReportingGuide(options = {}) {
+    return request('/reporting-guide', {
+      method: 'GET',
+      ...options
+    });
   }
 };
 

@@ -22,6 +22,30 @@ from safety.ai_analysis import AIAnalysisService
 from safety.languages import localize_assessment
 from safety.feedback_service import FeedbackService
 
+CYBERCRIME_REPORTING_GUIDE = {
+    "helpline": "1930",
+    "helpline_desc": "National Cyber Crime Helpline (24x7 Citizen Financial Cyber Fraud Reporting System)",
+    "portal_url": "https://cybercrime.gov.in",
+    "portal_name": "National Cyber Crime Reporting Portal (NCCRP)",
+    "chakshu_url": "https://sancharsaathi.gov.in/sfc/",
+    "chakshu_name": "Chakshu Facility (Report Suspected Fraud Calls, SMS, WhatsApp)",
+    "rbi_ombudsman_url": "https://cms.rbi.org.in",
+    "golden_hour_rule": "Report financial cyber fraud within 1 to 2 hours of unauthorized transaction. The 1930 system alerts beneficiary banks to freeze funds in suspect/mule accounts before withdrawal.",
+    "checklist": [
+        "Transaction ID and UTR Number from SMS or bank statement",
+        "Exact date, time, and debited amount",
+        "Screenshot of the payment app, SMS alert, or chat history",
+        "Suspect's UPI ID, phone number, or bank account details",
+        "Your bank account number (never share your PIN or OTP with anyone)"
+    ]
+}
+
+TRUST_TRANSPARENCY_DETAILS = {
+    "data_privacy": "Stateless Analysis: Your message text is processed in server memory and never stored in any database or disk log. Zero credentials, passwords, or personal names are collected.",
+    "analysis_methodology": "Multi-tier evaluation: syntactic extraction, financial threat pattern heuristics, verified institutional domain lookup, and social-engineering indicator detection.",
+    "advisory_limitation": "This assessment is an advisory educational tool to help you pause and verify. A Low-risk score is not a guarantee of safety. When in doubt, contact your bank directly."
+}
+
 class SafetyEngine:
     """
     V3 Multi-modal Safety Engine coordinating text analysis, guided questionnaires,
@@ -153,6 +177,10 @@ class SafetyEngine:
             status="analyzed",
             verification_status="analyzed",
             reviewed_input=request.text,
+            detected_platform=detection.get("detected_platform", "General Payment Message"),
+            context_tags=detection.get("context_tags", []),
+            cybercrime_reporting=CYBERCRIME_REPORTING_GUIDE,
+            trust_transparency=TRUST_TRANSPARENCY_DETAILS,
             detected_categories=categories if categories else (["Normal / Legitimate Transaction"] if is_standard_notification else ["Unspecified"]),
             indicators=formatted_indicators,
             why_suspicious=rec_data["why_suspicious"],
@@ -331,6 +359,16 @@ class SafetyEngine:
             golden_rule=golden_rule
         )
 
+        guided_platform = "General Guided Situation"
+        if request.requested_action in ["scan_qr_to_receive", "share_otp_pin"] or "collect" in str(request.requested_action):
+            guided_platform = "UPI App (PhonePe / Google Pay / Paytm / BHIM)"
+        elif request.contact_source in ["bank_caller", "unknown_call"]:
+            guided_platform = "Phone Call / Customer Care"
+        elif request.contact_source == "sms":
+            guided_platform = "SMS Alert"
+        elif request.contact_source == "messaging_app":
+            guided_platform = "WhatsApp / Messaging App"
+
         return SafetyAssessmentResponse(
             risk_level=risk_level,
             risk_score=risk_score,
@@ -338,6 +376,10 @@ class SafetyEngine:
             status="analyzed",
             verification_status="analyzed",
             reviewed_input=f"Sender: {request.contact_source}, Claim: {request.sender_claim}, Action: {request.requested_action}",
+            detected_platform=guided_platform,
+            context_tags=["Guided Check", request.contact_source.replace("_", " ").title()],
+            cybercrime_reporting=CYBERCRIME_REPORTING_GUIDE,
+            trust_transparency=TRUST_TRANSPARENCY_DETAILS,
             detected_categories=list(categories) if categories else (["Normal Merchant Payment"] if is_normal_merchant else ["Unspecified"]),
             indicators=formatted_indicators,
             why_suspicious=rec_data["why_suspicious"],

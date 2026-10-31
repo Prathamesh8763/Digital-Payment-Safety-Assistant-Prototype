@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Check, CreditCard } from 'lucide-react';
+import { ArrowRight, Check, CreditCard, ShieldAlert, PhoneCall } from 'lucide-react';
 
 export default function FeatureOverviewSection({ onExploreClick }) {
   const cards = [
@@ -10,6 +10,22 @@ export default function FeatureOverviewSection({ onExploreClick }) {
       title: 'Suspicious messages',
       desc: 'Paste an SMS, chat, or payment request to review common scam warning signs.',
       mode: 'text'
+    },
+    {
+      icon: <ShieldAlert size={20} strokeWidth={2.5} />,
+      iconClass: 'amber',
+      tag: 'INDIAN CONTEXT',
+      title: 'Indian Scam Tactics',
+      desc: 'Learn how UPI collect traps, fake screenshots, and electricity panic scams operate.',
+      mode: 'scam-guide'
+    },
+    {
+      icon: <PhoneCall size={20} strokeWidth={2.5} />,
+      iconClass: 'red',
+      tag: 'EMERGENCY RECOURSE',
+      title: 'Helpline 1930 & Reporting',
+      desc: 'Understand the Golden Hour protocol and how to report financial fraud on cybercrime.gov.in.',
+      mode: 'report'
     },
     {
       icon: '!',
