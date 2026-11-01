@@ -96,4 +96,31 @@ describe('Mobile-First Responsive Web Optimization Tests', () => {
     assert.ok(subSafetyCss.includes('@media (max-width: 768px)'), 'subscriptionSafety.css must include mobile media queries');
   });
 
+  test('Core Safety Rule & Authenticity Highlights: emphasizes NOT proof of authenticity and divides text into readable blocks', () => {
+    const resultDisplayPath = path.join(ROOT, 'src/components/ResultDisplay.jsx');
+    const resultDisplay = fs.readFileSync(resultDisplayPath, 'utf8');
+    assert.ok(resultDisplay.includes('NOT proof of authenticity'), 'ResultDisplay must emphasize NOT proof of authenticity');
+    assert.ok(resultDisplay.includes('v8-advisory-blocks'), 'Advisory banner must divide rules into structured blocks');
+    assert.ok(resultDisplay.includes('v8-cybercrime-blocks'), 'Cybercrime box must divide emergency instructions into bullet blocks');
+
+    const scamGuidePath = path.join(ROOT, 'src/components/IndianScamGuidePage.jsx');
+    const scamGuide = fs.readFileSync(scamGuidePath, 'utf8');
+    assert.ok(scamGuide.includes('NOT proof of authenticity'), 'IndianScamGuidePage must highlight NOT proof of authenticity');
+    assert.ok(scamGuide.includes('scamguide-golden-blocks'), 'Golden banner must divide rules into structured blocks');
+  });
+
+  test('Mobile Button Standards & Alignment: verifies full-width responsive buttons and 44px min touch target', () => {
+    const resultCss = fs.readFileSync(path.join(ROOT, 'src/styles/result.css'), 'utf8');
+    assert.ok(resultCss.includes('.v8-cybercrime-call-btn') && resultCss.includes('min-height: 48px'), 'Call button must have at least 48px height');
+    assert.ok(resultCss.includes('.v8-primary-btn') && resultCss.includes('width: 100%'), 'Primary buttons must expand to full-width on mobile');
+
+    const scamGuideCss = fs.readFileSync(path.join(ROOT, 'src/styles/scamGuide.css'), 'utf8');
+    assert.ok(scamGuideCss.includes('.scamguide-report-cta') && scamGuideCss.includes('width: 100%'), 'Scam guide report CTA must be full-width on mobile');
+
+    const tokensCss = fs.readFileSync(path.join(ROOT, 'src/styles/tokens.css'), 'utf8');
+    assert.ok(tokensCss.includes('--font-size-body-mobile: 15.5px'), 'Must define standardized mobile body size');
+    assert.ok(tokensCss.includes('--font-size-section-heading-mobile: 19px'), 'Must define standardized mobile section heading size');
+    assert.ok(tokensCss.includes('--line-height-mobile: 1.58'), 'Must define 1.55-1.65 line-height standard');
+  });
+
 });

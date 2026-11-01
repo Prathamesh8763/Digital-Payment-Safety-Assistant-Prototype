@@ -252,9 +252,20 @@ export default function ResultDisplay({
             <div className="v8-cybercrime-content">
               <span className="v8-cybercrime-badge">National Cybercrime Assistance</span>
               <h3 className="v8-cybercrime-title">Suspect Financial Cyber Fraud in India?</h3>
-              <p className="v8-cybercrime-text">
-                If you already sent money, shared an OTP/UPI PIN, or downloaded a remote app, act within the <strong>Golden Hour (1–2 hours)</strong>. Dial National Cybercrime Helpline <strong>1930</strong> or register on <strong>cybercrime.gov.in</strong> immediately so authorities can place an account hold before funds are withdrawn.
-              </p>
+              <div className="v8-cybercrime-blocks">
+                <div className="v8-cybercrime-bullet">
+                  <span className="bullet-dot" aria-hidden="true">•</span>
+                  <span><strong>Golden Hour urgency:</strong> Act within 1–2 hours so banks and police can freeze fraudulent transactions before money is withdrawn.</span>
+                </div>
+                <div className="v8-cybercrime-bullet">
+                  <span className="bullet-dot" aria-hidden="true">•</span>
+                  <span><strong>Helpline 1930:</strong> Call toll-free across India for immediate fraud escalation and account lien assistance.</span>
+                </div>
+                <div className="v8-cybercrime-bullet">
+                  <span className="bullet-dot" aria-hidden="true">•</span>
+                  <span><strong>National Portal:</strong> Register your incident and upload transaction UTR numbers on <strong>cybercrime.gov.in</strong>.</span>
+                </div>
+              </div>
             </div>
             <div className="v8-cybercrime-actions">
               <a href="tel:1930" className="v8-cybercrime-call-btn" title="Dial 1930 Helpline directly">
@@ -505,20 +516,23 @@ export default function ResultDisplay({
               </div>
               <div className="v8-interpret-card-title">No known threat found</div>
               <p className="v8-interpret-card-text">
-                No match in checked sources is not proof that a message is safe.
+                No match in checked sources is <span className="highlight-phrase">NOT proof of authenticity</span>. Automated tools cannot certify any message as 100% safe.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Trust & Transparency Section */}
-        <div className="v8-transparency-card" role="region" aria-label="Trust and Transparency">
-          <div className="v8-transparency-header">
-            <div className="v8-transparency-icon">
-              <Shield size={18} />
+        {/* Trust & Transparency Section (Collapsible Accordion for Mobile Cleanliness) */}
+        <details className="v8-transparency-card" role="region" aria-label="Trust and Transparency Commitments">
+          <summary className="v8-transparency-summary">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div className="v8-transparency-icon" aria-hidden="true">
+                <Shield size={18} />
+              </div>
+              <h3 className="v8-transparency-title">Trust & Transparency Commitments</h3>
             </div>
-            <h3 className="v8-transparency-title">Trust & Transparency Commitments</h3>
-          </div>
+            <span className="v8-accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
           <div className="v8-transparency-grid">
             <div className="v8-transparency-item">
               <h4>Stateless Privacy Guarantee</h4>
@@ -533,18 +547,29 @@ export default function ResultDisplay({
               <p>{trust_transparency?.limitation_disclaimer || 'Automated heuristics cannot catch every novel scam vector. A "Low" risk assessment is educational guidance, NOT a certification of legitimacy.'}</p>
             </div>
           </div>
-        </div>
+        </details>
 
-        {/* Blue Advisory / Disclaimer Banner */}
-        <div className="v8-advisory-banner" role="note" aria-label="Advisory note">
+        {/* Core Safety Rule / Advisory Banner */}
+        <div className="v8-advisory-banner" role="note" aria-label="Core safety rule and advisory note">
           <div className="v8-advisory-icon" aria-hidden="true">
-            <Info size={18} />
+            <Info size={20} />
           </div>
-          <div>
-            <div className="v8-advisory-title">This result is guidance, not a guarantee.</div>
-            <p className="v8-advisory-text">
-              If money or account access may be at risk, contact your bank through a verified official channel. Never share your OTP or UPI PIN.
-            </p>
+          <div className="v8-advisory-content">
+            <div className="v8-advisory-title">Core Safety Rule: Guidance, Not a Guarantee</div>
+            <div className="v8-advisory-blocks">
+              <div className="v8-advisory-bullet">
+                <span className="bullet-dot" aria-hidden="true">•</span>
+                <span><strong>Evidence bounds:</strong> A "Low Risk" or "No Known Threat" result is <span className="highlight-phrase">NOT proof of authenticity</span>. Scammers regularly generate new accounts and fake links.</span>
+              </div>
+              <div className="v8-advisory-bullet">
+                <span className="bullet-dot" aria-hidden="true">•</span>
+                <span><strong>The Golden Rule:</strong> Entering your UPI PIN or sharing an OTP <em>always</em> deducts money or hands over account control. You NEVER enter a PIN to receive money.</span>
+              </div>
+              <div className="v8-advisory-bullet">
+                <span className="bullet-dot" aria-hidden="true">•</span>
+                <span><strong>When in doubt:</strong> Stop immediately and verify independently using the official phone number on your bank card or banking app.</span>
+              </div>
+            </div>
           </div>
         </div>
 

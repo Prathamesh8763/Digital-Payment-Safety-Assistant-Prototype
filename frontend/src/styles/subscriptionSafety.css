@@ -598,28 +598,45 @@
 /* Mobile-First Responsive Refinements */
 @media (max-width: 768px) {
   .subsafety-nav {
-    padding: 10px 14px;
+    padding: 10px 16px;
   }
 
   .subsafety-container {
-    padding: 20px 14px 48px;
+    padding: 16px 16px 48px;
   }
 
   .subsafety-title {
-    font-size: clamp(1.45rem, 5vw, 2.2rem);
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    line-height: 1.25;
+  }
+
+  .subsafety-subtitle {
+    font-size: 15px;
+    line-height: 1.58;
+  }
+
+  .subsafety-card {
+    padding: 16px 18px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+
+  .subsafety-card-title {
+    font-size: 19px;
   }
 
   .subsafety-tabs {
     -webkit-overflow-scrolling: touch;
     white-space: nowrap;
     scrollbar-width: none;
+    margin-bottom: 20px;
   }
 
   .subsafety-tab-btn {
     white-space: nowrap;
     min-height: 44px;
     padding: 10px 14px;
-    font-size: 13.5px;
+    font-size: 14px;
   }
 
   .dir-grid,

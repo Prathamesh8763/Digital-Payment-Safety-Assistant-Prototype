@@ -324,26 +324,34 @@
 /* Mobile-First Responsive Refinements */
 @media (max-width: 768px) {
   .reportguide-nav {
-    padding: 10px 14px;
+    padding: 10px 16px;
   }
 
   .reportguide-container {
-    padding: 20px 14px 48px;
+    padding: 16px 16px 48px;
   }
 
   .reportguide-emergency-card {
-    padding: 22px 16px;
+    padding: 18px 18px;
     border-radius: 14px;
+    margin-bottom: 20px;
   }
 
   .reportguide-emergency-title {
-    font-size: clamp(1.4rem, 5vw, 1.85rem);
+    font-size: clamp(1.35rem, 5vw, 1.8rem);
+    line-height: 1.25;
+  }
+
+  .reportguide-emergency-desc {
+    font-size: 14.5px;
+    line-height: 1.55;
   }
 
   .reportguide-call-btn {
     width: 100%;
     justify-content: center;
     min-height: 48px;
+    font-size: 15px;
   }
 
   .reportguide-portal-grid {
@@ -352,7 +360,22 @@
   }
 
   .reportguide-checklist-card {
-    padding: 20px 16px;
+    padding: 18px 18px;
+    border-radius: 14px;
+  }
+
+  .reportguide-section-title {
+    font-size: 19px;
+  }
+
+  .reportguide-section-subtitle {
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+
+  .checklist-item {
+    font-size: 14.5px;
+    line-height: 1.55;
   }
 }
 

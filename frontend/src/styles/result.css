@@ -68,11 +68,11 @@
 }
 
 .v8-page-title {
-  font-size: 2.35rem;
+  font-size: clamp(1.45rem, 5vw, 2.2rem);
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.025em;
-  line-height: 1.15;
+  line-height: 1.2;
   margin-bottom: 0.4rem;
 }
 
@@ -828,13 +828,37 @@
   background: #ffe4e6;
 }
 
-/* Trust & Transparency Details Section */
+/* Trust & Transparency Details Section (Accordion on Mobile) */
 .v8-transparency-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
-  padding: 1.5rem 1.75rem;
+  padding: 1.25rem 1.5rem;
   margin-bottom: 1.75rem;
+}
+
+.v8-transparency-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.v8-transparency-summary::-webkit-details-marker {
+  display: none;
+}
+
+.v8-accordion-chevron {
+  font-size: 16px;
+  color: #64748b;
+  font-weight: 700;
+  transition: transform 0.2s ease;
+}
+
+details[open] .v8-accordion-chevron {
+  transform: rotate(180deg);
 }
 
 .v8-transparency-header {
@@ -866,6 +890,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1rem;
 }
 
 .v8-transparency-item {
@@ -883,9 +910,200 @@
 }
 
 .v8-transparency-item p {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: #64748b;
-  line-height: 1.45;
+  line-height: 1.5;
   margin: 0;
+}
+
+/* Cybercrime & Advisory Bullet Blocks */
+.v8-cybercrime-blocks,
+.v8-advisory-blocks {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.v8-cybercrime-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #881337;
+}
+
+.v8-cybercrime-bullet .bullet-dot {
+  font-size: 16px;
+  font-weight: 800;
+  color: #e11d48;
+  line-height: 1.2;
+}
+
+.v8-advisory-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #1e3a8a;
+}
+
+.v8-advisory-bullet .bullet-dot {
+  font-size: 16px;
+  font-weight: 800;
+  color: #2563eb;
+  line-height: 1.2;
+}
+
+/* Mobile-First Responsive Results Styling */
+@media (max-width: 768px) {
+  .v8-result-container {
+    padding: 1rem 1rem 3rem;
+  }
+
+  .v8-risk-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 14px;
+  }
+
+  .v8-banner-left {
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .v8-banner-headline {
+    font-size: 1.15rem;
+    margin-bottom: 4px;
+  }
+
+  .v8-banner-subtext {
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .v8-banner-stat-box {
+    align-self: flex-start;
+    min-width: auto;
+    padding: 6px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .v8-stat-num {
+    font-size: 1.4rem;
+  }
+
+  .v8-stat-label {
+    margin-top: 0;
+  }
+
+  .v8-cybercrime-box {
+    padding: 16px 18px;
+    border-radius: 14px;
+    margin-bottom: 1.25rem;
+  }
+
+  .v8-cybercrime-title {
+    font-size: 1.05rem;
+  }
+
+  .v8-cybercrime-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .v8-cybercrime-call-btn,
+  .v8-cybercrime-guide-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    font-size: 14.5px;
+  }
+
+  .v8-card {
+    padding: 16px 18px;
+    border-radius: 14px;
+    margin-bottom: 1rem;
+  }
+
+  .v8-card-title {
+    font-size: 1.1rem;
+  }
+
+  .v8-evidence-title,
+  .v8-step-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .v8-evidence-desc,
+  .v8-step-desc {
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .v8-advisory-banner {
+    padding: 16px 18px;
+    border-radius: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 1.25rem 0 1.75rem;
+  }
+
+  .v8-advisory-icon {
+    margin-top: 0;
+  }
+
+  .v8-action-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .v8-btn-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .v8-primary-btn,
+  .v8-secondary-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    font-size: 14.5px;
+  }
+
+  .v8-report-id-text {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .v8-result-header-row {
+    margin-bottom: 0.4rem;
+  }
+
+  .v8-page-title {
+    font-size: 1.45rem;
+  }
+
+  .v8-page-subtitle {
+    font-size: 14px;
+    margin-bottom: 1.25rem;
+  }
+
+  .v8-interpret-card {
+    padding: 14px 16px;
+  }
 }
 

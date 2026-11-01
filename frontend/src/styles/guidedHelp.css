@@ -793,20 +793,50 @@
   }
 
   .v9-header-inner {
-    padding: 10px 14px;
+    padding: 10px 16px;
   }
 
   .v9-guided-container {
-    padding: 16px 14px 40px;
+    padding: 16px 16px 40px;
   }
 
   .v9-hero-title {
-    font-size: clamp(1.45rem, 5vw, 2.2rem);
+    font-size: clamp(1.4rem, 5vw, 1.95rem);
+    line-height: 1.25;
+  }
+
+  .v9-hero-subhead {
+    font-size: 15px;
+    line-height: 1.58;
+  }
+
+  .v9-scenario-card,
+  .v9-guidance-card,
+  .v9-question-card {
+    padding: 16px 18px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+
+  .v9-scenario-title {
+    font-size: 17px;
+  }
+
+  .v9-scenario-desc {
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .v9-option-btn {
+    min-height: 48px;
+    font-size: 15px;
+    padding: 12px 16px;
   }
 
   .v9-actions-row {
     flex-direction: column;
     width: 100%;
+    gap: 10px;
   }
 
   .v9-btn-primary,
@@ -814,6 +844,7 @@
     width: 100%;
     justify-content: center;
     min-height: 48px;
+    font-size: 15px;
   }
 }
 

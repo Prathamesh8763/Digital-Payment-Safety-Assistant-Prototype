@@ -765,23 +765,61 @@
   }
 
   .v6-content-container {
-    padding: 1.25rem 1rem 3rem;
+    padding: 1rem 1rem 3rem;
+  }
+
+  .v6-page-headline {
+    font-size: clamp(1.35rem, 5vw, 1.9rem);
+    line-height: 1.25;
+  }
+
+  .v6-page-subhead {
+    font-size: 15px;
+    line-height: 1.58;
+    margin-bottom: 1.25rem;
+  }
+
+  .v6-main-grid {
+    gap: 1.25rem;
+    margin-bottom: 2rem;
   }
 
   .v6-input-card {
-    padding: 1.25rem;
-    border-radius: 12px;
+    padding: 16px 18px;
+    border-radius: 14px;
+  }
+
+  .v6-card-title {
+    font-size: 18.5px;
+  }
+
+  .v6-card-sub {
+    font-size: 14px;
+    line-height: 1.55;
   }
 
   .v6-privacy-banner {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
-    padding: 0.85rem 1rem;
+    padding: 14px 16px;
+    border-radius: 14px;
+  }
+
+  .v6-privacy-desc {
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  .v6-guidance-banner {
+    padding: 16px 18px;
+    border-radius: 14px;
+    margin: 1.5rem 0 2rem;
   }
 
   .v6-submit-btn {
     min-height: 48px;
+    font-size: 15px;
   }
 }
 
@@ -793,8 +831,8 @@
   }
 
   .v6-mode-tab {
-    padding: 0.55rem 0.5rem;
-    font-size: 0.8rem;
+    padding: 0.65rem 0.5rem;
+    font-size: 13px;
     min-height: 44px;
   }
 
@@ -803,12 +841,12 @@
   }
 
   .v6-sample-chip {
-    font-size: 0.78rem;
-    padding: 0.35rem 0.65rem;
+    font-size: 13px;
+    padding: 0.45rem 0.75rem;
   }
 
   .v6-back-btn {
-    padding: 0.35rem 0.75rem;
-    font-size: 0.78rem;
+    padding: 6px 10px;
+    font-size: 12.5px;
   }
 }

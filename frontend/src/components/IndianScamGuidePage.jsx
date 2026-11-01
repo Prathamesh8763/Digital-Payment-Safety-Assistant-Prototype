@@ -203,14 +203,25 @@ export default function IndianScamGuidePage({ onNavigateHome, onNavigateAnalyze,
             From UPI collect tricks and fake payment screenshots to electricity bill panics and screen-sharing takeovers—learn the psychological tricks fraudsters use before you make a move.
           </p>
 
-          {/* Golden Rule Highlight */}
-          <div className="scamguide-golden-banner">
-            <ShieldAlert className="scamguide-golden-icon" />
-            <div>
+          {/* Core Safety Rule / Golden Rule Highlight */}
+          <div className="scamguide-golden-banner" role="region" aria-label="Core UPI Safety Rule">
+            <div className="scamguide-golden-header">
+              <ShieldAlert className="scamguide-golden-icon" aria-hidden="true" />
               <h3 className="scamguide-golden-title">The #1 Rule of UPI Payments</h3>
-              <p className="scamguide-golden-desc">
-                <strong>You NEVER enter a UPI PIN or scan a QR code to receive money.</strong> Entering your PIN always deducts money from your bank account. If someone tells you to enter your PIN to claim a refund, reward, or payment, it is 100% a scam.
-              </p>
+            </div>
+            <div className="scamguide-golden-blocks">
+              <div className="scamguide-golden-point">
+                <span className="scamguide-point-dot" aria-hidden="true">•</span>
+                <span><strong>PIN is only for paying:</strong> You NEVER enter a UPI PIN or scan a QR code to receive money. Entering your PIN <em>always debits</em> funds from your account.</span>
+              </div>
+              <div className="scamguide-golden-point">
+                <span className="scamguide-point-dot" aria-hidden="true">•</span>
+                <span><strong>Screenshots are deceptive:</strong> A screenshot, SMS, or notification from a normal phone number is <span className="highlight-phrase">NOT proof of authenticity</span> or payment.</span>
+              </div>
+              <div className="scamguide-golden-point">
+                <span className="scamguide-point-dot" aria-hidden="true">•</span>
+                <span><strong>Bank balance is truth:</strong> Hand over goods or approve actions only after verifying funds inside your official banking application passbook.</span>
+              </div>
             </div>
           </div>
         </div>

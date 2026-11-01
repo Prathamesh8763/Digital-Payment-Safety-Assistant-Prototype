@@ -88,13 +88,57 @@ textarea {
   touch-action: manipulation;
 }
 
-/* Mobile-First: Prevent iOS Safari auto-zoom on input focus */
+/* Mobile-First: Typography & Text Formatting (Body: 15–17px, Headings: 18–20px, Line-height: 1.55–1.65) */
 @media screen and (max-width: 767px) {
+  body {
+    font-size: var(--font-size-body-mobile, 15.5px);
+    line-height: var(--line-height-mobile, 1.58);
+  }
+
+  p, li, span, div {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
   input,
   textarea,
   select {
     font-size: 16px !important;
   }
+
+  .container {
+    padding-left: var(--page-padding-mobile, 16px) !important;
+    padding-right: var(--page-padding-mobile, 16px) !important;
+  }
+}
+
+/* Crucial safety highlight phrase (e.g. NOT proof of authenticity) */
+.highlight-phrase {
+  display: inline-block;
+  background-color: #fee2e2;
+  color: #991b1b;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #fca5a5;
+  letter-spacing: 0.01em;
+}
+
+/* Button Standards: consistent heights, touch-targets, and vertical centering */
+button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
 }
 
 /* Responsive Table Wrapper Utility (avoids breaking mobile layouts) */

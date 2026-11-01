@@ -122,6 +122,17 @@
   --min-touch-target: 44px;
   --min-button-height: 48px;
 
+  /* Mobile Standardized Typography (Body 15–17px, Section Heading 18–20px, Line-height 1.55–1.65) */
+  --font-size-body-mobile: 15.5px;
+  --font-size-section-heading-mobile: 19px;
+  --font-size-page-title-mobile: 22px;
+  --line-height-mobile: 1.58;
+
+  /* Standardized Card Tokens across Warning (Red) and Info (Blue) Cards */
+  --card-border-radius: 14px;
+  --card-padding-mobile: 16px 18px;
+  --page-padding-mobile: 16px;
+
   /* Mobile Breakpoint System */
   --bp-xs: 320px;
   --bp-sm: 375px;

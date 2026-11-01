@@ -135,38 +135,53 @@
   max-width: 840px;
 }
 
-/* Quick Golden Rule Banner */
+/* Core Safety Rule / Golden Rule Banner */
 .scamguide-golden-banner {
   background: #eff6ff;
   border: 1.5px solid #bfdbfe;
-  border-radius: 12px;
-  padding: 16px 20px;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+}
+
+.scamguide-golden-header {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 28px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .scamguide-golden-icon {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   color: #2563eb;
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .scamguide-golden-title {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   color: #1e40af;
-  margin: 0 0 4px;
+  margin: 0;
 }
 
-.scamguide-golden-desc {
-  font-size: 13.5px;
+.scamguide-golden-blocks {
+  display: grid;
+  gap: 8px;
+}
+
+.scamguide-golden-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.55;
   color: #1e3a8a;
-  margin: 0;
-  line-height: 1.45;
+}
+
+.scamguide-point-dot {
+  color: #2563eb;
+  font-weight: 800;
 }
 
 /* Search and Filter bar */
@@ -383,6 +398,13 @@
   .scamguide-filter-btn {
     white-space: nowrap;
     min-height: 38px;
+  }
+
+  .scamguide-interactive-section .scamguide-report-cta {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 48px !important;
+    padding: 12px 16px !important;
   }
 }
 
