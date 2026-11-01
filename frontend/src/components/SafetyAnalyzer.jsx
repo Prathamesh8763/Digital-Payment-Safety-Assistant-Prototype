@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ResultDisplay from './ResultDisplay';
 import GuidedCheck from './GuidedCheck';
 import HistoryDrawer from './HistoryDrawer';
 import FeatureErrorBoundary from './FeatureErrorBoundary';
+import LanguageSelector from './LanguageSelector';
 import Alert from './ui/Alert';
 import apiClient from '../services/apiClient';
 import '../styles/analyze.css';
@@ -17,7 +19,6 @@ import {
   MessageSquareText, 
   HelpCircle, 
   History as HistoryIcon,
-  Globe,
   Compass,
   Lock
 } from 'lucide-react';
@@ -83,8 +84,9 @@ export default function SafetyAnalyzer({
   initialText = '',
   initialTab = 'message'
 }) {
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState(initialTab === 'url' ? 'link' : (initialTab || 'message')); // 'message' | 'link' | 'guided' | 'history'
-  const [language, setLanguage] = useState('en');
+  const language = i18n.language || 'en';
   const [messageText, setMessageText] = useState(initialText || '');
   const [urlInput, setUrlInput] = useState('');
   const [result, setResult] = useState(null);
@@ -227,30 +229,17 @@ export default function SafetyAnalyzer({
 
           <nav className="v6-header-nav" aria-label="Main Navigation">
             <a href="#how-it-works" className="v6-nav-link" onClick={(e) => { e.preventDefault(); if (onNavigateHome) onNavigateHome(); }}>
-              How it works
+              {t('common.nav_how_it_works', 'How it works')}
             </a>
             <a href="#learn" className="v6-nav-link" onClick={(e) => { e.preventDefault(); if (onNavigateHome) onNavigateHome(); }}>
-              Learn
+              {t('common.nav_learn', 'Learn')}
             </a>
             <a href="#privacy" className="v6-nav-link" onClick={(e) => { e.preventDefault(); if (onNavigateHome) onNavigateHome(); }}>
-              Privacy
+              {t('common.nav_privacy', 'Privacy')}
             </a>
 
-            {/* Language Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: '#f8fafc', padding: '0.25rem 0.6rem', borderRadius: '20px', border: '1px solid #cbd5e1', fontSize: '0.8rem' }}>
-              <Globe size={14} style={{ color: '#2563eb' }} aria-hidden="true" />
-              <select
-                id="header-lang-select"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                style={{ border: 'none', background: 'transparent', fontWeight: 600, color: '#2563eb', outline: 'none', cursor: 'pointer' }}
-                aria-label="Select interface language"
-              >
-                <option value="en">English</option>
-                <option value="hi">हिंदी (Hindi)</option>
-                <option value="hinglish">Hinglish</option>
-              </select>
-            </div>
+            {/* Centralized Language Selector */}
+            <LanguageSelector />
 
             {result ? (
               <button 
@@ -260,13 +249,13 @@ export default function SafetyAnalyzer({
                 aria-label="Back to Analyze"
               >
                 <ArrowLeft size={14} aria-hidden="true" />
-                <span>Back to Analyze</span>
+                <span>{t('analyzer.btn_back', 'Back to Analyze')}</span>
               </button>
             ) : (
               onNavigateHome && (
                 <button type="button" onClick={onNavigateHome} className="v6-back-btn" aria-label="Back to home page">
                   <ArrowLeft size={14} aria-hidden="true" />
-                  <span>Back to home</span>
+                  <span>{t('common.nav_back_home', 'Back to home')}</span>
                 </button>
               )
             )}
@@ -325,15 +314,15 @@ export default function SafetyAnalyzer({
 
           {/* Eyebrow & Headline */}
           <div className="v6-eyebrow">
-            {activeTab === 'link' ? 'LINK SAFETY CHECK' : 'MESSAGE SAFETY CHECK'}
+            {activeTab === 'link' ? t('analyzer.eyebrow_link', 'LINK SAFETY CHECK') : t('analyzer.eyebrow_message', 'MESSAGE SAFETY CHECK')}
           </div>
           <h1 className="v6-page-headline">
-            {activeTab === 'link' ? 'Inspect a link before you click.' : 'Check a message before you act.'}
+            {activeTab === 'link' ? t('analyzer.title_link', 'Inspect a link before you click.') : t('analyzer.title_message', 'Check a message before you act.')}
           </h1>
           <p className="v6-page-subhead">
             {activeTab === 'link' 
-              ? 'Paste an unfamiliar web address or domain name. We will inspect its structure and verified financial directories without visiting the link.'
-              : 'Paste a suspicious SMS, chat, email, or payment request. We\'ll help you spot common warning signs and think through a safer next step.'}
+              ? t('analyzer.subhead_link', 'Paste an unfamiliar web address or domain name. We will inspect its structure and verified financial directories without visiting the link.')
+              : t('analyzer.subhead_message', 'Paste an unfamiliar SMS, WhatsApp text, or payment claim. We will inspect its wording and indicators without storing your message.')}
           </p>
 
           {/* Privacy Reassurance Banner */}
@@ -343,14 +332,14 @@ export default function SafetyAnalyzer({
                 <Check size={14} strokeWidth={3} aria-hidden="true" />
               </div>
               <div>
-                <div className="v6-privacy-title">Stateless Processing & Data Privacy</div>
+                <div className="v6-privacy-title">{t('landing.privacy_title', 'Stateless Processing & Data Privacy')}</div>
                 <div className="v6-privacy-desc">
-                  Messages are securely transmitted over TLS/HTTPS to our stateless engine and analyzed purely in volatile memory. We do not store, database, or sell your message content. Remove names, phone numbers, and private credentials before pasting.
+                  {t('landing.privacy_p1', 'Messages are securely transmitted over TLS/HTTPS to our stateless engine and analyzed purely in volatile memory. We do not store, database, or sell your message content. Remove names, phone numbers, and private credentials before pasting.')}
                 </div>
               </div>
             </div>
-            <a href="#privacy" className="v6-privacy-link" onClick={(e) => { e.preventDefault(); alert("ClearPay Privacy Guarantee: Messages are transmitted over encrypted TLS/HTTPS and evaluated purely in volatile RAM memory without persistent database storage. Never paste actual passwords, OTPs, or UPI PINs."); }}>
-              <span>Privacy details</span>
+            <a href="#privacy" className="v6-privacy-link" onClick={(e) => { e.preventDefault(); alert(t('common.privacy_badge', "ClearPay Privacy Guarantee: Messages are transmitted over encrypted TLS/HTTPS and evaluated purely in volatile RAM memory without persistent database storage. Never paste actual passwords, OTPs, or UPI PINs.")); }}>
+              <span>{t('common.nav_privacy', 'Privacy')}</span>
               <ArrowRight size={14} aria-hidden="true" />
             </a>
           </div>
@@ -431,16 +420,16 @@ export default function SafetyAnalyzer({
             <div className="v6-input-card">
               <div className="v6-card-header">
                 <h2 className="v6-card-title">
-                  {activeTab === 'message' && 'What message would you like to check?'}
-                  {activeTab === 'link' && 'What link would you like to inspect?'}
-                  {activeTab === 'guided' && 'Step-by-Step Guided Situation Check'}
-                  {activeTab === 'history' && 'Local Analysis History'}
+                  {activeTab === 'message' && t('analyzer.card_title_message', 'What message would you like to check?')}
+                  {activeTab === 'link' && t('analyzer.card_title_link', 'What link would you like to inspect?')}
+                  {activeTab === 'guided' && t('analyzer.card_title_guided', 'Step-by-Step Guided Situation Check')}
+                  {activeTab === 'history' && t('analyzer.card_title_history', 'Local Analysis History')}
                 </h2>
                 <p className="v6-card-sub">
-                  {activeTab === 'message' && 'Paste the message exactly as received, after removing personal details.'}
-                  {activeTab === 'link' && 'Enter the full web address or domain to check against safety rules and directories.'}
-                  {activeTab === 'guided' && 'Answer simple questions to evaluate unfamiliar calls or payment demands.'}
-                  {activeTab === 'history' && 'Locally saved records from your current browser session.'}
+                  {activeTab === 'message' && t('analyzer.card_sub_message', 'Paste the message exactly as received, after removing personal details.')}
+                  {activeTab === 'link' && t('analyzer.card_sub_link', 'Enter the full web address or domain to check against safety rules and directories.')}
+                  {activeTab === 'guided' && t('analyzer.card_sub_guided', 'Answer simple questions to evaluate unfamiliar calls or payment demands.')}
+                  {activeTab === 'history' && t('analyzer.card_sub_history', 'Locally saved records from your current browser session.')}
                 </p>
               </div>
 
@@ -454,7 +443,7 @@ export default function SafetyAnalyzer({
                   onClick={() => { setActiveTab('message'); setError(null); }}
                 >
                   <MessageSquareText size={15} aria-hidden="true" />
-                  <span>Message</span>
+                  <span>{t('analyzer.tab_message', 'Message')}</span>
                 </button>
                 <button
                   type="button"
@@ -464,7 +453,7 @@ export default function SafetyAnalyzer({
                   onClick={() => { setActiveTab('link'); setError(null); }}
                 >
                   <LinkIcon size={15} aria-hidden="true" />
-                  <span>Link / URL</span>
+                  <span>{t('analyzer.tab_link', 'Link / URL')}</span>
                 </button>
                 <button
                   type="button"
@@ -474,7 +463,7 @@ export default function SafetyAnalyzer({
                   onClick={() => { setActiveTab('guided'); setError(null); }}
                 >
                   <HelpCircle size={15} aria-hidden="true" />
-                  <span>"I'm Not Sure"</span>
+                  <span>{t('analyzer.tab_guided', "\"I'm Not Sure\"")}</span>
                 </button>
                 <button
                   type="button"
@@ -484,7 +473,7 @@ export default function SafetyAnalyzer({
                   onClick={() => { setActiveTab('history'); setError(null); }}
                 >
                   <HistoryIcon size={15} aria-hidden="true" />
-                  <span>History ({history.length})</span>
+                  <span>{t('analyzer.tab_history', 'History')} ({history.length})</span>
                 </button>
               </div>
 
@@ -498,7 +487,7 @@ export default function SafetyAnalyzer({
                     <textarea
                       id="v6-message-input"
                       className="v6-textarea"
-                      placeholder={'Paste the suspicious message here...\n\nFor example: "Your bank account will be blocked today. Verify immediately to avoid losing access."'}
+                      placeholder={t('analyzer.placeholder_message', 'Paste the suspicious message here...\n\nFor example: "Your bank account will be blocked today. Verify immediately to avoid losing access."')}
                       value={messageText}
                       maxLength={2000}
                       onChange={(e) => { setMessageText(e.target.value); setIsExample(false); }}
@@ -512,7 +501,7 @@ export default function SafetyAnalyzer({
 
                   {/* Example chips */}
                   <div className="v6-examples-wrap">
-                    <div className="v6-examples-label">Or start with a common example</div>
+                    <div className="v6-examples-label">{t('analyzer.btn_example', 'Or start with a common example')}</div>
                     <div className="v6-chips-row">
                       {MESSAGE_EXAMPLES.map((ex, idx) => (
                         <button
@@ -530,7 +519,7 @@ export default function SafetyAnalyzer({
                   {/* Credential warning note */}
                   <div className="v6-credential-warning">
                     <div className="v6-warning-pill">!</div>
-                    <span>Never paste an OTP, UPI PIN, password, card number, or bank login.</span>
+                    <span>{t('analyzer.privacy_note', 'Never paste an OTP, UPI PIN, password, card number, or bank login.')}</span>
                   </div>
 
                   {/* Submit CTA */}
@@ -539,7 +528,7 @@ export default function SafetyAnalyzer({
                     className="v6-submit-btn"
                     disabled={messageText.trim().length < 3 || loading}
                   >
-                    <span>{loading ? 'Analyzing situation...' : 'Analyze message'}</span>
+                    <span>{loading ? t('analyzer.btn_analyzing', 'Analyzing situation...') : t('analyzer.btn_analyze', 'Analyze message')}</span>
                     <ArrowRight size={16} aria-hidden="true" />
                   </button>
                   <div className="v6-submit-note">

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PhoneCall, ShieldCheck, Lock, Info, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const CURRENT_YEAR = 2026;
 
@@ -12,6 +13,7 @@ export default function LandingFooter({
   onNavigateScamGuide,
   onNavigateReport
 }) {
+  const { t } = useTranslation();
   const [activeModal, setActiveModal] = useState(null); // 'privacy' | 'terms' | 'about' | null
 
   const handleNavClick = (sectionId) => (e) => {
@@ -141,7 +143,7 @@ export default function LandingFooter({
                   onClick={() => setActiveModal('privacy')}
                   style={{ background: 'none', border: 'none', padding: 0, color: '#94a3b8', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}
                 >
-                  Stateless Privacy Policy
+                  {t('common.nav_privacy', 'Privacy')} Policy
                 </button>
               </li>
               <li>

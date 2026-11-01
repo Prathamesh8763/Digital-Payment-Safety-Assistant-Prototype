@@ -12,6 +12,8 @@ import {
   ArrowLeft,
   ArrowRight
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from './LanguageSelector';
 import '../styles/reportGuide.css';
 
 const REPORTING_PORTALS = [
@@ -89,6 +91,7 @@ const EVIDENCE_ITEMS = [
 ];
 
 export default function ReportGuidancePage({ onNavigateHome, onNavigateScamGuide, onNavigateAnalyze }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopyChecklist = () => {
@@ -123,14 +126,17 @@ export default function ReportGuidancePage({ onNavigateHome, onNavigateScamGuide
               <span className="reportguide-brand-subtitle">Official Indian Law Enforcement & Banking Recourse</span>
             </div>
           </div>
-          <button
-            type="button"
-            className="reportguide-back-btn"
-            onClick={onNavigateHome}
-          >
-            <ArrowLeft size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-            Back to Assistant
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <LanguageSelector />
+            <button
+              type="button"
+              className="reportguide-back-btn"
+              onClick={onNavigateHome}
+            >
+              <ArrowLeft size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+              {t('common.nav_back_home', 'Back to Assistant')}
+            </button>
+          </div>
         </div>
       </header>
 

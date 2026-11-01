@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowUpRight, Menu, X, ChevronDown, ShieldAlert, PhoneCall, Link2, CreditCard, HelpCircle } from 'lucide-react';
+import LanguageSelector from '../LanguageSelector';
 
 export default function LandingNavbar({
   onAnalyzeClick,
@@ -10,6 +12,7 @@ export default function LandingNavbar({
   onNavigateScamGuide,
   onNavigateReport
 }) {
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toolsDropdownOpen, setToolsDropdownOpen] = useState(false);
 
@@ -39,8 +42,8 @@ export default function LandingNavbar({
         <a href="/" className="landing-brand" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
           <div className="landing-brand-logo" aria-hidden="true">C</div>
           <div className="landing-brand-text">
-            <span className="landing-brand-name">ClearPay</span>
-            <span className="landing-brand-tagline">Payment Safety Assistant</span>
+            <span className="landing-brand-name">{t('common.brand_name', 'ClearPay')}</span>
+            <span className="landing-brand-tagline">{t('common.brand_tagline', 'Payment Safety Assistant')}</span>
           </div>
         </a>
 
@@ -48,12 +51,12 @@ export default function LandingNavbar({
         <ul className="landing-nav-links desktop-only">
           <li>
             <a href="#how-it-works" onClick={handleNavClick('how-it-works')} className="landing-nav-link">
-              How it works
+              {t('common.nav_how_it_works', 'How it works')}
             </a>
           </li>
           <li>
             <a href="#detection-scope" onClick={handleNavClick('detection-scope')} className="landing-nav-link">
-              What We Detect
+              {t('common.nav_what_we_detect', 'What We Detect')}
             </a>
           </li>
           <li>
@@ -62,7 +65,7 @@ export default function LandingNavbar({
               onClick={handleLinkClick(onNavigateScamGuide)}
               className="landing-nav-link"
             >
-              Scam Guide
+              {t('common.nav_scam_guide', 'Scam Guide')}
             </a>
           </li>
           <li>
@@ -72,7 +75,7 @@ export default function LandingNavbar({
               className="landing-nav-link"
               style={{ color: '#dc2626', fontWeight: 700 }}
             >
-              Report (1930)
+              {t('common.nav_report_1930', 'Report (1930)')}
             </a>
           </li>
 
@@ -87,7 +90,7 @@ export default function LandingNavbar({
               aria-expanded={toolsDropdownOpen}
               aria-haspopup="true"
             >
-              <span>More Tools</span>
+              <span>{t('common.nav_more_tools', 'More Tools')}</span>
               <ChevronDown size={14} style={{ transform: toolsDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }} />
             </button>
 
@@ -117,7 +120,7 @@ export default function LandingNavbar({
                   className="dropdown-item"
                 >
                   <Link2 size={16} color="#2563eb" />
-                  <span>Check a link / URL</span>
+                  <span>{t('common.nav_link_qr_check', 'Check a link / URL')}</span>
                 </a>
                 <a
                   href="/subscriptions"
@@ -126,7 +129,7 @@ export default function LandingNavbar({
                   className="dropdown-item"
                 >
                   <CreditCard size={16} color="#7c3aed" />
-                  <span>Subscriptions & Invoices</span>
+                  <span>{t('common.nav_subscriptions', 'Subscriptions & Invoices')}</span>
                 </a>
                 <a
                   href="/guided-help"
@@ -135,7 +138,7 @@ export default function LandingNavbar({
                   className="dropdown-item"
                 >
                   <HelpCircle size={16} color="#2563eb" />
-                  <span>I'm Not Sure (Guided)</span>
+                  <span>{t('common.nav_guided_help', "I'm Not Sure (Guided)")}</span>
                 </a>
               </div>
             )}
@@ -144,13 +147,16 @@ export default function LandingNavbar({
 
         {/* Right Action & Mobile Toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Centralized Language Selector */}
+          <LanguageSelector className="desktop-only" />
+
           <button
             type="button"
             onClick={onAnalyzeClick}
             className="landing-nav-cta desktop-only"
             aria-label="Analyze a message now"
           >
-            <span>Analyze a message</span>
+            <span>{t('common.nav_analyze_btn', 'Analyze a message')}</span>
             <ArrowUpRight size={16} aria-hidden="true" />
           </button>
 
@@ -187,6 +193,11 @@ export default function LandingNavbar({
             boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
           }}
         >
+          {/* Mobile Language Selector */}
+          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+            <LanguageSelector style={{ width: '100%', justifyContent: 'center' }} />
+          </div>
+
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 16px', display: 'grid', gap: '10px' }}>
             <li>
               <button
@@ -195,48 +206,48 @@ export default function LandingNavbar({
                 className="landing-nav-cta"
                 style={{ width: '100%', justifyContent: 'center', padding: '10px' }}
               >
-                <span>Analyze a message</span>
+                <span>{t('common.nav_analyze_btn', 'Analyze a message')}</span>
                 <ArrowUpRight size={16} />
               </button>
             </li>
             <li>
               <a href="/scam-guide" onClick={handleLinkClick(onNavigateScamGuide)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', fontSize: '15px', fontWeight: 600, color: '#0f172a', textDecoration: 'none' }}>
                 <ShieldAlert size={18} color="#2563eb" />
-                <span>Indian Scam Tactics Guide</span>
+                <span>{t('common.nav_scam_guide', 'Indian Scam Tactics Guide')}</span>
               </a>
             </li>
             <li>
               <a href="/report" onClick={handleLinkClick(onNavigateReport)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', fontSize: '15px', fontWeight: 700, color: '#dc2626', textDecoration: 'none' }}>
                 <PhoneCall size={18} color="#dc2626" />
-                <span>Helpline 1930 & Reporting</span>
+                <span>{t('common.nav_report_1930', 'Helpline 1930 & Reporting')}</span>
               </a>
             </li>
             <li>
               <a href="/check-link" onClick={handleLinkClick(onNavigateCheckLink)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', fontSize: '15px', fontWeight: 500, color: '#334155', textDecoration: 'none' }}>
                 <Link2 size={18} color="#475569" />
-                <span>Inspect Link / URL</span>
+                <span>{t('common.nav_link_qr_check', 'Inspect Link / URL')}</span>
               </a>
             </li>
             <li>
               <a href="/subscriptions" onClick={handleLinkClick(onNavigateSubscriptions)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', fontSize: '15px', fontWeight: 500, color: '#334155', textDecoration: 'none' }}>
                 <CreditCard size={18} color="#475569" />
-                <span>Subscriptions & Invoices</span>
+                <span>{t('common.nav_subscriptions', 'Subscriptions & Invoices')}</span>
               </a>
             </li>
             <li>
               <a href="/guided-help" onClick={handleLinkClick(onNavigateGuided)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', fontSize: '15px', fontWeight: 600, color: '#2563eb', textDecoration: 'none' }}>
                 <HelpCircle size={18} color="#2563eb" />
-                <span>I'm Not Sure (Guided)</span>
+                <span>{t('common.nav_guided_help', "I'm Not Sure (Guided)")}</span>
               </a>
             </li>
             <li>
               <a href="#detection-scope" onClick={handleNavClick('detection-scope')} style={{ display: 'block', padding: '8px 0', fontSize: '14px', color: '#64748b', textDecoration: 'none' }}>
-                What ClearPay Can & Cannot Detect
+                {t('common.nav_what_we_detect', 'What ClearPay Can & Cannot Detect')}
               </a>
             </li>
             <li>
               <a href="#how-it-works" onClick={handleNavClick('how-it-works')} style={{ display: 'block', padding: '8px 0', fontSize: '14px', color: '#64748b', textDecoration: 'none' }}>
-                How it works
+                {t('common.nav_how_it_works', 'How it works')}
               </a>
             </li>
           </ul>

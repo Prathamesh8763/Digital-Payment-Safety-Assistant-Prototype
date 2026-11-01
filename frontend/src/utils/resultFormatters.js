@@ -11,7 +11,51 @@ export function getBannerTheme(risk_level, status, verification_status) {
   return 'unverified';
 }
 
-export function getBannerCopy(bannerTheme, activeStatus = 'unverified') {
+export function getBannerCopy(bannerTheme, activeStatus = 'unverified', t = null) {
+  if (t) {
+    if (bannerTheme === 'high' || activeStatus === 'flagged') {
+      return {
+        tag: t('risks.HIGH', 'HIGH RISK'),
+        headline: t('risks.headline_high', 'Pause before you click or pay.'),
+        subtext: t('risks.subtext_high', 'Several warning signs appear in this situation. Do not use the supplied link or share confidential information until you verify independently.')
+      };
+    }
+    if (bannerTheme === 'medium' || activeStatus === 'suspicious') {
+      return {
+        tag: t('risks.MEDIUM', 'SUSPICIOUS SIGNS'),
+        headline: t('risks.headline_medium', 'Caution recommended before acting.'),
+        subtext: t('risks.subtext_medium', 'Unusual patterns or urgency tactics were detected. Confirm directly with your provider before following instructions.')
+      };
+    }
+    if (bannerTheme === 'low' || activeStatus === 'no_known_threat_found') {
+      return {
+        tag: t('risks.LOW', 'LIMITED THREAT MATCH'),
+        headline: t('risks.headline_low', 'No known threat found in checked sources.'),
+        subtext: t('risks.subtext_low', 'No match was found in verified directories. Remember: lack of a reported match does not prove a message or link is safe.')
+      };
+    }
+    if (activeStatus === 'invalid_input') {
+      return {
+        tag: t('risks.INVALID', 'INVALID INPUT'),
+        headline: t('risks.headline_invalid', 'Invalid or incomplete input.'),
+        subtext: t('risks.subtext_invalid', 'The submitted web address or message was incomplete or malformed and could not be inspected.')
+      };
+    }
+    if (activeStatus === 'provider_unavailable') {
+      return {
+        tag: t('risks.UNAVAILABLE', 'CHECK UNAVAILABLE'),
+        headline: t('risks.headline_unavailable', 'A required check could not be completed.'),
+        subtext: t('risks.subtext_unavailable', 'Verification directories are currently unreachable or busy. Treat unknown requests with caution.')
+      };
+    }
+    return {
+      tag: t('risks.UNVERIFIED', 'UNVERIFIED'),
+      headline: t('risks.headline_unverified', 'Could not verify this destination.'),
+      subtext: t('risks.subtext_unverified', 'There is not enough reliable directory data to confirm whether this link is genuine. Treat it with caution.')
+    };
+  }
+
+  // Default English strings (strictly adheres to Table 6.1)
   if (bannerTheme === 'high' || activeStatus === 'flagged') {
     return {
       tag: 'HIGH RISK',
@@ -52,6 +96,43 @@ export function getBannerCopy(bannerTheme, activeStatus = 'unverified') {
     headline: 'Could not verify this destination.',
     subtext: 'There is not enough reliable directory data to confirm whether this link is genuine. Treat it with caution.'
   };
+}
+
+/**
+ * Translates backend security indicators using reason codes dictionary.
+ */
+export function translateIndicator(indicator, t) {
+  if (!indicator || !t) return indicator;
+  const key = indicator.id || indicator.code?.toLowerCase();
+  const localizedTitle = t(`findings.${key}.title`, { defaultValue: '' });
+  const localizedDesc = t(`findings.${key}.desc`, { defaultValue: '' });
+
+  return {
+    ...indicator,
+    title: localizedTitle || indicator.title || indicator.name,
+    description: localizedDesc || indicator.description
+  };
+}
+
+/**
+ * Translates recommended action strings if matching standard guidance patterns.
+ */
+export function translateAction(actionText, t) {
+  if (!actionText || !t) return actionText;
+  const lower = actionText.toLowerCase();
+  if (lower.includes('otp') || lower.includes('pin') || lower.includes('password')) {
+    return t('actions.never_share_otp', actionText);
+  }
+  if (lower.includes('send') && (lower.includes('money') || lower.includes('funds') || lower.includes('collect'))) {
+    return t('actions.do_not_send_funds', actionText);
+  }
+  if (lower.includes('verify') || lower.includes('official') || lower.includes('contact') || lower.includes('card')) {
+    return t('actions.verify_independently', actionText);
+  }
+  if (lower.includes('1930') || lower.includes('cybercrime')) {
+    return t('actions.report_1930', actionText);
+  }
+  return actionText;
 }
 
 /**

@@ -12,6 +12,8 @@ import {
   ArrowRight,
   PhoneForwarded
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from './LanguageSelector';
 import '../styles/scamGuide.css';
 
 const SCAM_MODULES = [
@@ -138,6 +140,7 @@ const SCAM_MODULES = [
 ];
 
 export default function IndianScamGuidePage({ onNavigateHome, onNavigateAnalyze, onNavigateReport }) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
@@ -172,21 +175,22 @@ export default function IndianScamGuidePage({ onNavigateHome, onNavigateAnalyze,
             </div>
           </a>
 
-          <div className="scamguide-nav-actions">
+          <div className="scamguide-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <LanguageSelector />
             <button
               type="button"
               onClick={onNavigateReport}
               className="scamguide-report-cta"
             >
               <PhoneForwarded size={16} />
-              Report Cybercrime (1930)
+              {t('common.nav_report_1930', 'Report Cybercrime (1930)')}
             </button>
             <button
               type="button"
               onClick={onNavigateHome}
               className="scamguide-back-btn"
             >
-              ← Back to home
+              ← {t('common.nav_back_home', 'Back to home')}
             </button>
           </div>
         </nav>

@@ -1,0 +1,241 @@
+{
+  "common": {
+    "brand_name": "ClearPay",
+    "brand_tagline": "Payment Safety Assistant",
+    "nav_how_it_works": "How it works",
+    "nav_what_we_detect": "What We Detect",
+    "nav_scam_guide": "Scam Guide",
+    "nav_report_1930": "Report (1930)",
+    "nav_more_tools": "More Tools",
+    "nav_link_qr_check": "Link & QR Checker",
+    "nav_guided_help": "Guided Help (I'm Not Sure)",
+    "nav_subscriptions": "Subscription Traps",
+    "nav_learn": "Learn",
+    "nav_privacy": "Privacy",
+    "nav_back_home": "Back to home",
+    "nav_home": "Home",
+    "nav_analyze_btn": "Analyze a message",
+    "language_label": "Language",
+    "lang_en": "English",
+    "lang_hi": "हिंदी (Hindi)",
+    "lang_hinglish": "Hinglish",
+    "helpline_banner": "National Cybercrime Helpline: 1930 • Call within the Golden Hour (2-3 hrs)",
+    "privacy_badge": "Built around privacy. No bank login or payment details needed.",
+    "footer_tagline": "A calmer, safer second opinion for suspicious payment requests, UPI links, and urgent messages across India.",
+    "footer_emergency": "Emergency Financial Fraud Helpline",
+    "footer_emergency_sub": "If money was debited fraudulently, call 1930 immediately to freeze the funds across banking channels.",
+    "footer_resources": "Safety Resources",
+    "footer_legal": "Trust & Privacy",
+    "footer_copyright": "ClearPay Safety Assistant • Independent Educational Public Service"
+  },
+  "landing": {
+    "announcement": "Learn how ClearPay protects against digital payment fraud",
+    "hero_eyebrow": "YOUR DIGITAL SAFETY COMPANION",
+    "hero_title": "Pause before you pay. Know before you trust.",
+    "hero_subhead": "Suspicious SMS, payment requests, and urgent messages can feel convincing. Get a clear, practical second opinion before you act.",
+    "check_message_btn": "Check a message",
+    "how_it_works_btn": "How it works",
+    "demo_badge": "DEMO",
+    "demo_title": "Message safety check",
+    "demo_sample_text": "Your electricity power will be disconnected today. Verify now to avoid losing access. Share the code we sent you.",
+    "demo_review_btn": "Review warning signs",
+    "demo_high_risk": "HIGH RISK",
+    "demo_slow_down": "Slow down — this message has warning signs",
+    "demo_clue_1": "Creates urgency and pressure",
+    "demo_clue_2": "Requests a sensitive verification code",
+    "demo_clue_3": "Verify independently using an official channel",
+    "demo_disclaimer": "Educational example only. Not a guarantee of safety or fraud status.",
+    "trust_independent": "Independent Analysis",
+    "trust_independent_sub": "Not affiliated with any single bank or wallet",
+    "trust_privacy": "Zero Data Retention",
+    "trust_privacy_sub": "Submitted messages are processed in-memory and discarded",
+    "trust_education": "Educate, Never Blame",
+    "trust_education_sub": "Clear explanations designed for family safety",
+    "steps_eyebrow": "THREE SIMPLE STEPS",
+    "steps_title": "How ClearPay helps you pause and verify",
+    "step_1_title": "1. Copy the message or link",
+    "step_1_desc": "Paste the SMS, WhatsApp text, or unfamiliar website link into ClearPay. Remove your personal details first.",
+    "step_2_title": "2. ClearPay analyzes the risk",
+    "step_2_desc": "Our rule engine checks for urgency triggers, OTP requests, spoofed links, and known Indian payment scam patterns.",
+    "step_3_title": "3. Get clear next steps",
+    "step_3_desc": "Receive a plain-English risk assessment with clear recommendations: what to do, what not to do, and who to contact.",
+    "scope_eyebrow": "TRANSPARENCY & SCOPE",
+    "scope_title": "What ClearPay can and cannot do",
+    "scope_can_header": "What ClearPay Can Detect",
+    "scope_cannot_header": "What ClearPay Cannot Do",
+    "scope_can_1": "High-urgency language and artificial panic cues",
+    "scope_can_2": "Requests for OTP, UPI PIN, passwords, or CVV numbers",
+    "scope_can_3": "UPI QR reverse-collect traps and consumer VPA spoofing",
+    "scope_can_4": "Unverified domains, shortened links, and brand typosquatting",
+    "scope_can_5": "Demands to install remote access apps (AnyDesk, TeamViewer)",
+    "scope_cannot_1": "Guarantee that an unflagged message or link is 100% safe",
+    "scope_cannot_2": "Check bank balances, reverse transactions, or freeze accounts",
+    "scope_cannot_3": "Access private chats or monitor messages automatically",
+    "scope_cannot_4": "Replace your bank's fraud department or law enforcement",
+    "privacy_eyebrow": "PRIVACY FIRST",
+    "privacy_title": "Your messages stay yours.",
+    "privacy_p1": "We never ask for your bank login, UPI PIN, card numbers, or passwords. Any message you analyze is processed in-memory and discarded.",
+    "privacy_p2": "We do not store submitted text in a database, share it with third parties, or use it to train public AI models.",
+    "cta_title": "Unsure about a payment request?",
+    "cta_subhead": "It takes ten seconds to check. A second opinion can protect your hard-earned money.",
+    "cta_btn": "Check a message now"
+  },
+  "analyzer": {
+    "eyebrow_message": "MESSAGE SAFETY CHECK",
+    "eyebrow_link": "LINK SAFETY CHECK",
+    "title_message": "Check a message before you act.",
+    "title_link": "Inspect a link before you click.",
+    "subhead_message": "Paste an unfamiliar SMS, WhatsApp text, or payment claim. We will inspect its wording and indicators without storing your message.",
+    "subhead_link": "Paste an unfamiliar web address or domain name. We will inspect its structure and verified financial directories without visiting the link.",
+    "card_title_message": "What message would you like to check?",
+    "card_title_link": "What link would you like to inspect?",
+    "card_title_guided": "Step-by-Step Guided Situation Check",
+    "card_title_history": "Local Analysis History",
+    "card_sub_message": "Paste the message exactly as received, after removing personal details.",
+    "card_sub_link": "Enter the full web address or domain to check against safety rules and directories.",
+    "card_sub_guided": "Answer simple questions to evaluate unfamiliar calls or payment demands.",
+    "card_sub_history": "Locally saved records from your current browser session.",
+    "tab_message": "Message",
+    "tab_link": "Inspect a link",
+    "tab_guided": "I'm Not Sure",
+    "tab_history": "History",
+    "label_message_input": "Message content",
+    "placeholder_message": "Paste the suspicious message here (e.g., 'Your electricity power will be disconnected today. Call manager at 98xxxx or click link...').",
+    "placeholder_url": "e.g., https://sbi-card-reward-points.info/login or bit.ly/kyc-update",
+    "char_count": "Up to 2,000 characters",
+    "btn_analyze": "Analyze message",
+    "btn_analyzing": "Analyzing safety...",
+    "btn_inspect_link": "Inspect link",
+    "btn_inspecting": "Inspecting destination...",
+    "btn_clear": "Clear",
+    "btn_example": "Try an example",
+    "btn_back": "Back to Analyze",
+    "privacy_note": "Privacy check: Never paste actual OTPs, bank account numbers, or passwords. Strip personal details first.",
+    "error_empty_message": "Please enter or paste a message to analyze.",
+    "error_empty_url": "Please enter a web address or link to inspect.",
+    "empty_history": "No analysis records in this session yet.",
+    "empty_history_sub": "When you check a message, link, or situation, your results are saved locally in this browser."
+  },
+  "qr_scanner": {
+    "header_title": "QR Scanner",
+    "card_title": "Scan QR Code",
+    "card_subtitle": "Use your camera or upload an image",
+    "btn_upload": "Upload QR Image",
+    "btn_camera": "Use Camera",
+    "btn_close_camera": "Close Camera",
+    "tips": "For best results when uploading an image, ensure the QR code is clearly visible and well-lit. When using camera, hold steady and center the QR code in frame.",
+    "sender_claim_label": "What did the sender claim? (Optional)",
+    "sender_claim_placeholder": "e.g. Buyer on OLX sent this to receive money, or caller offered refund...",
+    "viewfinder_align": "Align QR code within the frame",
+    "analyzing": "Analyzing QR code with safety engine...",
+    "samples_title": "Or Test With Realistic Scenarios (1-Click Demo):",
+    "sim_header_cancel": "← Cancel Payment",
+    "sim_proceed_btn": "Proceed to Payment",
+    "sim_trap_warning": "TRAP WARNING: Tapping this in PhonePe / GPay / Paytm will debit money from your bank account!",
+    "hero_amount_label": "PAYMENT AMOUNT (OUTGOING DEBIT)",
+    "hero_amount_notice": "⚠️ Scanning a QR code can ONLY send money from your account. You NEVER receive money.",
+    "hero_user_enters": "User enters amount in app",
+    "label_recipient_name": "RECIPIENT NAME",
+    "label_recipient_vpa": "RECIPIENT UPI ID (VPA)",
+    "label_transaction_note": "TRANSACTION NOTE",
+    "label_currency": "CURRENCY",
+    "val_not_provided": "Not Provided / Concealed",
+    "val_none": "None specified",
+    "card_findings_title": "Security findings",
+    "card_findings_clean": "No suspicious fraud indicators identified in this payment QR code.",
+    "card_steps_title": "Recommended next steps",
+    "card_steps_sub": "Follow safe payment practices before authorizing:",
+    "golden_rule_title": "Golden Rule:",
+    "golden_rule_text": "UPI PIN is ONLY entered to send money. Entering your PIN never deposits or receives funds.",
+    "btn_scan_another": "Scan another QR code",
+    "btn_copy_report": "Copy security report",
+    "btn_copied": "Copied summary!"
+  },
+  "risks": {
+    "HIGH": "HIGH RISK • POTENTIAL THREAT",
+    "MEDIUM": "MEDIUM RISK • NEEDS ATTENTION",
+    "LOW": "LOW RISK • STANDARD PAYMENT FORMAT",
+    "UNVERIFIED": "UNVERIFIED • UNKNOWN SOURCE",
+    "INVALID": "INVALID INPUT",
+    "UNAVAILABLE": "CHECK UNAVAILABLE",
+    "headline_high": "Do not proceed — potential payment manipulation detected.",
+    "headline_medium": "Caution advised — unverified recipient or pre-filled amount.",
+    "headline_low": "Payment format valid. Verify recipient in your UPI app.",
+    "subtext_high": "Several warning signs appear in this situation. Do not send funds or share credentials.",
+    "subtext_medium": "Unusual patterns or urgency tactics were detected. Confirm directly before following instructions.",
+    "subtext_low": "No known threat indicators found. Remember that automated checks cannot guarantee complete safety.",
+    "disclaimer_text": "This result is guidance, not a guarantee. If money or account access may be at risk, contact your bank through a verified official channel. Never share your OTP or UPI PIN."
+  },
+  "findings": {
+    "sensitive_credential_request": {
+      "title": "Sensitive Credential Request",
+      "desc": "The message requests confidential secrets such as OTP, UPI PIN, passwords, or CVV. Legitimate banks and payment providers never ask for these."
+    },
+    "urgency_coercion": {
+      "title": "Urgency & Pressure Tactics",
+      "desc": "The message creates artificial panic (e.g. 'account blocked in 2 hours', 'electricity cut tonight') to rush you into acting without thinking."
+    },
+    "qr_receive_trap": {
+      "title": "QR Receive Trap (Reverse Collect)",
+      "desc": "You were asked to scan a QR code or enter a PIN to receive money. Scanning a QR code or entering a PIN ONLY sends money out of your account."
+    },
+    "brand_impersonation_vpa": {
+      "title": "Deceptive Recipient UPI ID",
+      "desc": "The recipient UPI ID mimics a recognized brand (e.g., Amazon, SBI) on a personal consumer handle. Legitimate enterprises never process payments or refunds on personal handles."
+    },
+    "remote_access_app": {
+      "title": "Remote Access App Request",
+      "desc": "You were instructed to install screen-sharing software (AnyDesk, TeamViewer, RustDesk). Scammers use this to view your screen and steal banking passwords."
+    },
+    "fake_payment_screenshot": {
+      "title": "Fake Payment Confirmation Proof",
+      "desc": "A payment screenshot or regular 10-digit SMS was provided as proof of transfer. Only money reflected in your official banking app balance is genuine."
+    },
+    "authority_impersonation": {
+      "title": "Official Authority Impersonation",
+      "desc": "The sender pretends to be from RBI, police, customs, or court threatening 'digital arrest' or legal consequences to extort money."
+    },
+    "preset_high_amount": {
+      "title": "Pre-Set Locked Payment Amount",
+      "desc": "This QR code pre-fills an outgoing debit. Scammers lock amounts in advance-fee and marketplace scams."
+    },
+    "missing_payee_identity": {
+      "title": "Unverified / Concealed Recipient Name",
+      "desc": "The payee display name is 'Unknown' or missing. The actual identity of the account holder is concealed."
+    },
+    "reward_advance_fee": {
+      "title": "Fake Reward / Lottery Fee",
+      "desc": "The message claims you won cash, lottery, or rewards, but requires an advance processing fee or tax to claim."
+    },
+    "refund_overpayment_trap": {
+      "title": "Refund / Overpayment Scam",
+      "desc": "The caller claims they accidentally overpaid or owes you a refund, asking you to return the difference via UPI."
+    },
+    "untrusted_link_file": {
+      "title": "Suspicious Link or APK Download",
+      "desc": "The message includes an unfamiliar link or urges installing an Android APK file outside official app stores."
+    },
+    "job_task_manipulation": {
+      "title": "Part-Time Task Scam",
+      "desc": "Offers high daily income for liking YouTube videos or rating hotels, leading to Telegram investment groups."
+    },
+    "unknown_unverified_domain": {
+      "title": "Unrecognized / Unverified Domain",
+      "desc": "This domain is not listed in verified institutional directories. Anyone can register new domains; verify independently."
+    },
+    "shortened_url": {
+      "title": "Concealed Short Link",
+      "desc": "A URL shortener is used to conceal the true destination of the website."
+    },
+    "fake_link_generator_detected": {
+      "title": "Flagged Threat Generator",
+      "desc": "Matches known phishing kits, fake link generators, or credential harvesters."
+    }
+  },
+  "actions": {
+    "never_share_otp": "Never share your OTP, UPI PIN, or passwords with anyone, even if they claim to be bank officials.",
+    "do_not_send_funds": "Do not send money or approve collect requests.",
+    "verify_independently": "Contact your bank or provider using the official phone number on your debit card or verified app.",
+    "report_1930": "If you already transferred money, call 1930 immediately or visit cybercrime.gov.in."
+  }
+}

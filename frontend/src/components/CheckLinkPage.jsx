@@ -20,7 +20,10 @@ import {
   PhoneCall
 } from 'lucide-react';
 import jsQR from 'jsqr';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
+import LanguageSelector from './LanguageSelector';
+import { translateIndicator, translateAction } from '../utils/resultFormatters';
 import '../styles/checkLink.css';
 
 const SAMPLE_QR_SCENARIOS = [
@@ -47,6 +50,7 @@ const SAMPLE_QR_SCENARIOS = [
 ];
 
 export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNavigateGuided }) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState('url'); // 'url' | 'qr'
   const [urlInput, setUrlInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -352,8 +356,8 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
           <div className="checklink-brand" onClick={onNavigateHome}>
             <div className="checklink-brand-logo" aria-hidden="true">C</div>
             <div className="checklink-brand-text">
-              <span className="checklink-brand-name">ClearPay</span>
-              <span className="checklink-brand-tagline">Safety Assistant</span>
+              <span className="checklink-brand-name">{t('common.brand_name', 'ClearPay')}</span>
+              <span className="checklink-brand-tagline">{t('common.brand_tagline', 'Safety Assistant')}</span>
             </div>
           </div>
 
@@ -364,7 +368,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 onClick={onNavigateHome}
                 className="checklink-nav-link"
               >
-                How it works
+                {t('common.nav_how_it_works', 'How it works')}
               </button>
             </li>
             <li>
@@ -373,7 +377,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 onClick={onNavigateHome}
                 className="checklink-nav-link"
               >
-                Learn
+                {t('common.nav_learn', 'Learn')}
               </button>
             </li>
             <li>
@@ -382,18 +386,22 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 onClick={() => setPrivacyModalOpen(true)}
                 className="checklink-nav-link"
               >
-                Privacy
+                {t('common.nav_privacy', 'Privacy')}
               </button>
             </li>
           </ul>
 
-          <button
-            type="button"
-            onClick={onNavigateHome}
-            className="checklink-back-btn"
-          >
-            ← Back to home
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <LanguageSelector />
+
+            <button
+              type="button"
+              onClick={onNavigateHome}
+              className="checklink-back-btn"
+            >
+              ← {t('common.nav_back_home', 'Back to home')}
+            </button>
+          </div>
         </nav>
       </header>
 
@@ -401,13 +409,13 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
         {/* Breadcrumb & Title Section */}
         <div className="checklink-top-section">
           <div className="checklink-breadcrumbs">
-            <a href="/" onClick={(e) => { e.preventDefault(); onNavigateHome(); }}>Home</a>
+            <a href="/" onClick={(e) => { e.preventDefault(); onNavigateHome(); }}>{t('common.nav_home', 'Home')}</a>
             {' / '}
-            <span>Link & QR Checker</span>
+            <span>{t('common.nav_link_qr_check', 'Link & QR Checker')}</span>
           </div>
 
           <div className="checklink-eyebrow">CHECK BEFORE YOU CLICK</div>
-          <h1 className="checklink-title">Check a link before you open it.</h1>
+          <h1 className="checklink-title">{t('analyzer.title_link', 'Check a link before you open it.')}</h1>
           <p className="checklink-subhead">
             Paste a website address or check where a QR code leads. We'll help you spot warning signs without opening the link for you.
           </p>
@@ -446,17 +454,13 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 </div>
                 <div>
                   <span className="checklink-qr-banner-badge">
-                    {qrResult.risk_level === 'HIGH' && 'HIGH RISK • POTENTIAL THREAT'}
-                    {qrResult.risk_level === 'MEDIUM' && 'MEDIUM RISK • NEEDS ATTENTION'}
-                    {qrResult.risk_level === 'LOW' && 'LOW RISK • STANDARD PAYMENT FORMAT'}
+                    {t('risks.' + qrResult.risk_level, qrResult.risk_level)}
                   </span>
                   <h2 className="checklink-qr-banner-headline">
-                    {qrResult.risk_level === 'HIGH' && 'Do not proceed — potential payment manipulation detected.'}
-                    {qrResult.risk_level === 'MEDIUM' && 'Caution advised — unverified recipient or pre-filled amount.'}
-                    {qrResult.risk_level === 'LOW' && 'Payment format valid. Verify details in your UPI app.'}
+                    {t('risks.headline_' + qrResult.risk_level.toLowerCase(), qrResult.risk_level === 'HIGH' ? 'Do not proceed — potential payment manipulation detected.' : 'Caution advised')}
                   </h2>
                   <p className="checklink-qr-banner-subtext">
-                    {qrResult.uncertainty_note}
+                    {t('risks.subtext_' + qrResult.risk_level.toLowerCase(), qrResult.uncertainty_note)}
                   </p>
                 </div>
               </div>
@@ -475,7 +479,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 <div className="checklink-phone-mockup" aria-label="Simulated Mobile UPI App Interface">
                   <div className="phone-mockup-header">
                     <button type="button" className="phone-cancel-btn">
-                      ← Cancel Payment
+                      {t('qr_scanner.sim_header_cancel', '← Cancel Payment')}
                     </button>
                   </div>
 
@@ -499,7 +503,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                     </div>
                     <div className="phone-recipient-info">
                       <div className="phone-recipient-name">
-                        {qrResult.payment_details.payee_name || 'Unknown'}
+                        {qrResult.payment_details.payee_name || t('qr_scanner.val_not_provided', 'Unknown')}
                       </div>
                       <div className="phone-recipient-sub">
                         {qrResult.payment_details.payee_vpa}
@@ -509,12 +513,11 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                   </div>
 
                   <button type="button" className="phone-proceed-btn" disabled>
-                    Proceed to Payment
+                    {t('qr_scanner.sim_proceed_btn', 'Proceed to Payment')}
                   </button>
 
                   <div className="phone-scam-alert-callout">
-                    🚨 <strong>TRAP WARNING:</strong> Tapping this in PhonePe / GPay / Paytm will debit{' '}
-                    <strong>{qrResult.payment_details.amount || 'money'}</strong> from your bank account!
+                    🚨 <strong>{t('qr_scanner.sim_trap_warning', 'TRAP WARNING: Tapping this in PhonePe / GPay / Paytm will debit money from your bank account!')}</strong>
                   </div>
 
                   {/* Simulated Numeric Keypad */}
@@ -529,39 +532,39 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 {/* Right: Technical Breakdown & Inspector */}
                 <div className="checklink-payment-details-card" style={{ marginBottom: 0 }}>
                   <div className="checklink-payment-amount-hero">
-                    <span className="checklink-payment-amount-label">PAYMENT AMOUNT (OUTGOING DEBIT)</span>
+                    <span className="checklink-payment-amount-label">{t('qr_scanner.hero_amount_label', 'PAYMENT AMOUNT (OUTGOING DEBIT)')}</span>
                     <div className="checklink-payment-amount-val">
-                      {qrResult.payment_details.amount || 'User enters amount in app'}
+                      {qrResult.payment_details.amount || t('qr_scanner.hero_user_enters', 'User enters amount in app')}
                     </div>
                     <span className="checklink-payment-amount-notice">
-                      ⚠️ Scanning a QR code can ONLY send money from your account. You NEVER receive money.
+                      {t('qr_scanner.hero_amount_notice', '⚠️ Scanning a QR code can ONLY send money from your account. You NEVER receive money.')}
                     </span>
                   </div>
 
                   <div className="checklink-payment-grid">
                     <div className="checklink-payment-item">
-                      <span className="checklink-payment-label">RECIPIENT NAME</span>
+                      <span className="checklink-payment-label">{t('qr_scanner.label_recipient_name', 'RECIPIENT NAME')}</span>
                       <div className="checklink-payment-value payee-name">
-                        {qrResult.payment_details.payee_name || 'Not Provided / Concealed'}
+                        {qrResult.payment_details.payee_name || t('qr_scanner.val_not_provided', 'Not Provided / Concealed')}
                       </div>
                     </div>
 
                     <div className="checklink-payment-item">
-                      <span className="checklink-payment-label">RECIPIENT UPI ID (VPA)</span>
+                      <span className="checklink-payment-label">{t('qr_scanner.label_recipient_vpa', 'RECIPIENT UPI ID (VPA)')}</span>
                       <div className="checklink-payment-value upi-id">
                         <code>{qrResult.payment_details.payee_vpa || 'Missing'}</code>
                       </div>
                     </div>
 
                     <div className="checklink-payment-item">
-                      <span className="checklink-payment-label">TRANSACTION NOTE</span>
+                      <span className="checklink-payment-label">{t('qr_scanner.label_transaction_note', 'TRANSACTION NOTE')}</span>
                       <div className="checklink-payment-value">
-                        {qrResult.payment_details.transaction_note || 'None specified'}
+                        {qrResult.payment_details.transaction_note || t('qr_scanner.val_none', 'None specified')}
                       </div>
                     </div>
 
                     <div className="checklink-payment-item">
-                      <span className="checklink-payment-label">CURRENCY</span>
+                      <span className="checklink-payment-label">{t('qr_scanner.label_currency', 'CURRENCY')}</span>
                       <div className="checklink-payment-value">
                         {qrResult.payment_details.currency || 'INR'}
                       </div>
@@ -576,7 +579,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
               {/* Left Column: Security Findings */}
               <div className="checklink-qr-card">
                 <div className="checklink-qr-card-header">
-                  <h3 className="checklink-qr-card-title">Security findings</h3>
+                  <h3 className="checklink-qr-card-title">{t('qr_scanner.card_findings_title', 'Security findings')}</h3>
                   <span className="checklink-qr-count-badge">
                     {qrResult.indicators?.length || 0} indicators
                   </span>
@@ -584,42 +587,48 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
 
                 {qrResult.indicators && qrResult.indicators.length > 0 ? (
                   <div className="checklink-qr-findings-list">
-                    {qrResult.indicators.map((ind, idx) => (
-                      <div key={idx} className="checklink-qr-finding-item">
-                        <div className={`checklink-qr-icon-circle ${ind.severity}`}>
-                          {ind.severity === 'high' ? <AlertTriangle size={18} /> : <AlertCircle size={18} />}
+                    {qrResult.indicators.map((rawInd, idx) => {
+                      const ind = translateIndicator(rawInd, t);
+                      return (
+                        <div key={idx} className="checklink-qr-finding-item">
+                          <div className={`checklink-qr-icon-circle ${ind.severity}`}>
+                            {ind.severity === 'high' ? <AlertTriangle size={18} /> : <AlertCircle size={18} />}
+                          </div>
+                          <div>
+                            <div className="checklink-qr-finding-name">{ind.title || ind.name}</div>
+                            <p className="checklink-qr-finding-desc">{ind.description}</p>
+                          </div>
                         </div>
-                        <div>
-                          <div className="checklink-qr-finding-name">{ind.title || ind.name}</div>
-                          <p className="checklink-qr-finding-desc">{ind.description}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="checklink-qr-clean-box">
                     <CheckCircle2 size={20} color="#16a34a" />
-                    <span>No suspicious fraud indicators identified in this payment QR code.</span>
+                    <span>{t('qr_scanner.card_findings_clean', 'No suspicious fraud indicators identified in this payment QR code.')}</span>
                   </div>
                 )}
               </div>
 
               {/* Right Column: Recommended Next Steps */}
               <div className="checklink-qr-card">
-                <h3 className="checklink-qr-card-title">Recommended next steps</h3>
-                <p className="checklink-qr-card-sub">Follow safe payment practices before authorizing:</p>
+                <h3 className="checklink-qr-card-title">{t('qr_scanner.card_steps_title', 'Recommended next steps')}</h3>
+                <p className="checklink-qr-card-sub">{t('qr_scanner.card_steps_sub', 'Follow safe payment practices before authorizing:')}</p>
 
                 <div className="checklink-qr-steps-list">
-                  {qrResult.recommended_actions?.map((action, idx) => (
-                    <div key={idx} className="checklink-qr-step-item">
-                      <div className="checklink-qr-step-num">{idx + 1}</div>
-                      <p className="checklink-qr-step-text">{action}</p>
-                    </div>
-                  ))}
+                  {qrResult.recommended_actions?.map((rawAction, idx) => {
+                    const action = translateAction(rawAction, t);
+                    return (
+                      <div key={idx} className="checklink-qr-step-item">
+                        <div className="checklink-qr-step-num">{idx + 1}</div>
+                        <p className="checklink-qr-step-text">{action}</p>
+                      </div>
+                    );
+                  })}
                   <div className="checklink-qr-step-item">
                     <div className="checklink-qr-step-num">!</div>
                     <p className="checklink-qr-step-text">
-                      <strong>Golden Rule:</strong> UPI PIN is ONLY entered to send money. Entering your PIN never deposits or receives funds.
+                      <strong>{t('qr_scanner.golden_rule_title', 'Golden Rule:')}</strong> {t('qr_scanner.golden_rule_text', 'UPI PIN is ONLY entered to send money. Entering your PIN never deposits or receives funds.')}
                     </p>
                   </div>
                 </div>
@@ -644,7 +653,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 onClick={handleResetQr}
                 className="checklink-action-btn primary"
               >
-                <RotateCcw size={16} /> Scan another QR code
+                <RotateCcw size={16} /> {t('qr_scanner.btn_scan_another', 'Scan another QR code')}
               </button>
 
               <button
@@ -653,7 +662,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 className="checklink-action-btn secondary"
               >
                 {copied ? <Check size={16} color="#16a34a" /> : <Copy size={16} />}
-                {copied ? 'Copied summary!' : 'Copy security report'}
+                {copied ? t('qr_scanner.btn_copied', 'Copied summary!') : t('qr_scanner.btn_copy_report', 'Copy security report')}
               </button>
 
               <a
@@ -661,7 +670,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 className="checklink-action-btn secondary"
                 style={{ color: '#dc2626', textDecoration: 'none' }}
               >
-                <PhoneCall size={15} /> Helpline 1930
+                <PhoneCall size={15} /> {t('common.nav_report_1930', 'Helpline 1930')}
               </a>
             </div>
           </section>
@@ -952,7 +961,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 className={`checklink-mode-tab ${mode === 'url' ? 'active' : ''}`}
                 onClick={() => setMode('url')}
               >
-                <LinkIcon size={16} /> Website link
+                <LinkIcon size={16} /> {t('analyzer.tab_link', 'Website link')}
               </button>
               <button
                 type="button"
@@ -961,7 +970,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 className={`checklink-mode-tab ${mode === 'qr' ? 'active' : ''}`}
                 onClick={() => setMode('qr')}
               >
-                <QrCode size={16} /> QR code
+                <QrCode size={16} /> {t('qr_scanner.card_title', 'QR code')}
               </button>
             </div>
 
@@ -970,7 +979,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
               <form onSubmit={(e) => { e.preventDefault(); handleCheckUrl(); }}>
                 <div className="checklink-form-group">
                   <label htmlFor="url-input" className="checklink-field-label">
-                    WEBSITE ADDRESS
+                    {t('analyzer.tab_link', 'WEBSITE ADDRESS')}
                   </label>
                   <div className="checklink-input-wrapper">
                     <LinkIcon className="checklink-input-prefix-icon" aria-hidden="true" />
@@ -978,7 +987,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                       id="url-input"
                       type="text"
                       className="checklink-url-input"
-                      placeholder="https://paste-a-link-here.com"
+                      placeholder={t('analyzer.placeholder_url', 'https://paste-a-link-here.com')}
                       value={urlInput}
                       onChange={(e) => setUrlInput(e.target.value)}
                       disabled={loading}
@@ -1017,7 +1026,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                   disabled={loading || !urlInput.trim()}
                 >
                   <LinkIcon size={18} />
-                  {loading ? 'Checking address...' : 'Check link →'}
+                  {loading ? t('analyzer.btn_inspecting', 'Checking address...') : t('analyzer.btn_inspect_link', 'Check link →')}
                 </button>
 
                 <p className="checklink-prototype-note">
@@ -1042,7 +1051,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                   onChange={(e) => handleFileSelect(e.target.files?.[0])}
                 />
 
-                <h2 className="checklink-qr-header-title">QR Scanner</h2>
+                <h2 className="checklink-qr-header-title">{t('qr_scanner.header_title', 'QR Scanner')}</h2>
 
                 {/* Inner Dashed Dropzone matching Screenshot 1 */}
                 <div className="checklink-qr-dashed-dropzone">
@@ -1050,9 +1059,9 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                     <QrCode size={36} />
                   </div>
 
-                  <h3 className="checklink-qr-scanner-title">Scan QR Code</h3>
+                  <h3 className="checklink-qr-scanner-title">{t('qr_scanner.card_title', 'Scan QR Code')}</h3>
                   <p className="checklink-qr-scanner-subtitle">
-                    Use your camera or upload an image
+                    {t('qr_scanner.card_subtitle', 'Use your camera or upload an image')}
                   </p>
 
                   {/* Primary Buttons Row matching Screenshot 1 */}
@@ -1064,7 +1073,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                       disabled={loading || qrDecoding}
                     >
                       <Upload size={17} />
-                      <span>Upload QR Image</span>
+                      <span>{t('qr_scanner.btn_upload', 'Upload QR Image')}</span>
                     </button>
 
                     <button
@@ -1074,7 +1083,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                       disabled={loading || qrDecoding}
                     >
                       {isCameraActive ? <CameraOff size={17} /> : <Camera size={17} />}
-                      <span>{isCameraActive ? 'Close Camera' : 'Use Camera'}</span>
+                      <span>{isCameraActive ? t('qr_scanner.btn_close_camera', 'Close Camera') : t('qr_scanner.btn_camera', 'Use Camera')}</span>
                     </button>
                   </div>
                 </div>
@@ -1083,20 +1092,20 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 <div className="checklink-qr-tips-box">
                   <AlertCircle size={18} style={{ color: '#2563eb', flexShrink: 0, marginTop: '2px' }} />
                   <div className="checklink-qr-tips-text">
-                    For best results when uploading an image, ensure the QR code is clearly visible and well-lit. When using camera, hold steady and center the QR code in frame.
+                    {t('qr_scanner.tips', 'For best results when uploading an image, ensure the QR code is clearly visible and well-lit. When using camera, hold steady and center the QR code in frame.')}
                   </div>
                 </div>
 
                 {/* Context Input */}
                 <div style={{ marginTop: '16px' }}>
                   <label htmlFor="qr-context-input" style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    What did the sender claim? (Optional)
+                    {t('qr_scanner.sender_claim_label', 'What did the sender claim? (Optional)')}
                   </label>
                   <input
                     id="qr-context-input"
                     type="text"
                     className="checklink-url-input"
-                    placeholder="e.g. Buyer on OLX sent this to receive money, or caller offered refund..."
+                    placeholder={t('qr_scanner.sender_claim_placeholder', 'e.g. Buyer on OLX sent this to receive money, or caller offered refund...')}
                     value={qrContext}
                     onChange={(e) => setQrContext(e.target.value)}
                     style={{ fontSize: '13.5px', padding: '10px 14px' }}
@@ -1116,7 +1125,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                     <div className="checklink-camera-overlay">
                       <div className="checklink-camera-target" />
                       <div className="checklink-camera-target-label">
-                        Align QR code within the frame
+                        {t('qr_scanner.viewfinder_align', 'Align QR code within the frame')}
                       </div>
                     </div>
                     <button
@@ -1134,7 +1143,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 {qrDecoding && (
                   <div style={{ textAlign: 'center', padding: '16px', color: '#2563eb', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                     <div style={{ width: '16px', height: '16px', border: '2px solid #93c5fd', borderTopColor: '#2563eb', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                    <span>Analyzing QR code with safety engine...</span>
+                    <span>{t('qr_scanner.analyzing', 'Analyzing QR code with safety engine...')}</span>
                   </div>
                 )}
 
@@ -1148,7 +1157,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 {/* Quick Test Scenarios */}
                 <div style={{ marginTop: '22px' }}>
                   <div className="checklink-qr-samples-title">
-                    Or Test With Realistic Scenarios (1-Click Demo):
+                    {t('qr_scanner.samples_title', 'Or Test With Realistic Scenarios (1-Click Demo):')}
                   </div>
                   <div className="checklink-qr-samples-grid">
                     {SAMPLE_QR_SCENARIOS.map((sc, idx) => (

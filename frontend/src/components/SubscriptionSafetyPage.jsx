@@ -13,7 +13,9 @@ import {
   Info,
   DollarSign
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
+import LanguageSelector from './LanguageSelector';
 import '../styles/subscriptionSafety.css';
 
 const SAMPLE_INVOICES = [
@@ -114,6 +116,7 @@ const CANCELLATION_GUIDES = [
 ];
 
 export default function SubscriptionSafetyPage({ onNavigateHome, onNavigateCheckLink, onNavigateAnalyze }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('invoice'); // 'invoice' | 'directory' | 'cancellation' | 'calculator'
 
   // Tab 1: Invoice Scanner State
@@ -247,13 +250,16 @@ export default function SubscriptionSafetyPage({ onNavigateHome, onNavigateCheck
             </div>
           </a>
 
-          <button
-            type="button"
-            onClick={onNavigateHome}
-            className="subsafety-back-btn"
-          >
-            ← Back to home
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <LanguageSelector />
+            <button
+              type="button"
+              onClick={onNavigateHome}
+              className="subsafety-back-btn"
+            >
+              ← {t('common.nav_back_home', 'Back to home')}
+            </button>
+          </div>
         </nav>
       </header>
 

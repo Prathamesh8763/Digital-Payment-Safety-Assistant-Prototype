@@ -17,8 +17,9 @@ import {
   ExternalLink,
   Shield
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import FeedbackModal from './FeedbackModal';
-import { getBannerTheme, getBannerCopy, generateRedactedSummary } from '../utils/resultFormatters';
+import { getBannerTheme, getBannerCopy, generateRedactedSummary, translateIndicator, translateAction } from '../utils/resultFormatters';
 import '../styles/result.css';
 
 export default function ResultDisplay({ 
@@ -30,6 +31,7 @@ export default function ResultDisplay({
   onNavigateReport,
   onNavigateScamGuide
 }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
@@ -82,7 +84,7 @@ export default function ResultDisplay({
     || (domain ? `Link submitted for inspection: ${url_submitted || domain}` : summary);
 
   const bannerTheme = getBannerTheme(risk_level, status, activeStatus);
-  const bannerCopy = getBannerCopy(bannerTheme, activeStatus);
+  const bannerCopy = getBannerCopy(bannerTheme, activeStatus, t);
 
   // Stat Count (distinct warning indicators)
   const warningCount = safeIndicators.length > 0 
@@ -307,7 +309,8 @@ export default function ResultDisplay({
 
             <div className="v8-evidence-list">
               {safeIndicators.length > 0 ? (
-                safeIndicators.map((ind, idx) => {
+                safeIndicators.map((rawInd, idx) => {
+                  const ind = translateIndicator(rawInd, t);
                   const isHigh = ind.severity === 'high';
                   const isLink = ind.id && ind.id.includes('url');
                   return (
@@ -339,14 +342,14 @@ export default function ResultDisplay({
                       <AlertTriangle size={18} />
                     </div>
                     <div className="v8-evidence-content">
-                      <div className="v8-evidence-title">Suspicious Pattern Detected</div>
-                      <div className="v8-evidence-desc">{reason}</div>
+                      <div className="v8-evidence-title">{t('risks.headline_medium', 'Suspicious Pattern Detected')}</div>
+                      <div className="v8-evidence-desc">{translateAction(reason, t)}</div>
                     </div>
                   </div>
                 ))
               ) : (
                 <div style={{ padding: '1rem 0', color: '#166534', fontSize: '0.88rem' }}>
-                  ✓ No standard fraud indicators were identified in this message text.
+                  ✓ {t('qr_scanner.card_findings_clean', 'No standard fraud indicators were identified in this message text.')}
                 </div>
               )}
             </div>
@@ -354,8 +357,8 @@ export default function ResultDisplay({
 
           {/* Right Column: What to do next */}
           <div className="v8-card">
-            <h3 className="v8-card-title">What to do next</h3>
-            <p className="v8-card-sub">A safe response starts with a pause.</p>
+            <h3 className="v8-card-title">{t('qr_scanner.card_steps_title', 'What to do next')}</h3>
+            <p className="v8-card-sub">{t('qr_scanner.card_steps_sub', 'A safe response starts with a pause.')}</p>
 
             <div className="v8-step-list">
               {nextSteps.map((step, idx) => (
@@ -366,8 +369,8 @@ export default function ResultDisplay({
                     {step.icon === 'check' && <CheckCircle2 size={18} />}
                   </div>
                   <div>
-                    <div className="v8-step-title">{step.title}</div>
-                    <p className="v8-step-desc">{step.desc}</p>
+                    <div className="v8-step-title">{translateAction(step.title, t)}</div>
+                    <p className="v8-step-desc">{translateAction(step.desc, t)}</p>
                   </div>
                 </div>
               ))}

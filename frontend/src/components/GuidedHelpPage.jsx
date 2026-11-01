@@ -21,6 +21,8 @@ import {
   GUIDANCES,
   generateChecklistText
 } from '../utils/guidedHelpData';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from './LanguageSelector';
 import '../styles/guidedHelp.css';
 
 export default function GuidedHelpPage({
@@ -28,6 +30,7 @@ export default function GuidedHelpPage({
   onNavigateAnalyze,
   initialScenarioId = null
 }) {
+  const { t } = useTranslation();
   const [currentScenario, setCurrentScenario] = useState(
     initialScenarioId ? SCENARIOS.find((s) => s.id === initialScenarioId) || null : null
   );
@@ -169,24 +172,25 @@ export default function GuidedHelpPage({
 
           <nav className="v9-header-nav" aria-label="Main Navigation">
             <a href="#how-it-works" className="v9-nav-link" onClick={(e) => { e.preventDefault(); if (onNavigateHome) onNavigateHome(); }}>
-              How it works
+              {t('common.nav_how_it_works', 'How it works')}
             </a>
             <a href="#learn" className="v9-nav-link" onClick={(e) => { e.preventDefault(); if (onNavigateHome) onNavigateHome(); }}>
-              Learn
+              {t('common.nav_learn', 'Learn')}
             </a>
             <a href="#privacy" className="v9-nav-link" onClick={(e) => { e.preventDefault(); setShowPrivacyModal(true); }}>
-              Privacy
+              {t('common.nav_privacy', 'Privacy')}
             </a>
           </nav>
 
-          <div className="v9-header-actions">
+          <div className="v9-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <LanguageSelector />
             <button
               type="button"
               className="v9-btn-outline"
               onClick={onNavigateAnalyze}
               aria-label="Go to Analyze page"
             >
-              <span>Analyze</span>
+              <span>{t('analyzer.tab_message', 'Analyze')}</span>
             </button>
             <button
               type="button"
@@ -195,7 +199,7 @@ export default function GuidedHelpPage({
               aria-label="Back to home page"
             >
               <ArrowLeft size={14} aria-hidden="true" />
-              <span>Back to home</span>
+              <span>{t('common.nav_back_home', 'Back to home')}</span>
             </button>
           </div>
         </div>
