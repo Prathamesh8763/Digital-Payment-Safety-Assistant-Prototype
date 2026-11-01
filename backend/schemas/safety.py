@@ -327,10 +327,13 @@ class QRCheckResponse(BaseModel):
     reviewed_input: Optional[str] = None
     verification_status: Optional[str] = None
     raw_payload_preview: str
-    parsed_details: Dict[str, Any] = {}
-    indicators: List[DetectedIndicator]
-    why_suspicious: List[str]
-    recommended_actions: List[str]
+    parsed_details: Dict[str, Any] = Field(default_factory=dict)
+    payment_details: Optional[Dict[str, Any]] = None
+    indicators: List[DetectedIndicator] = Field(default_factory=list)
+    why_suspicious: List[str] = Field(default_factory=list)
+    recommended_actions: List[str] = Field(default_factory=list)
+    checks_performed: List[str] = Field(default_factory=list)
+    checks_unavailable: List[str] = Field(default_factory=list)
     educational_concept: EducationalConcept
     reference_id: str = "REF-QR-0000"
     analysis_id: Optional[str] = None
@@ -341,11 +344,21 @@ class QRCheckResponse(BaseModel):
         "Scanning a QR code only initiates an outgoing payment from your account."
     )
 
+    @field_validator(
+        "indicators", "why_suspicious", "recommended_actions", "checks_performed", "checks_unavailable",
+        mode="before"
+    )
+    @classmethod
+    def coerce_none_to_empty_list_qr(cls, v: Any) -> Any:
+        return [] if v is None else v
+
     def model_post_init(self, __context: Any) -> None:
         if self.analysis_id is None:
             self.analysis_id = self.reference_id
         if self.verification_status is None:
             self.verification_status = "flagged" if self.risk_level == "HIGH" else "unverified"
+        if self.payment_details is None and self.payload_type == "upi_intent":
+            self.payment_details = self.parsed_details
 
 class FeedbackRequest(BaseModel):
     reference_id: Optional[str] = Field(default=None, max_length=64, description="Optional assessment reference ID")

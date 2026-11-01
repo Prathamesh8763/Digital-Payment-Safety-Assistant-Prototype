@@ -417,6 +417,17 @@ class SafetyEngine:
         res.uncertainty_note = self._build_uncertainty_note(res.risk_level, len(res.indicators))
         return res
 
+    def analyze_qr_image(self, file_bytes: bytes, context: Optional[str] = None, language: str = "en") -> QRCheckResponse:
+        res = self.qr_service.decode_and_analyze_image(file_bytes, context=context, language=language)
+        res.reference_id = self._generate_ref_id("QR")
+        res.analysis_id = res.reference_id
+        res.reviewed_input = res.raw_payload_preview
+        res.verification_status = "flagged" if res.risk_level == "HIGH" else "unverified"
+        res.language = language
+        if not res.uncertainty_note:
+            res.uncertainty_note = self._build_uncertainty_note(res.risk_level, len(res.indicators))
+        return res
+
     def check_link(self, request: CheckLinkRequest) -> CheckLinkResponse:
         res = self.url_checker.check_link(request)
         res.reference_id = self._generate_ref_id("URL")

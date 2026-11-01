@@ -40,12 +40,14 @@ export async function request(endpoint, options = {}) {
     const cleanBase = (API_BASE || '').replace(/\/+$/, '');
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = endpoint.startsWith('http') ? endpoint : `${cleanBase}${cleanEndpoint}`;
+    const isFormData = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData;
+    const requestHeaders = isFormData
+      ? { ...headers }
+      : { 'Content-Type': 'application/json', ...headers };
+
     const response = await fetch(url, {
       ...fetchOptions,
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      },
+      headers: requestHeaders,
       signal: controller.signal
     });
 
@@ -189,12 +191,23 @@ export const apiClient = {
 
 
   /**
-   * Inspect a QR code payload
+   * Inspect a QR code payload string
    */
   async checkQr(payload, options = {}) {
     return request('/check/qr', {
       method: 'POST',
       body: JSON.stringify(payload),
+      ...options
+    });
+  },
+
+  /**
+   * Upload and inspect a QR code image directly using backend Python zxing-cpp
+   */
+  async checkQrImage(formData, options = {}) {
+    return request('/check/qr-image', {
+      method: 'POST',
+      body: formData,
       ...options
     });
   },

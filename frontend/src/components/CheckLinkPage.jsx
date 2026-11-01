@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Link as LinkIcon,
   QrCode,
@@ -14,11 +14,37 @@ import {
   Upload,
   X,
   CreditCard,
-  Globe
+  Globe,
+  Camera,
+  CameraOff,
+  PhoneCall
 } from 'lucide-react';
 import jsQR from 'jsqr';
 import apiClient from '../services/apiClient';
 import '../styles/checkLink.css';
+
+const SAMPLE_QR_SCENARIOS = [
+  {
+    label: '⚠️ Amazon Refund Trap',
+    payload: 'upi://pay?pa=refundamazon@okhdfc&pn=Unknown&am=2500&cu=INR&tn=Headphones%20order',
+    context: 'Caller claiming to be Amazon support told me to scan this to get refund for damaged headphones'
+  },
+  {
+    label: '⚠️ OLX Reverse Collect',
+    payload: 'upi://pay?pa=buyeradvance@okaxis&pn=BuyerOLX&am=4500&cu=INR&tn=Advance%20Payment',
+    context: 'Buyer told me to scan this QR and enter UPI PIN to receive ₹4,500 advance for sofa'
+  },
+  {
+    label: '✓ Daily Grocery (Sharma Tea)',
+    payload: 'upi://pay?pa=sharmateastall@icici&pn=Sharma%20Tea%20Stall&am=40&cu=INR&mc=5411',
+    context: 'Counter QR code at local tea stall'
+  },
+  {
+    label: '⚠️ Fake Bank KYC Web Link',
+    payload: 'http://sbi-kyc-update.top/login.apk',
+    context: 'QR code asking to update PAN'
+  }
+];
 
 export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNavigateGuided }) {
   const [mode, setMode] = useState('url'); // 'url' | 'qr'
@@ -29,13 +55,20 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
   const [copied, setCopied] = useState(false);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
-  // QR state
-  const [qrFile, setQrFile] = useState(null);
+  // QR Payment Analyzer State
+  const [_qrFile, setQrFile] = useState(null);
   const [qrPayload, setQrPayload] = useState('');
-  const [qrIsUrl, setQrIsUrl] = useState(false);
+  const [qrResult, setQrResult] = useState(null);
+  const [qrContext, setQrContext] = useState('');
   const [qrError, setQrError] = useState('');
   const [qrDecoding, setQrDecoding] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+
   const fileInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const animFrameRef = useRef(null);
 
   // Submit URL Check
   const handleCheckUrl = async (urlToCheck) => {
@@ -62,12 +95,72 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
     }
   };
 
-  // QR File Handling
-  const handleFileSelect = (file) => {
+  // Camera cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  // Analyze QR payload string directly
+  const handleAnalyzeQrPayload = async (rawPayload, contextText = '') => {
+    if (!rawPayload || !rawPayload.trim()) return;
+    setLoading(true);
+    setQrError('');
+    setQrResult(null);
+
+    try {
+      const res = await apiClient.checkQr({
+        payload: rawPayload.trim(),
+        context: contextText || qrContext.trim() || undefined
+      });
+      setQrResult(res);
+      setQrPayload(rawPayload.trim());
+    } catch (err) {
+      setQrError(err.message || 'Unable to complete QR code safety analysis.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Decode with client-side jsQR fallback
+  const decodeWithJsQr = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, img.width, img.height);
+          const imageData = ctx.getImageData(0, 0, img.width, img.height);
+          const decoded = jsQR(imageData.data, imageData.width, imageData.height);
+          if (decoded && decoded.data) {
+            resolve(decoded.data.trim());
+          } else {
+            resolve(null);
+          }
+        };
+        img.onerror = () => reject(new Error('Failed to load image file.'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Failed to read image file.'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Upload QR Image Handling (Backend zxing-cpp + Client jsQR fallback)
+  const handleFileSelect = async (file) => {
     if (!file) return;
     setQrError('');
+    setCameraError('');
+    setQrResult(null);
     setQrPayload('');
-    setQrIsUrl(false);
     setQrFile(file);
 
     // Validate size (max 5MB)
@@ -84,39 +177,139 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
     }
 
     setQrDecoding(true);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, img.width, img.height);
-        const imageData = ctx.getImageData(0, 0, img.width, img.height);
-        const decoded = jsQR(imageData.data, imageData.width, imageData.height);
 
-        setQrDecoding(false);
-        if (decoded && decoded.data) {
-          const payload = decoded.data.trim();
-          setQrPayload(payload);
-          const isWebUrl = /^https?:\/\//i.test(payload) || /^[a-z0-9-]+(\.[a-z0-9-]+)+/i.test(payload);
-          setQrIsUrl(isWebUrl);
-        } else {
-          setQrError("We couldn't find a readable QR code in this image. Try a clearer image showing the full code.");
-        }
-      };
-      img.onerror = () => {
-        setQrDecoding(false);
-        setQrError('Could not process this image. Please try another file.');
-      };
-      img.src = e.target.result;
-    };
-    reader.onerror = () => {
+    // 1. Primary: Send directly to backend Python zxing-cpp + Pillow decoder
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (qrContext.trim()) {
+        formData.append('context', qrContext.trim());
+      }
+      const res = await apiClient.checkQrImage(formData);
+      setQrResult(res);
+      setQrPayload(res.raw_payload_preview || '');
       setQrDecoding(false);
-      setQrError('Failed to read the selected file.');
-    };
-    reader.readAsDataURL(file);
+      return;
+    } catch (backendErr) {
+      // 2. Secondary: Client-side jsQR Canvas decode fallback
+      try {
+        const clientPayload = await decodeWithJsQr(file);
+        if (clientPayload) {
+          setQrPayload(clientPayload);
+          const res = await apiClient.checkQr({
+            payload: clientPayload,
+            context: qrContext.trim() || undefined
+          });
+          setQrResult(res);
+          setQrDecoding(false);
+          return;
+        } else {
+          setQrError(backendErr.message || "No readable QR code found in this image. Please ensure the QR code is clearly visible and well-lit.");
+        }
+      } catch (clientErr) {
+        setQrError(backendErr.message || clientErr.message || "Failed to decode QR code. Please try another image.");
+      }
+    } finally {
+      setQrDecoding(false);
+    }
+  };
+
+  // Camera Management
+  const startCamera = async () => {
+    setCameraError('');
+    setQrError('');
+    setQrResult(null);
+    setIsCameraActive(true);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        animFrameRef.current = requestAnimationFrame(scanCameraFrame);
+      }
+    } catch {
+      setIsCameraActive(false);
+      setCameraError('Camera access not granted or unavailable on this device. Please use "Upload QR Image".');
+    }
+  };
+
+  const stopCamera = () => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const scanCameraFrame = () => {
+    if (!videoRef.current || videoRef.current.readyState !== videoRef.current.HAVE_ENOUGH_DATA) {
+      if (streamRef.current) {
+        animFrameRef.current = requestAnimationFrame(scanCameraFrame);
+      }
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+    if (code && code.data) {
+      stopCamera();
+      handleAnalyzeQrPayload(code.data);
+    } else if (streamRef.current) {
+      animFrameRef.current = requestAnimationFrame(scanCameraFrame);
+    }
+  };
+
+  // Copy QR Summary
+  const handleCopyQrSummary = () => {
+    if (!qrResult) return;
+    const details = qrResult.payment_details || qrResult.parsed_details || {};
+    const text = [
+      '--- ClearPay QR Payment Security Assessment ---',
+      `Risk Level: ${qrResult.risk_level}`,
+      `Risk Score: ${qrResult.risk_score}/100`,
+      `Type: ${qrResult.payload_type.toUpperCase()}`,
+      details.payee_name ? `Recipient Name: ${details.payee_name}` : null,
+      details.payee_vpa ? `UPI ID (VPA): ${details.payee_vpa}` : null,
+      details.amount ? `Amount: ${details.amount}` : null,
+      details.transaction_note ? `Note: ${details.transaction_note}` : null,
+      '',
+      'Security Findings:',
+      ...(qrResult.indicators?.map(i => `• ${i.title || i.name}: ${i.description}`) || ['• Standard format without flagged indicators']),
+      '',
+      'Recommendations:',
+      ...(qrResult.recommended_actions?.map(a => `• ${a}`) || ['• Verify independently in your banking app before entering your PIN']),
+      '',
+      `Notice: ${qrResult.disclaimer || 'A QR code can only send money. Never enter a UPI PIN to receive money.'}`
+    ].filter(Boolean).join('\n');
+
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleResetQr = () => {
+    stopCamera();
+    setQrFile(null);
+    setQrPayload('');
+    setQrResult(null);
+    setQrError('');
+    setCameraError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // Copy Summary with Redaction
@@ -240,7 +433,183 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
           </div>
         </div>
 
-        {/* Live Result View (if check has run) */}
+        {/* Live QR Payment Security Report */}
+        {qrResult && (
+          <section className="checklink-qr-result-container" aria-label="QR Payment Security Report">
+            {/* Status Banner */}
+            <div className={`checklink-qr-banner ${qrResult.risk_level.toLowerCase()}`}>
+              <div className="checklink-qr-banner-left">
+                <div className="checklink-qr-banner-icon">
+                  {qrResult.risk_level === 'HIGH' && <AlertTriangle size={26} color="#dc2626" />}
+                  {qrResult.risk_level === 'MEDIUM' && <AlertCircle size={26} color="#d97706" />}
+                  {qrResult.risk_level === 'LOW' && <ShieldCheck size={26} color="#16a34a" />}
+                </div>
+                <div>
+                  <span className="checklink-qr-banner-badge">
+                    {qrResult.risk_level === 'HIGH' && 'HIGH RISK • POTENTIAL THREAT'}
+                    {qrResult.risk_level === 'MEDIUM' && 'MEDIUM RISK • NEEDS ATTENTION'}
+                    {qrResult.risk_level === 'LOW' && 'LOW RISK • STANDARD PAYMENT FORMAT'}
+                  </span>
+                  <h2 className="checklink-qr-banner-headline">
+                    {qrResult.risk_level === 'HIGH' && 'Do not proceed — potential payment manipulation detected.'}
+                    {qrResult.risk_level === 'MEDIUM' && 'Caution advised — unverified recipient or pre-filled amount.'}
+                    {qrResult.risk_level === 'LOW' && 'Payment format valid. Verify details in your UPI app.'}
+                  </h2>
+                  <p className="checklink-qr-banner-subtext">
+                    {qrResult.uncertainty_note}
+                  </p>
+                </div>
+              </div>
+              <div className="checklink-qr-stat-box">
+                <div className="checklink-qr-stat-num">{qrResult.indicators?.length || 0}</div>
+                <div className="checklink-qr-stat-label">
+                  {qrResult.indicators?.length === 1 ? 'warning signal' : 'warning signals'}
+                </div>
+              </div>
+            </div>
+
+            {/* UPI Payment Breakdown Card (Matching Screenshot 2 & PRD Section 3.2) */}
+            {qrResult.payload_type === 'upi_intent' && qrResult.payment_details && (
+              <div className="checklink-payment-details-card">
+                <div className="checklink-payment-amount-hero">
+                  <span className="checklink-payment-amount-label">PAYMENT AMOUNT (OUTGOING DEBIT)</span>
+                  <div className="checklink-payment-amount-val">
+                    {qrResult.payment_details.amount || 'User enters amount in app'}
+                  </div>
+                  <span className="checklink-payment-amount-notice">
+                    ⚠️ Scanning a QR code can ONLY send money from your account. You NEVER receive money.
+                  </span>
+                </div>
+
+                <div className="checklink-payment-grid">
+                  <div className="checklink-payment-item">
+                    <span className="checklink-payment-label">RECIPIENT NAME</span>
+                    <div className="checklink-payment-value payee-name">
+                      {qrResult.payment_details.payee_name || 'Not Provided / Concealed'}
+                    </div>
+                  </div>
+
+                  <div className="checklink-payment-item">
+                    <span className="checklink-payment-label">RECIPIENT UPI ID (VPA)</span>
+                    <div className="checklink-payment-value upi-id">
+                      <code>{qrResult.payment_details.payee_vpa || 'Missing'}</code>
+                    </div>
+                  </div>
+
+                  <div className="checklink-payment-item">
+                    <span className="checklink-payment-label">TRANSACTION NOTE</span>
+                    <div className="checklink-payment-value">
+                      {qrResult.payment_details.transaction_note || 'None specified'}
+                    </div>
+                  </div>
+
+                  <div className="checklink-payment-item">
+                    <span className="checklink-payment-label">CURRENCY</span>
+                    <div className="checklink-payment-value">
+                      {qrResult.payment_details.currency || 'INR'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Two-Column Findings & Actions Grid */}
+            <div className="checklink-qr-two-col">
+              {/* Left Column: Security Findings */}
+              <div className="checklink-qr-card">
+                <div className="checklink-qr-card-header">
+                  <h3 className="checklink-qr-card-title">Security findings</h3>
+                  <span className="checklink-qr-count-badge">
+                    {qrResult.indicators?.length || 0} indicators
+                  </span>
+                </div>
+
+                {qrResult.indicators && qrResult.indicators.length > 0 ? (
+                  <div className="checklink-qr-findings-list">
+                    {qrResult.indicators.map((ind, idx) => (
+                      <div key={idx} className="checklink-qr-finding-item">
+                        <div className={`checklink-qr-icon-circle ${ind.severity}`}>
+                          {ind.severity === 'high' ? <AlertTriangle size={18} /> : <AlertCircle size={18} />}
+                        </div>
+                        <div>
+                          <div className="checklink-qr-finding-name">{ind.title || ind.name}</div>
+                          <p className="checklink-qr-finding-desc">{ind.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="checklink-qr-clean-box">
+                    <CheckCircle2 size={20} color="#16a34a" />
+                    <span>No suspicious fraud indicators identified in this payment QR code.</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Recommended Next Steps */}
+              <div className="checklink-qr-card">
+                <h3 className="checklink-qr-card-title">Recommended next steps</h3>
+                <p className="checklink-qr-card-sub">Follow safe payment practices before authorizing:</p>
+
+                <div className="checklink-qr-steps-list">
+                  {qrResult.recommended_actions?.map((action, idx) => (
+                    <div key={idx} className="checklink-qr-step-item">
+                      <div className="checklink-qr-step-num">{idx + 1}</div>
+                      <p className="checklink-qr-step-text">{action}</p>
+                    </div>
+                  ))}
+                  <div className="checklink-qr-step-item">
+                    <div className="checklink-qr-step-num">!</div>
+                    <p className="checklink-qr-step-text">
+                      <strong>Golden Rule:</strong> UPI PIN is ONLY entered to send money. Entering your PIN never deposits or receives funds.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Collapsible Decoded Content */}
+            <details className="checklink-qr-raw-accordion">
+              <summary className="checklink-qr-raw-summary">
+                <span>View Decoded Raw QR Payload</span>
+                <span className="checklink-qr-raw-pill">{qrResult.payload_type.toUpperCase()}</span>
+              </summary>
+              <div className="checklink-qr-raw-body">
+                <code>{qrResult.raw_payload_preview || qrPayload}</code>
+              </div>
+            </details>
+
+            {/* Bottom Actions */}
+            <div className="checklink-qr-actions-row">
+              <button
+                type="button"
+                onClick={handleResetQr}
+                className="checklink-action-btn primary"
+              >
+                <RotateCcw size={16} /> Scan another QR code
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCopyQrSummary}
+                className="checklink-action-btn secondary"
+              >
+                {copied ? <Check size={16} color="#16a34a" /> : <Copy size={16} />}
+                {copied ? 'Copied summary!' : 'Copy security report'}
+              </button>
+
+              <a
+                href="tel:1930"
+                className="checklink-action-btn secondary"
+                style={{ color: '#dc2626', textDecoration: 'none' }}
+              >
+                <PhoneCall size={15} /> Helpline 1930
+              </a>
+            </div>
+          </section>
+        )}
+
+        {/* Live Result View (if URL check has run) */}
         {result && (
           <section className="checklink-result-card" aria-label="Check Result">
             <div className={`checklink-result-status-banner ${result.status}`}>
@@ -605,8 +974,8 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
             )}
 
             {/* Mode 2: QR Code Mode */}
-            {mode === 'qr' && (
-              <div>
+            {mode === 'qr' && !qrResult && (
+              <div className="checklink-qr-scanner-card">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -615,87 +984,144 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                   onChange={(e) => handleFileSelect(e.target.files?.[0])}
                 />
 
-                {!qrFile && (
-                  <div
-                    className="checklink-qr-dropzone"
+                <div className="checklink-qr-icon-hero">
+                  <QrCode size={34} />
+                </div>
+
+                <h3 className="checklink-qr-scanner-title">Scan QR Code</h3>
+                <p className="checklink-qr-scanner-subtitle">
+                  Use your camera or upload an image to inspect recipient identity and check for payment fraud.
+                </p>
+
+                {/* Primary Buttons Row matching Screenshot 1 */}
+                <div className="checklink-qr-btn-row">
+                  <button
+                    type="button"
+                    className="checklink-qr-upload-btn"
                     onClick={() => fileInputRef.current?.click()}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+                    disabled={loading || qrDecoding}
                   >
-                    <Upload className="checklink-qr-dropzone-icon" />
-                    <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a', marginBottom: '4px' }}>
-                      Click to upload a QR code image
+                    <Upload size={17} />
+                    <span>Upload QR Image</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="checklink-qr-camera-btn"
+                    onClick={isCameraActive ? stopCamera : startCamera}
+                    disabled={loading || qrDecoding}
+                  >
+                    {isCameraActive ? <CameraOff size={17} /> : <Camera size={17} />}
+                    <span>{isCameraActive ? 'Close Camera' : 'Use Camera'}</span>
+                  </button>
+                </div>
+
+                {/* Context Input */}
+                <div style={{ marginTop: '12px' }}>
+                  <label htmlFor="qr-context-input" style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    What did the sender claim? (Optional)
+                  </label>
+                  <input
+                    id="qr-context-input"
+                    type="text"
+                    className="checklink-url-input"
+                    placeholder="e.g. Buyer on OLX sent this to receive money, or caller offered refund..."
+                    value={qrContext}
+                    onChange={(e) => setQrContext(e.target.value)}
+                    style={{ fontSize: '13.5px', padding: '10px 14px' }}
+                  />
+                </div>
+
+                {/* Live Camera Viewfinder Overlay (Matching Screenshot 2) */}
+                {isCameraActive && (
+                  <div className="checklink-camera-modal">
+                    <video
+                      ref={videoRef}
+                      playsInline
+                      autoPlay
+                      muted
+                      className="checklink-camera-video"
+                    />
+                    <div className="checklink-camera-overlay">
+                      <div className="checklink-camera-target" />
+                      <div className="checklink-camera-target-label">
+                        Align QR code within the frame
+                      </div>
                     </div>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>
-                      Supports PNG, JPG, or WebP up to 5 MB
-                    </div>
+                    <button
+                      type="button"
+                      className="checklink-camera-close-btn"
+                      onClick={stopCamera}
+                      aria-label="Close camera"
+                    >
+                      <X size={20} />
+                    </button>
                   </div>
                 )}
 
+                {/* Decoding Progress Indicator */}
                 {qrDecoding && (
-                  <div style={{ textAlign: 'center', padding: '20px', color: '#2563eb' }}>
-                    Decoding QR code image...
+                  <div style={{ textAlign: 'center', padding: '16px', color: '#2563eb', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <div style={{ width: '16px', height: '16px', border: '2px solid #93c5fd', borderTopColor: '#2563eb', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    <span>Analyzing QR code with safety engine...</span>
                   </div>
                 )}
 
-                {qrError && (
-                  <div style={{ color: '#dc2626', fontSize: '13.5px', marginTop: '14px', background: '#fef2f2', padding: '10px 14px', borderRadius: '8px' }}>
-                    {qrError}
-                    <div style={{ marginTop: '8px' }}>
+                {/* Error messages */}
+                {(qrError || cameraError) && (
+                  <div style={{ color: '#dc2626', fontSize: '13.5px', marginTop: '14px', background: '#fef2f2', padding: '12px 14px', borderRadius: '8px', border: '1px solid #fecaca' }}>
+                    {qrError || cameraError}
+                  </div>
+                )}
+
+                {/* Tips Box Matching Screenshot 1 */}
+                <div className="checklink-qr-tips-box">
+                  <AlertCircle size={18} style={{ color: '#2563eb', flexShrink: 0, marginTop: '2px' }} />
+                  <div className="checklink-qr-tips-text">
+                    For best results when uploading an image, ensure the QR code is clearly visible and well-lit. When using camera, hold steady and center the QR code in frame.
+                  </div>
+                </div>
+
+                {/* Quick Test Scenarios */}
+                <div style={{ marginTop: '22px' }}>
+                  <div className="checklink-qr-samples-title">
+                    Or Test With Realistic Scenarios (1-Click Demo):
+                  </div>
+                  <div className="checklink-qr-samples-grid">
+                    {SAMPLE_QR_SCENARIOS.map((sc, idx) => (
                       <button
+                        key={idx}
                         type="button"
-                        onClick={() => { setQrFile(null); setQrError(''); }}
-                        className="checklink-action-btn secondary"
-                        style={{ padding: '6px 12px', fontSize: '12.5px' }}
+                        className={`checklink-qr-sample-pill ${sc.label.includes('⚠️') ? 'high' : ''}`}
+                        onClick={() => {
+                          setQrContext(sc.context);
+                          handleAnalyzeQrPayload(sc.payload, sc.context);
+                        }}
                       >
-                        Try another image
+                        {sc.label}
                       </button>
-                    </div>
+                    ))}
                   </div>
-                )}
+                </div>
+              </div>
+            )}
 
-                {qrFile && qrPayload && (
-                  <div className="checklink-qr-preview-box">
-                    <div className="checklink-qr-preview-header">
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>
-                        Decoded QR Code Destination:
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => { setQrFile(null); setQrPayload(''); }}
-                        style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '12px' }}
-                      >
-                        Change image
-                      </button>
-                    </div>
-
-                    <div className="checklink-qr-payload-text">
-                      {qrPayload}
-                    </div>
-
-                    {qrIsUrl ? (
-                      <div style={{ marginTop: '16px' }}>
-                        <div style={{ fontSize: '13px', color: '#166534', marginBottom: '8px', fontWeight: 600 }}>
-                          ✓ Website destination detected. Review before checking:
-                        </div>
-                        <button
-                          type="button"
-                          className="checklink-submit-btn"
-                          disabled={loading}
-                          onClick={() => handleCheckUrl(qrPayload)}
-                        >
-                          <LinkIcon size={18} />
-                          {loading ? 'Checking link...' : 'Check this link →'}
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ marginTop: '14px', background: '#eff6ff', padding: '12px', borderRadius: '8px', fontSize: '13px', color: '#1e40af' }}>
-                        <strong>Non-URL QR Code:</strong> This QR code contains plain text or a payment string rather than a web address. ClearPay will not open it as a website.
-                      </div>
-                    )}
-                  </div>
-                )}
+            {/* If QR result is active, show small reset banner in input column */}
+            {mode === 'qr' && qrResult && (
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
+                <CheckCircle2 size={32} color="#16a34a" style={{ margin: '0 auto 8px' }} />
+                <h4 style={{ margin: '0 0 6px', fontSize: '16px', color: '#0f172a' }}>QR Code Analysis Completed</h4>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#64748b' }}>
+                  Review the safety assessment and recipient details above.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResetQr}
+                  className="checklink-action-btn primary"
+                  style={{ width: '100%', justifyContent: 'center' }}
+                >
+                  <RotateCcw size={16} /> Scan Another QR Code
+                </button>
               </div>
             )}
           </div>

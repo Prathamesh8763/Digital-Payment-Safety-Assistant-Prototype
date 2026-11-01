@@ -3,7 +3,7 @@ import re
 import time
 import logging
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel, Field
@@ -176,6 +176,40 @@ def check_qr(payload: QRCheckRequest):
     if not payload.payload or len(payload.payload.strip()) < 1:
         raise HTTPException(status_code=400, detail="QR payload cannot be empty.")
     return engine.analyze_qr(payload)
+
+@app.post("/api/check/qr-image", response_model=QRCheckResponse)
+@app.post("/check/qr-image", response_model=QRCheckResponse)
+async def check_qr_image(
+    file: UploadFile = File(...),
+    context: Optional[str] = Form(None),
+    language: Optional[str] = Form("en")
+):
+    """
+    Decodes and analyzes an uploaded QR code image directly using Python zxing-cpp and Pillow.
+    Extracts UPI payment parameters, detects reverse collect traps, and inspects deceptive recipients.
+    """
+    allowed_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"]
+    content_type = (file.content_type or "").lower()
+    if content_type and content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported image format. Please upload a PNG, JPEG, or WebP image."
+        )
+
+    file_bytes = await file.read()
+    if len(file_bytes) > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=413,
+            detail="File size exceeds the 5 MB limit. Please select a smaller image."
+        )
+
+    try:
+        return engine.analyze_qr_image(file_bytes, context=context, language=language or "en")
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error processing QR image: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process QR image.")
 
 @app.post("/api/feedback", response_model=FeedbackResponse)
 @app.post("/feedback", response_model=FeedbackResponse)
