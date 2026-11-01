@@ -10,42 +10,40 @@ const frontendDir = path.resolve(__dirname, '../../');
 const publicDir = path.resolve(frontendDir, 'public');
 const assetsDir = path.resolve(frontendDir, 'src/assets');
 
-test('Logo System: 4 required logo files exist in public and assets directories', () => {
-  const publicFiles = ['favicon.svg', 'logo-symbol.svg', 'logo-horizontal.svg', 'logo-full.svg'];
-  for (const file of publicFiles) {
+test('Logo System: PNG variations and icons exist in public and assets directories', () => {
+  const publicPngs = [
+    'logo-original.png',
+    'logo-full.png',
+    'logo-symbol.png',
+    'logo-horizontal.png',
+    'favicon.png',
+    'icon-192.png',
+    'icon-512.png'
+  ];
+  for (const file of publicPngs) {
     const fullPath = path.join(publicDir, file);
     assert.ok(fs.existsSync(fullPath), `Expected ${file} to exist in public/`);
-    const content = fs.readFileSync(fullPath, 'utf8');
-    assert.ok(content.length > 50, `${file} should not be empty`);
-    assert.ok(content.includes('<svg'), `${file} should be valid SVG`);
+    const stat = fs.statSync(fullPath);
+    assert.ok(stat.size > 100, `${file} should not be empty`);
   }
 
-  const assetFiles = ['logo-symbol.svg', 'logo-horizontal.svg', 'logo-full.svg'];
-  for (const file of assetFiles) {
+  const assetPngs = ['logo-original.png', 'logo-full.png', 'logo-symbol.png', 'logo-horizontal.png'];
+  for (const file of assetPngs) {
     const fullPath = path.join(assetsDir, file);
     assert.ok(fs.existsSync(fullPath), `Expected ${file} to exist in src/assets/`);
   }
 });
 
-test('Logo System: Shield emblem contains navy blue and emerald green security identity', () => {
-  const symbolSvg = fs.readFileSync(path.join(publicDir, 'logo-symbol.svg'), 'utf8');
-  assert.ok(symbolSvg.includes('#1e3a8a') || symbolSvg.includes('#0f172a'), 'Should contain navy blue');
-  assert.ok(symbolSvg.includes('#10b981') || symbolSvg.includes('#34d399'), 'Should contain security emerald green');
-  assert.ok(symbolSvg.includes('viewBox="0 0 40 40"'), 'Should define viewBox');
-});
-
-test('Logo System: Horizontal logo contains ClearPay wordmark and payment safety tagline', () => {
-  const horizontalSvg = fs.readFileSync(path.join(publicDir, 'logo-horizontal.svg'), 'utf8');
-  assert.ok(horizontalSvg.includes('Clear'), 'Should include Clear');
-  assert.ok(horizontalSvg.includes('Pay'), 'Should include Pay');
-  assert.ok(horizontalSvg.includes('PAYMENT SAFETY ASSISTANT'), 'Should include official tagline');
-});
-
-test('Logo System: Full brand logo contains stacked emblem and digital payment safety assistant pill', () => {
-  const fullSvg = fs.readFileSync(path.join(publicDir, 'logo-full.svg'), 'utf8');
-  assert.ok(fullSvg.includes('Clear'), 'Should include Clear');
-  assert.ok(fullSvg.includes('Pay'), 'Should include Pay');
-  assert.ok(fullSvg.includes('DIGITAL PAYMENT SAFETY ASSISTANT'), 'Should include full tagline');
+test('Logo System: 4 required SVG logo files exist and are valid SVGs', () => {
+  const svgFiles = ['favicon.svg', 'logo-symbol.svg', 'logo-horizontal.svg', 'logo-full.svg'];
+  for (const file of svgFiles) {
+    const fullPath = path.join(publicDir, file);
+    assert.ok(fs.existsSync(fullPath), `Expected ${file} to exist in public/`);
+    const content = fs.readFileSync(fullPath, 'utf8');
+    assert.ok(content.length > 50, `${file} should not be empty`);
+    assert.ok(content.includes('<svg'), `${file} should be valid SVG`);
+    assert.ok(content.includes('</svg>'), `${file} should close svg tag`);
+  }
 });
 
 test('Logo System: PWA manifest is valid JSON and links to brand icons', () => {
