@@ -468,45 +468,103 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
               </div>
             </div>
 
-            {/* UPI Payment Breakdown Card (Matching Screenshot 2 & PRD Section 3.2) */}
+            {/* UPI Payment Breakdown & Phone Simulation (Matching Screenshot 3) */}
             {qrResult.payload_type === 'upi_intent' && qrResult.payment_details && (
-              <div className="checklink-payment-details-card">
-                <div className="checklink-payment-amount-hero">
-                  <span className="checklink-payment-amount-label">PAYMENT AMOUNT (OUTGOING DEBIT)</span>
-                  <div className="checklink-payment-amount-val">
-                    {qrResult.payment_details.amount || 'User enters amount in app'}
+              <div className="checklink-upi-simulation-wrapper">
+                {/* Left: Mobile UPI Screen Mockup (Matching Screenshot 3) */}
+                <div className="checklink-phone-mockup" aria-label="Simulated Mobile UPI App Interface">
+                  <div className="phone-mockup-header">
+                    <button type="button" className="phone-cancel-btn">
+                      ← Cancel Payment
+                    </button>
                   </div>
-                  <span className="checklink-payment-amount-notice">
-                    ⚠️ Scanning a QR code can ONLY send money from your account. You NEVER receive money.
-                  </span>
+
+                  <div className="phone-amount-display">
+                    <div className="phone-currency-amount">
+                      {qrResult.payment_details.amount || '₹0.00'}
+                    </div>
+                    <div className="phone-vpa-handle">
+                      {qrResult.payment_details.payee_vpa || 'recipient@upi'}
+                    </div>
+                    {qrResult.payment_details.transaction_note && (
+                      <span className="phone-note-pill">
+                        {qrResult.payment_details.transaction_note}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="phone-recipient-card">
+                    <div className="phone-avatar-circle">
+                      {(qrResult.payment_details.payee_name || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="phone-recipient-info">
+                      <div className="phone-recipient-name">
+                        {qrResult.payment_details.payee_name || 'Unknown'}
+                      </div>
+                      <div className="phone-recipient-sub">
+                        {qrResult.payment_details.payee_vpa}
+                      </div>
+                    </div>
+                    <span className="phone-chevron" aria-hidden="true">▾</span>
+                  </div>
+
+                  <button type="button" className="phone-proceed-btn" disabled>
+                    Proceed to Payment
+                  </button>
+
+                  <div className="phone-scam-alert-callout">
+                    🚨 <strong>TRAP WARNING:</strong> Tapping this in PhonePe / GPay / Paytm will debit{' '}
+                    <strong>{qrResult.payment_details.amount || 'money'}</strong> from your bank account!
+                  </div>
+
+                  {/* Simulated Numeric Keypad */}
+                  <div className="phone-keypad-grid" aria-hidden="true">
+                    <span>1</span><span>2</span><span>3</span>
+                    <span>4</span><span>5</span><span>6</span>
+                    <span>7</span><span>8</span><span>9</span>
+                    <span>.</span><span>0</span><span>⌫</span>
+                  </div>
                 </div>
 
-                <div className="checklink-payment-grid">
-                  <div className="checklink-payment-item">
-                    <span className="checklink-payment-label">RECIPIENT NAME</span>
-                    <div className="checklink-payment-value payee-name">
-                      {qrResult.payment_details.payee_name || 'Not Provided / Concealed'}
+                {/* Right: Technical Breakdown & Inspector */}
+                <div className="checklink-payment-details-card" style={{ marginBottom: 0 }}>
+                  <div className="checklink-payment-amount-hero">
+                    <span className="checklink-payment-amount-label">PAYMENT AMOUNT (OUTGOING DEBIT)</span>
+                    <div className="checklink-payment-amount-val">
+                      {qrResult.payment_details.amount || 'User enters amount in app'}
                     </div>
+                    <span className="checklink-payment-amount-notice">
+                      ⚠️ Scanning a QR code can ONLY send money from your account. You NEVER receive money.
+                    </span>
                   </div>
 
-                  <div className="checklink-payment-item">
-                    <span className="checklink-payment-label">RECIPIENT UPI ID (VPA)</span>
-                    <div className="checklink-payment-value upi-id">
-                      <code>{qrResult.payment_details.payee_vpa || 'Missing'}</code>
+                  <div className="checklink-payment-grid">
+                    <div className="checklink-payment-item">
+                      <span className="checklink-payment-label">RECIPIENT NAME</span>
+                      <div className="checklink-payment-value payee-name">
+                        {qrResult.payment_details.payee_name || 'Not Provided / Concealed'}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="checklink-payment-item">
-                    <span className="checklink-payment-label">TRANSACTION NOTE</span>
-                    <div className="checklink-payment-value">
-                      {qrResult.payment_details.transaction_note || 'None specified'}
+                    <div className="checklink-payment-item">
+                      <span className="checklink-payment-label">RECIPIENT UPI ID (VPA)</span>
+                      <div className="checklink-payment-value upi-id">
+                        <code>{qrResult.payment_details.payee_vpa || 'Missing'}</code>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="checklink-payment-item">
-                    <span className="checklink-payment-label">CURRENCY</span>
-                    <div className="checklink-payment-value">
-                      {qrResult.payment_details.currency || 'INR'}
+                    <div className="checklink-payment-item">
+                      <span className="checklink-payment-label">TRANSACTION NOTE</span>
+                      <div className="checklink-payment-value">
+                        {qrResult.payment_details.transaction_note || 'None specified'}
+                      </div>
+                    </div>
+
+                    <div className="checklink-payment-item">
+                      <span className="checklink-payment-label">CURRENCY</span>
+                      <div className="checklink-payment-value">
+                        {qrResult.payment_details.currency || 'INR'}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -984,40 +1042,53 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                   onChange={(e) => handleFileSelect(e.target.files?.[0])}
                 />
 
-                <div className="checklink-qr-icon-hero">
-                  <QrCode size={34} />
+                <h2 className="checklink-qr-header-title">QR Scanner</h2>
+
+                {/* Inner Dashed Dropzone matching Screenshot 1 */}
+                <div className="checklink-qr-dashed-dropzone">
+                  <div className="checklink-qr-icon-hero">
+                    <QrCode size={36} />
+                  </div>
+
+                  <h3 className="checklink-qr-scanner-title">Scan QR Code</h3>
+                  <p className="checklink-qr-scanner-subtitle">
+                    Use your camera or upload an image
+                  </p>
+
+                  {/* Primary Buttons Row matching Screenshot 1 */}
+                  <div className="checklink-qr-btn-row">
+                    <button
+                      type="button"
+                      className="checklink-qr-upload-btn"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={loading || qrDecoding}
+                    >
+                      <Upload size={17} />
+                      <span>Upload QR Image</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="checklink-qr-camera-btn"
+                      onClick={isCameraActive ? stopCamera : startCamera}
+                      disabled={loading || qrDecoding}
+                    >
+                      {isCameraActive ? <CameraOff size={17} /> : <Camera size={17} />}
+                      <span>{isCameraActive ? 'Close Camera' : 'Use Camera'}</span>
+                    </button>
+                  </div>
                 </div>
 
-                <h3 className="checklink-qr-scanner-title">Scan QR Code</h3>
-                <p className="checklink-qr-scanner-subtitle">
-                  Use your camera or upload an image to inspect recipient identity and check for payment fraud.
-                </p>
-
-                {/* Primary Buttons Row matching Screenshot 1 */}
-                <div className="checklink-qr-btn-row">
-                  <button
-                    type="button"
-                    className="checklink-qr-upload-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={loading || qrDecoding}
-                  >
-                    <Upload size={17} />
-                    <span>Upload QR Image</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="checklink-qr-camera-btn"
-                    onClick={isCameraActive ? stopCamera : startCamera}
-                    disabled={loading || qrDecoding}
-                  >
-                    {isCameraActive ? <CameraOff size={17} /> : <Camera size={17} />}
-                    <span>{isCameraActive ? 'Close Camera' : 'Use Camera'}</span>
-                  </button>
+                {/* Tips Box Matching Screenshot 1 */}
+                <div className="checklink-qr-tips-box">
+                  <AlertCircle size={18} style={{ color: '#2563eb', flexShrink: 0, marginTop: '2px' }} />
+                  <div className="checklink-qr-tips-text">
+                    For best results when uploading an image, ensure the QR code is clearly visible and well-lit. When using camera, hold steady and center the QR code in frame.
+                  </div>
                 </div>
 
                 {/* Context Input */}
-                <div style={{ marginTop: '12px' }}>
+                <div style={{ marginTop: '16px' }}>
                   <label htmlFor="qr-context-input" style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
                     What did the sender claim? (Optional)
                   </label>
@@ -1073,14 +1144,6 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                     {qrError || cameraError}
                   </div>
                 )}
-
-                {/* Tips Box Matching Screenshot 1 */}
-                <div className="checklink-qr-tips-box">
-                  <AlertCircle size={18} style={{ color: '#2563eb', flexShrink: 0, marginTop: '2px' }} />
-                  <div className="checklink-qr-tips-text">
-                    For best results when uploading an image, ensure the QR code is clearly visible and well-lit. When using camera, hold steady and center the QR code in frame.
-                  </div>
-                </div>
 
                 {/* Quick Test Scenarios */}
                 <div style={{ marginTop: '22px' }}>
