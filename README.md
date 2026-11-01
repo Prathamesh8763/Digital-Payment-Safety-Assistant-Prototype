@@ -184,14 +184,13 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 #### 3. Load Browser Extension
 1. Open Chrome or Edge and navigate to `chrome://extensions/`.
 2. Enable **Developer mode** (top-right).
-3. Click **Load unpacked** and select the `extension` folder in this project:
-   `d:\Digital Payment Security Assitant\extension`
+3. Click **Load unpacked** and select the `./extension` folder inside this repository.
 
 ---
 
 ## 6. Running Tests & Quality Verification
 
-### 1. Frontend Unit Tests (10 tests)
+### 1. Frontend Unit Tests (62 tests)
 ```powershell
 cd frontend
 npm test
@@ -209,9 +208,9 @@ cd frontend
 npm run build
 ```
 
-### 4. Backend Pytest Suite (22 unit tests)
+### 4. Backend Pytest Suite (109 unit tests)
 ```powershell
-backend\.venv\Scripts\pytest backend\tests -v
+pytest backend/tests -v
 ```
 
 ### 5. Benchmark Quality Evaluation

@@ -39,8 +39,11 @@ frontend/.vite/
 
 # Environment variables & secrets (CRITICAL PRIVACY)
 .env
-.env.local
-.env.*.local
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
 *.pem
 *.key
 credentials.txt

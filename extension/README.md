@@ -9,7 +9,7 @@ This extension allows users to safely check suspicious text or links directly fr
 1. Open your browser and navigate to `chrome://extensions/` (or `edge://extensions/`).
 2. Enable **Developer mode** using the toggle switch in the top-right corner.
 3. Click the **Load unpacked** button.
-4. Select the `extension` folder located inside this project directory (`d:\Digital Payment Security Assitant\extension`).
+4. Select the `extension` folder located inside the cloned repository (`./extension`).
 5. Pin the **Digital Payment Safety Assistant** to your browser toolbar.
 
 ---
