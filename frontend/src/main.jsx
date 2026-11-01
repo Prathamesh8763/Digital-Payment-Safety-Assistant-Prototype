@@ -12,3 +12,14 @@ createRoot(document.getElementById('root')).render(
     </ErrorBoundary>
   </StrictMode>,
 );
+
+// Register PWA Service Worker for app shell (bypasses all dynamic safety APIs)
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV !== 'test') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .catch(() => {
+        // Silent fallback: app runs normally without service worker
+      });
+  });
+}

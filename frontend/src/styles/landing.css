@@ -197,9 +197,9 @@
 }
 
 .landing-hero-title {
-  font-size: clamp(2.3rem, 4.2vw, 3.8rem);
+  font-size: clamp(1.75rem, 5vw, 3.5rem);
   font-weight: 800;
-  line-height: 1.12;
+  line-height: 1.15;
   letter-spacing: -0.03em;
   color: #0f172a;
   margin-bottom: 1.25rem;
@@ -938,5 +938,90 @@
 
 .dropdown-item:hover {
   background-color: #f1f5f9;
+}
+
+/* Responsive Landing Styles - Mobile-First Refinement */
+@media (max-width: 640px) {
+  .landing-topbar {
+    padding: 0.5rem 1rem;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+
+  .landing-header {
+    padding: 0.65rem 1rem;
+  }
+
+  .landing-hero {
+    padding: 2.25rem 1rem 3rem;
+  }
+
+  .landing-hero-desc {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .landing-hero-ctas {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .btn-hero-primary,
+  .btn-hero-secondary {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    font-size: 0.95rem;
+  }
+
+  .hero-demo-card {
+    padding: 1.15rem;
+  }
+
+  .landing-overview-section,
+  .landing-steps-section,
+  .landing-scope-section,
+  .landing-privacy-section {
+    padding: 2.5rem 1rem;
+  }
+
+  .landing-cta-banner-section {
+    padding: 0 1rem;
+    margin-bottom: 3.5rem;
+  }
+
+  .landing-cta-banner {
+    padding: 2rem 1.25rem;
+    border-radius: 14px;
+  }
+
+  .btn-cta-banner {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  .landing-footer {
+    padding: 3rem 1rem 2rem;
+  }
+
+  .landing-footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-demo-textbox {
+    font-size: 0.85rem;
+    padding: 0.85rem;
+  }
+
+  .landing-section-title {
+    font-size: 1.65rem;
+  }
 }
 

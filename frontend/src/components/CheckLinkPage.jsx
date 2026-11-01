@@ -734,8 +734,9 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
               </div>
             )}
 
-            {/* Checks Table */}
-            <table className="checklink-checks-table">
+            {/* Checks Table (Responsive Wrapper prevents mobile horizontal overflow) */}
+            <div className="table-responsive">
+              <table className="checklink-checks-table">
               <thead>
                 <tr>
                   <th>Check Type</th>
@@ -837,6 +838,7 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                 </tr>
               </tbody>
             </table>
+          </div>
 
             {/* Multi-Parameter Evaluation Scorecard */}
             {result.multi_parameter_scorecard && (
@@ -982,7 +984,8 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
                     <LinkIcon className="checklink-input-prefix-icon" aria-hidden="true" />
                     <input
                       id="url-input"
-                      type="text"
+                      type="url"
+                      inputMode="url"
                       className="checklink-url-input"
                       placeholder={t('analyzer.placeholder_url', 'https://paste-a-link-here.com')}
                       value={urlInput}

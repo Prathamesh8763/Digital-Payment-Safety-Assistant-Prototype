@@ -197,6 +197,7 @@ export default function Logo({
 
       {showTagline && !isDark && (
         <span
+          className="clearpay-logo-tagline"
           style={{
             fontFamily: "system-ui, -apple-system, 'Inter', 'Segoe UI', sans-serif",
             fontWeight: 700,

@@ -37,7 +37,7 @@ export default function LandingFooter({
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
         {/* Main 4-Column Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '36px', marginBottom: '48px' }}>
+        <div className="landing-footer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '32px', marginBottom: '48px' }}>
           
           {/* Col 1: Brand & Mission */}
           <div>

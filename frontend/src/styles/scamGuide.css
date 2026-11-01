@@ -349,3 +349,51 @@
   color: #64748b;
   margin: 0 0 20px;
 }
+
+/* Mobile-First Responsive Refinements */
+@media (max-width: 768px) {
+  .scamguide-nav {
+    padding: 10px 14px;
+  }
+
+  .scamguide-container {
+    padding: 20px 14px 48px;
+  }
+
+  .scamguide-title {
+    font-size: clamp(1.45rem, 5vw, 2.2rem);
+  }
+
+  .scam-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+
+  .scamguide-hero {
+    margin-bottom: 20px;
+  }
+
+  .scamguide-filter-pills {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+
+  .scamguide-filter-btn {
+    white-space: nowrap;
+    min-height: 38px;
+  }
+}
+
+@media (max-width: 480px) {
+  .scamguide-brand-subtitle {
+    display: none;
+  }
+
+  .scamguide-back-btn,
+  .scamguide-report-cta {
+    padding: 6px 10px;
+    font-size: 12.5px;
+  }
+}

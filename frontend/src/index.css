@@ -49,14 +49,65 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   font-family: var(--font-family-sans);
   background-color: var(--bg-app);
   color: var(--text-main);
   line-height: var(--line-height-normal);
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Mobile-First: Hide verbose logo tagline on narrow mobile viewports (< 480px) */
+@media screen and (max-width: 480px) {
+  .clearpay-logo-tagline {
+    display: none !important;
+  }
+}
+
+/* Fast tap response without 300ms double-tap delay */
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+/* Mobile-First: Prevent iOS Safari auto-zoom on input focus */
+@media screen and (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Responsive Table Wrapper Utility (avoids breaking mobile layouts) */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+}
+
+.table-responsive > table {
+  width: 100%;
+  min-width: 520px;
 }
 
 /* Global Accessible Focus-Visible Ring */

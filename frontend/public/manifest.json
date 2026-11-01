@@ -9,6 +9,18 @@
       "sizes": "any"
     },
     {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
       "src": "/logo-symbol.svg",
       "type": "image/svg+xml",
       "sizes": "192x192 512x512",
@@ -18,5 +30,6 @@
   "start_url": "/",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
-  "display": "standalone"
+  "display": "standalone",
+  "orientation": "portrait-primary"
 }

@@ -215,7 +215,10 @@ export default function LandingNavbar({
             <li>
               <button
                 type="button"
-                onClick={onAnalyzeClick}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (onAnalyzeClick) onAnalyzeClick();
+                }}
                 className="landing-nav-cta"
                 style={{ width: '100%', justifyContent: 'center', padding: '10px' }}
               >

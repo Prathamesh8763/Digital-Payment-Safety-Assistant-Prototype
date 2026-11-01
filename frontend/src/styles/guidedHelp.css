@@ -791,4 +791,39 @@
   .v9-header-nav {
     display: none;
   }
+
+  .v9-header-inner {
+    padding: 10px 14px;
+  }
+
+  .v9-guided-container {
+    padding: 16px 14px 40px;
+  }
+
+  .v9-hero-title {
+    font-size: clamp(1.45rem, 5vw, 2.2rem);
+  }
+
+  .v9-actions-row {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .v9-btn-primary,
+  .v9-btn-secondary {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .v9-brand-tag {
+    display: none;
+  }
+
+  .v9-btn-outline {
+    padding: 6px 10px;
+    font-size: 12.5px;
+  }
 }
