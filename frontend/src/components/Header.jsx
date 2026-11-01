@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, Lock, ArrowLeft } from 'lucide-react';
+import { Lock, ArrowLeft } from 'lucide-react';
 import LanguageSelector from './LanguageSelector';
+import Logo from './common/Logo';
 
 export default function Header({ onNavigateHome }) {
   const { t } = useTranslation();
@@ -36,9 +37,8 @@ export default function Header({ onNavigateHome }) {
         <LanguageSelector />
       </div>
 
-      <div className="app-title-row">
-        <ShieldCheck className="app-logo" aria-hidden="true" />
-        <h1 className="app-title">{t('common.brand_name', 'ClearPay')} – {t('common.brand_tagline', 'Payment Safety Assistant')}</h1>
+      <div className="app-title-row" style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+        <Logo variant="horizontal" size="lg" />
       </div>
       <p className="app-subtitle">
         {t('landing.hero_subhead', 'Help yourself and family members spot payment scams, pause before acting, and learn safe digital payment habits.')}

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './LanguageSelector';
+import Logo from './common/Logo';
 import '../styles/scamGuide.css';
 
 const SCAM_MODULES = [
@@ -167,12 +168,9 @@ export default function IndianScamGuidePage({ onNavigateHome, onNavigateAnalyze,
               e.preventDefault();
               onNavigateHome();
             }}
+            aria-label="ClearPay Home"
           >
-            <div className="scamguide-brand-logo">C</div>
-            <div>
-              <span className="scamguide-brand-title">ClearPay</span>
-              <span className="scamguide-brand-subtitle">Indian Digital Payment Scam Guide</span>
-            </div>
+            <Logo variant="horizontal" size="md" />
           </a>
 
           <div className="scamguide-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

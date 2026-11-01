@@ -16,6 +16,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
 import LanguageSelector from './LanguageSelector';
+import Logo from './common/Logo';
 import '../styles/subscriptionSafety.css';
 
 const SAMPLE_INVOICES = [
@@ -242,12 +243,9 @@ export default function SubscriptionSafetyPage({ onNavigateHome, onNavigateCheck
               e.preventDefault();
               onNavigateHome();
             }}
+            aria-label="ClearPay Home"
           >
-            <div className="subsafety-brand-logo">C</div>
-            <div>
-              <span className="subsafety-brand-title">ClearPay</span>
-              <span className="subsafety-brand-subtitle">Subscription Safety Center</span>
-            </div>
+            <Logo variant="horizontal" size="md" />
           </a>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

@@ -23,6 +23,7 @@ import jsQR from 'jsqr';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
 import LanguageSelector from './LanguageSelector';
+import Logo from './common/Logo';
 import { translateIndicator, translateAction } from '../utils/resultFormatters';
 import '../styles/checkLink.css';
 
@@ -353,12 +354,8 @@ export default function CheckLinkPage({ onNavigateHome, onNavigateAnalyze, onNav
       {/* Top Header */}
       <header className="checklink-header">
         <nav className="checklink-nav-container" aria-label="Main Navigation">
-          <div className="checklink-brand" onClick={onNavigateHome}>
-            <div className="checklink-brand-logo" aria-hidden="true">C</div>
-            <div className="checklink-brand-text">
-              <span className="checklink-brand-name">{t('common.brand_name', 'ClearPay')}</span>
-              <span className="checklink-brand-tagline">{t('common.brand_tagline', 'Safety Assistant')}</span>
-            </div>
+          <div className="checklink-brand" onClick={onNavigateHome} role="button" tabIndex={0} aria-label="ClearPay Home">
+            <Logo variant="horizontal" size="md" />
           </div>
 
           <ul className="checklink-nav-links">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUpRight, Menu, X, ChevronDown, ShieldAlert, PhoneCall, Link2, CreditCard, HelpCircle } from 'lucide-react';
 import LanguageSelector from '../LanguageSelector';
+import Logo from '../common/Logo';
 
 export default function LandingNavbar({
   onAnalyzeClick,
@@ -38,13 +39,9 @@ export default function LandingNavbar({
   return (
     <header className="landing-header">
       <nav className="landing-nav-container" aria-label="Main Navigation">
-        {/* Brand Logo */}
-        <a href="/" className="landing-brand" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-          <div className="landing-brand-logo" aria-hidden="true">C</div>
-          <div className="landing-brand-text">
-            <span className="landing-brand-name">{t('common.brand_name', 'ClearPay')}</span>
-            <span className="landing-brand-tagline">{t('common.brand_tagline', 'Payment Safety Assistant')}</span>
-          </div>
+        {/* Brand Logo - Primary Horizontal */}
+        <a href="/" className="landing-brand" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="ClearPay Home">
+          <Logo variant="horizontal" size="md" />
         </a>
 
         {/* Desktop Navigation Links */}
@@ -193,6 +190,22 @@ export default function LandingNavbar({
             boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
           }}
         >
+          {/* Mobile Navigation Header: Symbol-Only Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Logo variant="symbol" size={32} />
+              <span style={{ fontWeight: 800, fontSize: '17px', color: '#0f172a' }}>ClearPay</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer', color: '#64748b' }}
+              aria-label="Close menu"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
           {/* Mobile Language Selector */}
           <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
             <LanguageSelector style={{ width: '100%', justifyContent: 'center' }} />

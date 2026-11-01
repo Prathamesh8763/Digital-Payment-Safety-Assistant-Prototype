@@ -23,6 +23,7 @@ import {
 } from '../utils/guidedHelpData';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './LanguageSelector';
+import Logo from './common/Logo';
 import '../styles/guidedHelp.css';
 
 export default function GuidedHelpPage({
@@ -163,11 +164,7 @@ export default function GuidedHelpPage({
             aria-label="Go to ClearPay home"
             onKeyDown={(e) => { if (e.key === 'Enter') onNavigateHome(); }}
           >
-            <div className="v9-brand-logo" aria-hidden="true">C</div>
-            <div className="v9-brand-text">
-              <span className="v9-brand-name">ClearPay</span>
-              <span className="v9-brand-tag">SAFETY ASSISTANT</span>
-            </div>
+            <Logo variant="horizontal" size="md" />
           </div>
 
           <nav className="v9-header-nav" aria-label="Main Navigation">

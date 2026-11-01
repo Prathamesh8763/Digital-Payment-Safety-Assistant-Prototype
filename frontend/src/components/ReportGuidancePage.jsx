@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './LanguageSelector';
+import Logo from './common/Logo';
 import '../styles/reportGuide.css';
 
 const REPORTING_PORTALS = [
@@ -119,7 +120,8 @@ export default function ReportGuidancePage({ onNavigateHome, onNavigateScamGuide
       {/* Top Header */}
       <header className="reportguide-header">
         <div className="reportguide-nav">
-          <div className="reportguide-brand">
+          <div className="reportguide-brand" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={onNavigateHome} role="button" tabIndex={0} aria-label="ClearPay Home">
+            <Logo variant="symbol" size={34} />
             <div className="reportguide-brand-logo">1930</div>
             <div>
               <span className="reportguide-brand-title">Financial Cybercrime Reporting</span>

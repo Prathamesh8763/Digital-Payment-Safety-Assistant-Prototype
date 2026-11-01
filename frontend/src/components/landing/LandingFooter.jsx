@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PhoneCall, ShieldCheck, Lock, Info, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import Logo from '../common/Logo';
 
 const CURRENT_YEAR = 2026;
 
@@ -40,12 +41,7 @@ export default function LandingFooter({
           
           {/* Col 1: Brand & Mission */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-              <div style={{ width: '32px', height: '32px', background: '#2563eb', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800 }}>
-                C
-              </div>
-              <span style={{ fontSize: '18px', fontWeight: 800, color: '#ffffff' }}>ClearPay</span>
-            </div>
+            <Logo variant="horizontal" theme="dark" size="md" style={{ marginBottom: '16px' }} />
             <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.5, marginBottom: '16px' }}>
               An open, educational digital safety companion helping users identify financial fraud cues before sending money or sharing secret codes.
             </p>

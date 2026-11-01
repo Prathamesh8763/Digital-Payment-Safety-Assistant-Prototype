@@ -1,0 +1,22 @@
+{
+  "short_name": "ClearPay",
+  "name": "ClearPay – Digital Payment Safety Assistant",
+  "description": "Educational companion helping users spot digital payment scams, check suspicious messages, verify links and QR codes.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/logo-symbol.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "display": "standalone"
+}

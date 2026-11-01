@@ -1,7 +1,8 @@
 import React from 'react';
-import { AlertCircle, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import Button from './ui/Button';
 import Card from './ui/Card';
+import Logo from './common/Logo';
 
 /**
  * Global ErrorBoundary to catch unhandled rendering exceptions.
@@ -41,20 +42,8 @@ export default class ErrorBoundary extends React.Component {
         <div className="container" style={{ paddingTop: '3rem', maxWidth: '600px' }}>
           <Card>
             <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '50%',
-                  background: 'var(--color-warning-100)',
-                  color: 'var(--color-warning-600)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1rem'
-                }}
-              >
-                <AlertCircle size={32} aria-hidden="true" />
+              <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'center' }}>
+                <Logo variant="symbol" size={54} />
               </div>
 
               <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-extrabold)', marginBottom: '0.5rem', color: 'var(--color-text-primary)' }}>

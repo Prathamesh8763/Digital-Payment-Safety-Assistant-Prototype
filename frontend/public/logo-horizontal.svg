@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48" fill="none" width="240" height="48" role="img" aria-label="ClearPay Logo">
+  <defs>
+    <linearGradient id="cpHShieldLeft" x1="5.5" y1="3.5" x2="20" y2="37" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="cpHShieldRight" x1="34.5" y1="3.5" x2="20" y2="37" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="50%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="cpHCheck" x1="12" y1="20" x2="28" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <filter id="cpHGlow" x="8" y="10" width="24" height="20" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#10b981" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Scaled Shield Symbol at (4, 4) -->
+  <g transform="translate(4, 4)">
+    <path d="M20 3.5C13 3.5 5.5 6.5 5.5 15C5.5 25.5 13.5 33.5 20 37V3.5Z" fill="url(#cpHShieldLeft)"/>
+    <path d="M20 3.5C27 3.5 34.5 6.5 34.5 15C34.5 25.5 26.5 33.5 20 37V3.5Z" fill="url(#cpHShieldRight)"/>
+    <path d="M20 6C14.8 6 8.2 8.5 8.2 15.5C8.2 24.2 14.8 31.2 20 34.2C25.2 31.2 31.8 24.2 31.8 15.5C31.8 8.5 25.2 6 20 6Z" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.5"/>
+    <path d="M15 13.5C17.5 12.2 22.5 12.2 25 13.5" stroke="#60a5fa" stroke-opacity="0.45" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M12.5 20.5L17.5 25.5L27.5 14" stroke="url(#cpHCheck)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#cpHGlow)"/>
+    <circle cx="27.5" cy="14" r="1.5" fill="#34d399"/>
+  </g>
+
+  <!-- ClearPay Wordmark -->
+  <text x="54" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif" font-weight="800" font-size="22" letter-spacing="-0.4px">
+    <tspan fill="#0f172a">Clear</tspan><tspan fill="#2563eb">Pay</tspan><tspan fill="#10b981">.</tspan>
+  </text>
+
+  <!-- Subtitle Tagline -->
+  <text x="55" y="41" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif" font-weight="700" font-size="8.5" fill="#64748b" letter-spacing="1.2px">
+    PAYMENT SAFETY ASSISTANT
+  </text>
+</svg>

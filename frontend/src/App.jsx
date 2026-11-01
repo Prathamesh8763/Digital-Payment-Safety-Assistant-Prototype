@@ -6,18 +6,20 @@ import CheckLinkPage from './components/CheckLinkPage';
 import SubscriptionSafetyPage from './components/SubscriptionSafetyPage';
 import IndianScamGuidePage from './components/IndianScamGuidePage';
 import ReportGuidancePage from './components/ReportGuidancePage';
+import NotFoundPage from './components/NotFoundPage';
 import apiClient from './services/apiClient';
 
 function getInitialRoute() {
   if (typeof window === 'undefined') return '/';
   const path = window.location.pathname;
+  if (path === '/' || path === '') return '/';
   if (path.startsWith('/check-link') || path.startsWith('/check')) return '/check-link';
   if (path.startsWith('/guided-help') || path.startsWith('/guided')) return '/guided-help';
   if (path.startsWith('/subscriptions') || path.startsWith('/subscription')) return '/subscriptions';
   if (path.startsWith('/scam-guide') || path.startsWith('/scams')) return '/scam-guide';
   if (path.startsWith('/report') || path.startsWith('/cybercrime')) return '/report';
   if (path.startsWith('/analyze')) return '/analyze';
-  return '/';
+  return '/404';
 }
 
 export default function App() {
@@ -31,7 +33,9 @@ export default function App() {
 
     const handlePopState = () => {
       const path = window.location.pathname;
-      if (path.startsWith('/check-link') || path.startsWith('/check')) {
+      if (path === '/' || path === '') {
+        setRoute('/');
+      } else if (path.startsWith('/check-link') || path.startsWith('/check')) {
         setRoute('/check-link');
       } else if (path.startsWith('/guided-help') || path.startsWith('/guided')) {
         setRoute('/guided-help');
@@ -44,7 +48,7 @@ export default function App() {
       } else if (path.startsWith('/analyze')) {
         setRoute('/analyze');
       } else {
-        setRoute('/');
+        setRoute('/404');
       }
     };
 
@@ -122,6 +126,10 @@ export default function App() {
         initialTab={initialTab}
       />
     );
+  }
+
+  if (route === '/404') {
+    return <NotFoundPage onNavigateHome={() => navigateTo('/')} />;
   }
 
   return (

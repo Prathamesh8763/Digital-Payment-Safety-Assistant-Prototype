@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" width="40" height="40" role="img" aria-label="ClearPay Symbol">
+  <defs>
+    <linearGradient id="cpSymShieldLeft" x1="5.5" y1="3.5" x2="20" y2="37" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="cpSymShieldRight" x1="34.5" y1="3.5" x2="20" y2="37" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="50%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="cpSymCheck" x1="12" y1="20" x2="28" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <filter id="cpSymGlow" x="8" y="10" width="24" height="20" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#10b981" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <!-- Outer Shield Shell -->
+  <path d="M20 3.5C13 3.5 5.5 6.5 5.5 15C5.5 25.5 13.5 33.5 20 37V3.5Z" fill="url(#cpSymShieldLeft)"/>
+  <path d="M20 3.5C27 3.5 34.5 6.5 34.5 15C34.5 25.5 26.5 33.5 20 37V3.5Z" fill="url(#cpSymShieldRight)"/>
+  <!-- Inner Highlight Rim -->
+  <path d="M20 6C14.8 6 8.2 8.5 8.2 15.5C8.2 24.2 14.8 31.2 20 34.2C25.2 31.2 31.8 24.2 31.8 15.5C31.8 8.5 25.2 6 20 6Z" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.5"/>
+  <!-- Subtle Currency Safety Arc -->
+  <path d="M15 13.5C17.5 12.2 22.5 12.2 25 13.5" stroke="#60a5fa" stroke-opacity="0.45" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <!-- Verified Emerald Green Checkmark -->
+  <path d="M12.5 20.5L17.5 25.5L27.5 14" stroke="url(#cpSymCheck)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#cpSymGlow)"/>
+  <circle cx="27.5" cy="14" r="1.5" fill="#34d399"/>
+</svg>

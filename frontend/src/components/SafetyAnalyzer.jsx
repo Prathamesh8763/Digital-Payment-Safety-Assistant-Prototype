@@ -5,6 +5,7 @@ import GuidedCheck from './GuidedCheck';
 import HistoryDrawer from './HistoryDrawer';
 import FeatureErrorBoundary from './FeatureErrorBoundary';
 import LanguageSelector from './LanguageSelector';
+import Logo from './common/Logo';
 import Alert from './ui/Alert';
 import apiClient from '../services/apiClient';
 import '../styles/analyze.css';
@@ -220,11 +221,7 @@ export default function SafetyAnalyzer({
       <header className="v6-header">
         <div className="v6-header-inner">
           <div className="v6-brand-logo" onClick={onNavigateHome} role="button" tabIndex={0} aria-label="Go to ClearPay home">
-            <div className="v6-brand-icon">C</div>
-            <div className="v6-brand-text">
-              <span className="v6-brand-name">ClearPay</span>
-              <span className="v6-brand-tag">Safety Assistant</span>
-            </div>
+            <Logo variant="horizontal" size="md" />
           </div>
 
           <nav className="v6-header-nav" aria-label="Main Navigation">
@@ -290,7 +287,8 @@ export default function SafetyAnalyzer({
           </FeatureErrorBoundary>
           <footer className="v6-footer">
             <div className="v6-footer-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
-              <div className="v6-footer-brand">
+              <div className="v6-footer-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Logo variant="symbol" size={20} />
                 <strong>ClearPay</strong>
                 <span>· Educational guidance only · No scam checker can promise 100% accuracy.</span>
               </div>
@@ -360,16 +358,19 @@ export default function SafetyAnalyzer({
               role="status"
               aria-live="polite"
             >
-              <div
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  border: '3px solid #bfdbfe',
-                  borderTopColor: '#2563eb',
-                  borderRadius: '50%',
-                  flexShrink: 0
-                }}
-              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Logo variant="symbol" size={32} />
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: -4,
+                    border: '2px solid transparent',
+                    borderTopColor: '#2563eb',
+                    borderRadius: '50%',
+                    animation: 'spin 1.2s linear infinite'
+                  }}
+                />
+              </div>
               <div>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: '2px' }}>
                   {loadingStage === 1 && 'Scanning text syntax & evaluating urgency patterns...'}
@@ -855,7 +856,8 @@ export default function SafetyAnalyzer({
         {/* Footer */}
         <footer className="v6-footer">
           <div className="v6-footer-inner">
-            <div className="v6-footer-brand">
+            <div className="v6-footer-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Logo variant="symbol" size={20} />
               <strong>ClearPay</strong>
               <span>· Educational guidance only · No scam checker can promise 100% accuracy.</span>
             </div>
